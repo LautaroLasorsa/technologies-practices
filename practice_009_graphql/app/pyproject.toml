@@ -1,0 +1,11 @@
+[project]
+name = "graphql-bookstore"
+version = "0.1.0"
+description = "Practice 009: GraphQL Bookstore API with Strawberry + FastAPI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "strawberry-graphql[fastapi]>=0.262.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+]
