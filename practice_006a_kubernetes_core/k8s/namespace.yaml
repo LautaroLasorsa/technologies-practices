@@ -1,0 +1,18 @@
+# namespace.yaml — Creates an isolated namespace for this practice.
+#
+# Concepts to learn:
+#   - Namespaces provide logical isolation (like folders for K8s resources)
+#   - Resources in different namespaces can have the same name without conflict
+#   - Default namespaces: "default", "kube-system", "kube-public"
+#   - Deleting a namespace deletes ALL resources inside it (convenient cleanup)
+#
+# Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  # TODO(human): Give this namespace the name "practice".
+  # name: ???
+  labels:
+    # TODO(human): Add a label "project: k8s-learning" for identification.
+    # Hint: project: k8s-learning

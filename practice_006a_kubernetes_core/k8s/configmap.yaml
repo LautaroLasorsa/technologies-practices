@@ -1,0 +1,26 @@
+# configmap.yaml — Stores non-sensitive configuration as key-value pairs.
+#
+# Concepts to learn:
+#   - ConfigMaps decouple configuration from container images
+#   - Values are stored as plain text (NOT for passwords or secrets)
+#   - Can be consumed as environment variables or mounted as files
+#   - Must be created BEFORE the Pod/Deployment that references it
+#
+# Docs: https://kubernetes.io/docs/concepts/configuration/configmap/
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # TODO(human): Set the name to "task-tracker-config".
+  # name: ???
+  namespace: practice
+  labels:
+    app: task-tracker
+data:
+  # TODO(human): Add three key-value pairs that the app reads from env vars:
+  #   APP_ENV: "production"
+  #   APP_VERSION: "1.0.0"
+  #   LOG_LEVEL: "DEBUG"
+  #
+  # Syntax is simple:
+  #   KEY: "value"

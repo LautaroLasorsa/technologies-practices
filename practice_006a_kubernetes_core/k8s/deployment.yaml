@@ -1,0 +1,55 @@
+# deployment.yaml — Declares the desired state for task-tracker pods.
+#
+# Concepts to learn:
+#   - A Deployment manages a ReplicaSet, which manages Pods
+#   - Hierarchy: Deployment -> ReplicaSet -> Pod(s)
+#   - "replicas" = desired count; K8s self-heals to maintain it
+#   - selector.matchLabels MUST match template.metadata.labels (this is how
+#     the Deployment knows which Pods belong to it)
+#   - envFrom injects ALL keys from a ConfigMap/Secret as env vars
+#   - Rolling updates are the default strategy (zero-downtime deploys)
+#
+# Docs: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # TODO(human): Set the name to "task-tracker".
+  # name: ???
+  namespace: practice
+  labels:
+    app: task-tracker
+spec:
+  # TODO(human): Set replicas to 3 (K8s will ensure exactly 3 pods run).
+  # replicas: ???
+
+  selector:
+    matchLabels:
+      # TODO(human): This selector tells the Deployment which Pods to manage.
+      # It MUST match the labels in spec.template.metadata.labels below.
+      # Hint: app: task-tracker
+
+  template:
+    # This is the Pod template — every replica is created from this spec.
+    metadata:
+      labels:
+        # TODO(human): Add the label that matches the selector above.
+        # Hint: app: task-tracker
+    spec:
+      containers:
+        # TODO(human): Define the container with:
+        #   - name: task-tracker
+        #   - image: task-tracker:v1
+        #   - imagePullPolicy: Never
+        #   - ports:
+        #       - containerPort: 5000
+        #
+        # Then inject ConfigMap and Secret as environment variables using envFrom:
+        #   envFrom:
+        #     - configMapRef:
+        #         name: task-tracker-config
+        #     - secretRef:
+        #         name: task-tracker-secrets
+        #
+        # envFrom imports ALL keys from the referenced ConfigMap/Secret as env vars.
+        # This is simpler than mapping each key individually with valueFrom.

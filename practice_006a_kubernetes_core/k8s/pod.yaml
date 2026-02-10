@@ -1,0 +1,33 @@
+# pod.yaml — A bare Pod running the task-tracker container.
+#
+# Concepts to learn:
+#   - apiVersion, kind, metadata, spec — the four top-level fields of every K8s object
+#   - containerPort is informational (documentation), not a firewall rule
+#   - imagePullPolicy: Never — tells K8s to use the local image (built inside minikube)
+#   - A bare Pod has NO self-healing: if it dies, nothing restarts it
+#
+# Docs: https://kubernetes.io/docs/concepts/workloads/pods/
+
+apiVersion: v1
+kind: Pod
+metadata:
+  # TODO(human): Give this pod a name. Use "task-tracker".
+  # name: ???
+  labels:
+    # TODO(human): Add a label "app: task-tracker" so selectors can find this pod.
+    # Labels are key-value pairs — think of them as tags for filtering.
+    # Hint: app: task-tracker
+spec:
+  containers:
+    # TODO(human): Define a single container with:
+    #   - name: task-tracker
+    #   - image: task-tracker:v1
+    #   - imagePullPolicy: Never   (use the local image, don't pull from a registry)
+    #   - containerPort: 5000      (inside the "ports" list)
+    #
+    # Structure:
+    #   - name: <container-name>
+    #     image: <image:tag>
+    #     imagePullPolicy: Never
+    #     ports:
+    #       - containerPort: <port>
