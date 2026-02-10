@@ -1,0 +1,16 @@
+[project]
+name = "rest-api-design"
+version = "0.1.0"
+description = "REST API Design Principles — hands-on practice with FastAPI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.128.4",
+    "pydantic>=2.12.5",
+    "uvicorn>=0.40.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+]
