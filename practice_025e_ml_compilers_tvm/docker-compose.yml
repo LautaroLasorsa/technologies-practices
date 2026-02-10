@@ -1,0 +1,9 @@
+services:
+  tvm:
+    build: .
+    # Mount source code so edits on Windows are reflected immediately
+    volumes:
+      - ./tvm_practice:/app/tvm_practice
+    # Keep stdin open for interactive use (docker compose run --rm tvm bash)
+    stdin_open: true
+    tty: true
