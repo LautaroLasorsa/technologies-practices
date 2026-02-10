@@ -1,0 +1,37 @@
+{
+    "tab_size": 4,
+    "hard_tabs": false,
+    "languages": {
+        "Python": {
+            "tab_size": 4,
+            "hard_tabs": false,
+        },
+        "Rust": {
+            "tab_size": 4,
+            "hard_tabs": false,
+        },
+        "C++": {
+            "tab_size": 4,
+            "hard_tabs": false,
+        },
+        "TOML": {
+            "tab_size": 2,
+            "hard_tabs": false,
+        },
+        "JSON": {
+            "tab_size": 2,
+            "hard_tabs": false,
+        },
+        "Markdown": {
+            "tab_size": 2,
+            "hard_tabs": false,
+        },
+    },
+    "lsp": {
+        "clangd": {
+            "binary": {
+                "arguments": [],
+            },
+        },
+    },
+}
