@@ -1,0 +1,11 @@
+[project]
+name = "practice-017a-rl-dynaq"
+version = "0.1.0"
+description = "Dyna-Q: tabular model-based RL with planning steps"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gymnasium>=1.2.3",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.2",
+]
