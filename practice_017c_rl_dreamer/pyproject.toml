@@ -1,0 +1,11 @@
+[project]
+name = "practice-017c-rl-dreamer"
+version = "0.1.0"
+description = "Simplified Dreamer agent: RSSM world model + latent imagination + actor-critic on CartPole-v1"
+requires-python = ">=3.12"
+dependencies = [
+    "gymnasium>=1.2.3",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.2",
+    "torch>=2.10.0",
+]
