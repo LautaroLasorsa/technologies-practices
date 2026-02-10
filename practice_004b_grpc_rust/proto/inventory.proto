@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package inventory;
+
+// A simple inventory service demonstrating unary and server-streaming RPCs.
+// Shared between the Rust server (tonic) and the Python client (grpcio).
+
+service Inventory {
+    // Unary: Add a new item to the inventory.
+    rpc AddItem (AddItemRequest) returns (AddItemResponse);
+
+    // Unary: Query a single item by name.
+    rpc GetItem (GetItemRequest) returns (GetItemResponse);
+
+    // Server streaming: List all items in the inventory.
+    // The server sends each item as a separate message in the stream.
+    rpc ListItems (ListItemsRequest) returns (stream ListItemsResponse);
+}
+
+// ── Messages for AddItem ────────────────────────────────────────────
+
+message AddItemRequest {
+    string name = 1;
+    int32 quantity = 2;
+    double price = 3;
+}
+
+message AddItemResponse {
+    string name = 1;
+    string status = 2; // e.g. "created"
+}
+
+// ── Messages for GetItem ────────────────────────────────────────────
+
+message GetItemRequest {
+    string name = 1;
+}
+
+message GetItemResponse {
+    string name = 1;
+    int32 quantity = 2;
+    double price = 3;
+}
+
+// ── Messages for ListItems ──────────────────────────────────────────
+
+message ListItemsRequest {
+    // Empty for now; could add filters later.
+}
+
+message ListItemsResponse {
+    string name = 1;
+    int32 quantity = 2;
+    double price = 3;
+}

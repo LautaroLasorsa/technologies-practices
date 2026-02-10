@@ -1,0 +1,14 @@
+[package]
+name = "rust_server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+prost = "0.14.3"
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread", "sync"] }
+tokio-stream = "0.1.18"
+tonic = "0.14.3"
+tonic-prost = { version = "0.14.3", default-features = false }
+
+[build-dependencies]
+tonic-prost-build = "0.14.3"
