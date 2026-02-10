@@ -1,0 +1,16 @@
+# Terraform local state and provider binaries
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/.terraform.lock.hcl
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Sensitive variable files (if they contained secrets)
+# *.tfvars       # We keep terraform.tfvars for this practice
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
