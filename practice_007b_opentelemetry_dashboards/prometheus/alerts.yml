@@ -1,0 +1,52 @@
+# Prometheus Alerting Rules
+# Docs: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+#
+# Each rule has:
+#   - alert: Name of the alert
+#   - expr:  PromQL expression that triggers when it returns results
+#   - for:   How long the condition must hold before the alert fires
+#   - labels: Metadata attached to the alert (e.g., severity)
+#   - annotations: Human-readable description for dashboards/notifications
+#
+# -------------------------------------------------------------------
+# TODO(human): Replace the empty rules list below with your alert rules.
+#
+# You need two alerts:
+#
+# 1) HighErrorRate
+#    Goal: Fire when the error rate (failure / total) exceeds 20% for 2 min.
+#    Hints:
+#      - Numerator: rate(orders_processed_total{status="failure"}[5m])
+#      - Denominator: rate(orders_processed_total[5m])
+#      - Threshold: > 0.2
+#      - for: 2m
+#      - labels: severity: warning
+#      - annotations:
+#          summary: "High order error rate"
+#          description: "Error rate is {{ $value | humanizePercentage }} (5m window)."
+#
+# 2) HighLatency
+#    Goal: Fire when p95 order latency exceeds 2 seconds for 1 min.
+#    Hints:
+#      - expr: histogram_quantile(0.95, rate(order_duration_seconds_bucket[5m])) > 2
+#      - for: 1m
+#      - labels: severity: critical
+#      - annotations:
+#          summary: "High p95 order latency"
+#          description: "P95 latency is {{ $value | humanizeDuration }} (5m window)."
+#
+# Example alert structure (uncomment and adapt):
+#
+#   - alert: AlertName
+#     expr: <PromQL expression>
+#     for: 2m
+#     labels:
+#       severity: warning
+#     annotations:
+#       summary: "Short title"
+#       description: "Details with {{ $value }}."
+# -------------------------------------------------------------------
+
+groups:
+  - name: order_service_alerts
+    rules: []
