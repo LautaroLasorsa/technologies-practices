@@ -1,0 +1,156 @@
+networks:
+  saga_network:
+    driver: bridge
+
+volumes:
+  redpanda-data: null
+
+services:
+  # ---------------------------------------------------------------------------
+  # Redpanda: Kafka-compatible broker (no JVM, no ZooKeeper)
+  # ---------------------------------------------------------------------------
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
+    container_name: redpanda
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --mode dev-container
+      - --smp 1
+      - --default-log-level=info
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+    networks:
+      - saga_network
+    ports:
+      - "18081:18081"
+      - "18082:18082"
+      - "19092:19092"
+      - "19644:9644"
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "info", "--brokers", "localhost:9092"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Redpanda Console: Web UI for inspecting topics, messages, consumer groups
+  # ---------------------------------------------------------------------------
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.8.0
+    container_name: redpanda-console
+    networks:
+      - saga_network
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:9092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://redpanda:8081"]
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda:9644"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      redpanda:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Topic initialization: creates all Kafka topics the saga needs
+  # ---------------------------------------------------------------------------
+  init-topics:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.1
+    container_name: init-topics
+    networks:
+      - saga_network
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    entrypoint: /bin/bash
+    command: >
+      -c "
+      rpk topic create saga.commands --brokers redpanda:9092 --partitions 1 &&
+      rpk topic create saga.events  --brokers redpanda:9092 --partitions 1 &&
+      rpk topic create order.status --brokers redpanda:9092 --partitions 1 &&
+      echo '--- All topics created ---' &&
+      rpk topic list --brokers redpanda:9092
+      "
+
+  # ---------------------------------------------------------------------------
+  # Orchestrator: central saga coordinator (state machine)
+  # ---------------------------------------------------------------------------
+  orchestrator:
+    build:
+      context: .
+      dockerfile: orchestrator/Dockerfile
+    container_name: saga-orchestrator
+    networks:
+      - saga_network
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+    depends_on:
+      init-topics:
+        condition: service_completed_successfully
+
+  # ---------------------------------------------------------------------------
+  # Order Service: accepts HTTP orders, publishes saga start events
+  # ---------------------------------------------------------------------------
+  order-service:
+    build:
+      context: .
+      dockerfile: order_service/Dockerfile
+    container_name: order-service
+    networks:
+      - saga_network
+    ports:
+      - "8001:8000"
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+    depends_on:
+      init-topics:
+        condition: service_completed_successfully
+
+  # ---------------------------------------------------------------------------
+  # Payment Service: processes/refunds payments
+  # ---------------------------------------------------------------------------
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment_service/Dockerfile
+    container_name: payment-service
+    networks:
+      - saga_network
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+    depends_on:
+      init-topics:
+        condition: service_completed_successfully
+
+  # ---------------------------------------------------------------------------
+  # Inventory Service: reserves/releases inventory
+  # ---------------------------------------------------------------------------
+  inventory-service:
+    build:
+      context: .
+      dockerfile: inventory_service/Dockerfile
+    container_name: inventory-service
+    networks:
+      - saga_network
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+    depends_on:
+      init-topics:
+        condition: service_completed_successfully

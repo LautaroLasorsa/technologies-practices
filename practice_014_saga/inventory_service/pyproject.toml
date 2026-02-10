@@ -1,0 +1,8 @@
+[project]
+name = "inventory-service"
+version = "0.1.0"
+description = "Inventory service - reserves and releases stock"
+requires-python = ">=3.12"
+dependencies = [
+    "aiokafka>=0.12.0",
+]
