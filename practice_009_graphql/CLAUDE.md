@@ -131,4 +131,4 @@ Build a **Bookstore API** that demonstrates core GraphQL patterns: queries, muta
 
 ## State
 
-`in-progress`
+`not-started`

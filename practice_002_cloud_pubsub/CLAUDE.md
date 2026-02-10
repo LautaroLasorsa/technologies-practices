@@ -124,4 +124,4 @@ All commands run from `practice_002_cloud_pubsub/`.
 
 ## State
 
-`in-progress`
+`not-started`

@@ -136,4 +136,4 @@ All commands are run from `practice_003a_kafka_producers/`.
 
 ## State
 
-`in-progress`
+`not-started`
