@@ -1,0 +1,12 @@
+# Build output
+build/
+
+# QuickFIX session store and logs
+store/
+log/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+CMakeSettings.json
