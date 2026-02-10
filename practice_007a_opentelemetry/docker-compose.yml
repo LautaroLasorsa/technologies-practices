@@ -1,0 +1,10 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.64
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "4317:4317"    # OTLP gRPC receiver (where our app sends spans)
+      - "4318:4318"    # OTLP HTTP receiver (alternative)
+      - "16686:16686"  # Jaeger UI (http://localhost:16686)
