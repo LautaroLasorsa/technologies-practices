@@ -1,0 +1,8 @@
+[project]
+name = "ml-compilers-graphs"
+version = "0.1.0"
+description = "ML Compilers — Computation Graphs & IR from Scratch"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.2.0",
+]

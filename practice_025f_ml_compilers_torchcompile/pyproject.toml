@@ -1,0 +1,8 @@
+[project]
+name = "ml-compilers-torchcompile"
+version = "0.1.0"
+description = "ML Compilers — torch.compile Deep Dive"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.2.0",
+]

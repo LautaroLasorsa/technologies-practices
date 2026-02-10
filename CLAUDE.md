@@ -68,6 +68,12 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 023 | Advanced SQL: Window Functions, CTEs & Query Optimization | Python, PostgreSQL, Docker | `not-started` |
 | 024a | Testing Patterns: Python | Python (pytest, Hypothesis) | `not-started` |
 | 024b | Testing Patterns: Rust | Rust (mockall, proptest) | `not-started` |
+| 025a | ML Compilers: Computation Graphs & IR from Scratch | Python (PyTorch) | `not-started` |
+| 025b | ML Compilers: Operator Fusion & Graph Rewrites | Python (PyTorch, torch.fx) | `not-started` |
+| 025c | ML Compilers: XLA & HLO Inspection | Python (JAX) | `not-started` |
+| 025d | ML Compilers: Triton Custom GPU Kernels | Python (Triton, PyTorch) | `not-started` |
+| 025e | ML Compilers: TVM Scheduling & Auto-Tuning | Python (TVM), Docker | `not-started` |
+| 025f | ML Compilers: torch.compile Deep Dive | Python (PyTorch 2.x) | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 

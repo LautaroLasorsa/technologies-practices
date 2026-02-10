@@ -1,0 +1,10 @@
+[project]
+name = "ml-compilers-tvm"
+version = "0.1.0"
+description = "ML Compilers — TVM Scheduling & Auto-Tuning"
+requires-python = ">=3.12"
+dependencies = [
+    "apache-tvm>=0.17.0",
+    "numpy>=1.26.0",
+    "torch>=2.2.0",
+]

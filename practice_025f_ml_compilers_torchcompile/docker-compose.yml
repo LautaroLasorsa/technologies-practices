@@ -1,0 +1,17 @@
+services:
+  torchcompile:
+    build: .
+    # Mount source code so edits on Windows are reflected immediately
+    volumes:
+      - ./compile_inspect:/app/compile_inspect
+    # Enable GPU access — requires NVIDIA Container Toolkit
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # Keep stdin open for interactive use (docker compose run --rm torchcompile bash)
+    stdin_open: true
+    tty: true
