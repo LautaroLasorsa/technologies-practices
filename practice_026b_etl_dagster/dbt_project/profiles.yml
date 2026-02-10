@@ -1,0 +1,24 @@
+# dbt Profile -- database connection configuration
+#
+# COMPARISON WITH DAGSTER RESOURCES:
+#   This file configures dbt's database connection (like Airflow's "Connections").
+#   In Dagster, we ALSO configure a PostgresResource for Python assets.
+#   Both point to the same PostgreSQL instance in Docker.
+#
+#   The duplication is intentional:
+#   - dbt uses profiles.yml for its own connection management
+#   - Dagster uses PostgresResource for Python-based assets
+#   - They share the same database, enabling Python -> dbt -> Python pipelines
+
+weather:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres
+      port: 5432
+      user: dagster
+      password: dagster
+      dbname: dagster
+      schema: public
+      threads: 2

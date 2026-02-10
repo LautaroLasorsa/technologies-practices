@@ -1,0 +1,33 @@
+# Dagster instance configuration
+# This file tells Dagster where to store run history, event logs, and schedule state.
+#
+# KEY DIFFERENCE FROM AIRFLOW:
+# - Airflow uses a "metadata database" to track DAG runs and task states.
+# - Dagster uses a similar database but also tracks ASSET MATERIALIZATIONS --
+#   which partitions of which assets have been computed, when, and with what metadata.
+#   This is what enables the asset-centric model: Dagster knows the state of your DATA,
+#   not just the state of your TASKS.
+
+storage:
+  postgres:
+    postgres_db:
+      hostname: postgres
+      username: dagster
+      password: dagster
+      db_name: dagster
+
+run_launcher:
+  module: dagster.core.launcher
+  class: DefaultRunLauncher
+
+# Enable the run queue so the daemon can process queued runs (e.g., from backfills)
+run_queue:
+  max_concurrent_runs: 3
+
+# Sensor evaluation interval (seconds)
+sensors:
+  use_threads: true
+
+# Auto-materialization daemon (Phase 5)
+auto_materialize:
+  enabled: true

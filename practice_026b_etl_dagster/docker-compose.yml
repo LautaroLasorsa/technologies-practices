@@ -1,0 +1,94 @@
+# Docker Compose for Dagster + dbt + PostgreSQL
+#
+# Architecture:
+#   postgres           -- Shared database: Dagster metadata + dbt warehouse + raw data
+#   dagster-webserver  -- Dagit UI (asset catalog, run viewer, launchpad) on port 3000
+#   dagster-daemon     -- Background process: sensors, schedules, auto-materialization
+#
+# COMPARISON WITH AIRFLOW (026a):
+#   Airflow needed: postgres + webserver + scheduler + (optional) worker + (optional) triggerer
+#   Dagster needs:  postgres + webserver + daemon
+#   Dagster is simpler to deploy -- the daemon handles scheduling, sensors, and auto-materialization
+#   in a single process (vs Airflow's separate scheduler + triggerer + celery workers).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dagster
+      POSTGRES_PASSWORD: dagster
+      POSTGRES_DB: dagster
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dagster"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  dagster-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      bash -c "
+        echo 'Waiting for PostgreSQL...' &&
+        while ! pg_isready -h postgres -U dagster -q; do sleep 1; done &&
+        echo 'PostgreSQL ready. Parsing dbt project...' &&
+        cd /app/dbt_project && dbt parse --profiles-dir /app/dbt_project || true &&
+        echo 'Starting Dagit webserver...' &&
+        dagster-webserver -h 0.0.0.0 -p 3000
+      "
+    ports:
+      - "3000:3000"
+    environment:
+      DAGSTER_HOME: /app
+      # These environment variables are available to Dagster resources
+      DAGSTER_PG_HOST: postgres
+      DAGSTER_PG_USER: dagster
+      DAGSTER_PG_PASSWORD: dagster
+      DAGSTER_PG_DB: dagster
+    volumes:
+      # Mount source code for live reloading during development
+      - ./dagster_project:/app/dagster_project
+      - ./dbt_project:/app/dbt_project
+      - ./data:/app/data
+      - ./dagster.yaml:/app/dagster.yaml
+      - ./workspace.yaml:/app/workspace.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  dagster-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      bash -c "
+        echo 'Waiting for PostgreSQL...' &&
+        while ! pg_isready -h postgres -U dagster -q; do sleep 1; done &&
+        echo 'PostgreSQL ready. Parsing dbt project...' &&
+        cd /app/dbt_project && dbt parse --profiles-dir /app/dbt_project || true &&
+        echo 'Starting Dagster daemon...' &&
+        dagster-daemon run
+      "
+    environment:
+      DAGSTER_HOME: /app
+      DAGSTER_PG_HOST: postgres
+      DAGSTER_PG_USER: dagster
+      DAGSTER_PG_PASSWORD: dagster
+      DAGSTER_PG_DB: dagster
+    volumes:
+      - ./dagster_project:/app/dagster_project
+      - ./dbt_project:/app/dbt_project
+      - ./data:/app/data
+      - ./dagster.yaml:/app/dagster.yaml
+      - ./workspace.yaml:/app/workspace.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
