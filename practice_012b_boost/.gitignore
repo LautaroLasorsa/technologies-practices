@@ -1,0 +1,14 @@
+# Build output
+build/
+out/
+cmake-build-*/
+
+# IDE files
+.vs/
+.vscode/
+*.vcxproj*
+*.sln
+
+# Serialization output
+dijkstra_results.txt
+*.bin
