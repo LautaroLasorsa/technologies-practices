@@ -1,0 +1,311 @@
+# =============================================================================
+# Docker Compose -- Task Processing Pipeline
+#
+# Services: nginx, api_gateway, worker, dashboard, redis
+# Optional:  redis_commander (debug profile)
+#
+# Work through the TODO(human) markers in order (Phases 3-7 of CLAUDE.md).
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Phase 3 [1/4]: Redis -- Message broker and result store
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    # TODO(human): Expose port 6379 to the host for local debugging.
+    # Syntax:
+    #   ports:
+    #     - "6379:6379"
+
+    # TODO(human): Add a named volume so Redis data survives container restarts.
+    # Hint: Mount the volume to /data inside the container.
+    # Syntax:
+    #   volumes:
+    #     - redis_data:/data
+
+    # --- Phase 4: Health check (fill in after Phase 3) ---
+    # TODO(human): Add a healthcheck that runs "redis-cli ping".
+    # Hint: Redis responds with "PONG" when healthy.
+    # Syntax:
+    #   healthcheck:
+    #     test: ["CMD", "redis-cli", "ping"]
+    #     interval: 5s
+    #     timeout: 3s
+    #     retries: 5
+    #     start_period: 5s
+
+    # --- Phase 5: Networks (fill in after Phase 4) ---
+    # TODO(human): Attach Redis to the "backend" network only.
+    # Redis should NOT be reachable from the frontend network.
+    # Syntax:
+    #   networks:
+    #     - backend
+
+    # --- Phase 6: Resource limits (fill in after Phase 5) ---
+    # TODO(human): Limit Redis to 0.5 CPU and 256MB memory.
+    # Also set a reservation of 0.25 CPU and 128MB (guaranteed minimum).
+    # Syntax:
+    #   deploy:
+    #     resources:
+    #       limits:
+    #         cpus: "0.50"
+    #         memory: 256M
+    #       reservations:
+    #         cpus: "0.25"
+    #         memory: 128M
+
+  # ---------------------------------------------------------------------------
+  # Phase 3 [2/4]: API Gateway -- Receives task submissions
+  # ---------------------------------------------------------------------------
+  api_gateway:
+    # TODO(human): Build from the api_gateway Dockerfile.
+    # Syntax:
+    #   build:
+    #     context: ./services/api_gateway
+    #     dockerfile: Dockerfile
+
+    # TODO(human): Map container port 8000 to host port 8000.
+    # Syntax:
+    #   ports:
+    #     - "8000:8000"
+
+    # TODO(human): Set environment variables for Redis connection.
+    # Syntax:
+    #   environment:
+    #     REDIS_HOST: redis
+    #     REDIS_PORT: 6379
+    #     TASK_QUEUE: "tasks:pending"
+
+    # TODO(human): Bind-mount the source code for live reload during development.
+    # Hint: Mount ./services/api_gateway to /app inside the container.
+    # Syntax:
+    #   volumes:
+    #     - ./services/api_gateway:/app
+
+    # --- Phase 4: Health check & dependency (fill in after Phase 3) ---
+    # TODO(human): Add a healthcheck that hits the /health endpoint.
+    # Syntax:
+    #   healthcheck:
+    #     test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+    #     interval: 10s
+    #     timeout: 5s
+    #     retries: 3
+    #     start_period: 15s
+
+    # TODO(human): Make api_gateway wait for Redis to be healthy before starting.
+    # Syntax:
+    #   depends_on:
+    #     redis:
+    #       condition: service_healthy
+
+    # --- Phase 5: Networks (fill in after Phase 4) ---
+    # TODO(human): Attach to both "frontend" and "backend" networks.
+    # The API Gateway bridges the two: Nginx reaches it on frontend,
+    # and it reaches Redis on backend.
+    # Syntax:
+    #   networks:
+    #     - frontend
+    #     - backend
+
+    # --- Phase 6: Resource limits (fill in after Phase 5) ---
+    # TODO(human): Limit the API Gateway to 0.5 CPU and 256MB memory.
+    # Syntax:
+    #   deploy:
+    #     resources:
+    #       limits:
+    #         cpus: "0.50"
+    #         memory: 256M
+
+  # ---------------------------------------------------------------------------
+  # Phase 3 [3/4]: Dashboard -- Shows pipeline status
+  # ---------------------------------------------------------------------------
+  dashboard:
+    # TODO(human): Build from the dashboard Dockerfile.
+    # Syntax:
+    #   build:
+    #     context: ./services/dashboard
+    #     dockerfile: Dockerfile
+
+    # TODO(human): Map container port 8001 to host port 8001.
+    # Syntax:
+    #   ports:
+    #     - "8001:8001"
+
+    # TODO(human): Set environment variables (same Redis config as api_gateway).
+    # Syntax:
+    #   environment:
+    #     REDIS_HOST: redis
+    #     REDIS_PORT: 6379
+    #     TASK_QUEUE: "tasks:pending"
+
+    # TODO(human): Bind-mount source for live reload.
+    # Syntax:
+    #   volumes:
+    #     - ./services/dashboard:/app
+
+    # --- Phase 4: Health check & dependency ---
+    # TODO(human): Add a healthcheck hitting /health on port 8001.
+    # Syntax:
+    #   healthcheck:
+    #     test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+    #     interval: 10s
+    #     timeout: 5s
+    #     retries: 3
+    #     start_period: 15s
+
+    # TODO(human): Depend on Redis being healthy.
+    # Syntax:
+    #   depends_on:
+    #     redis:
+    #       condition: service_healthy
+
+    # --- Phase 5: Networks ---
+    # TODO(human): Attach to both "frontend" and "backend" networks.
+    # Dashboard needs frontend (Nginx) and backend (Redis).
+    # Syntax:
+    #   networks:
+    #     - frontend
+    #     - backend
+
+    # --- Phase 6: Resource limits ---
+    # TODO(human): Limit to 0.25 CPU and 128MB memory.
+    # Syntax:
+    #   deploy:
+    #     resources:
+    #       limits:
+    #         cpus: "0.25"
+    #         memory: 128M
+
+  # ---------------------------------------------------------------------------
+  # Phase 3 [4/4]: Worker -- Processes tasks from Redis queue
+  # ---------------------------------------------------------------------------
+  worker:
+    # TODO(human): Build from the worker Dockerfile.
+    # Syntax:
+    #   build:
+    #     context: ./services/worker
+    #     dockerfile: Dockerfile
+
+    # NOTE: Workers don't expose any ports -- they only poll Redis.
+
+    # TODO(human): Set environment variables for Redis connection.
+    # Syntax:
+    #   environment:
+    #     REDIS_HOST: redis
+    #     REDIS_PORT: 6379
+    #     TASK_QUEUE: "tasks:pending"
+    #     POLL_INTERVAL: "2"
+
+    # --- Phase 4: Dependency ---
+    # TODO(human): Depend on Redis being healthy (workers need Redis to poll).
+    # Syntax:
+    #   depends_on:
+    #     redis:
+    #       condition: service_healthy
+
+    # --- Phase 5: Networks ---
+    # TODO(human): Attach to "backend" only. Workers have no reason to be
+    # on the frontend network.
+    # Syntax:
+    #   networks:
+    #     - backend
+
+    # --- Phase 6: Resource limits ---
+    # TODO(human): Limit to 0.25 CPU and 128MB memory per replica.
+    # Syntax:
+    #   deploy:
+    #     resources:
+    #       limits:
+    #         cpus: "0.25"
+    #         memory: 128M
+
+    # --- Phase 7: Replicas ---
+    # TODO(human): Scale to 3 worker replicas.
+    # Hint: Add "replicas: 3" under the deploy key (same level as resources).
+    # Syntax:
+    #   deploy:
+    #     replicas: 3
+    #     resources:
+    #       limits:
+    #         cpus: "0.25"
+    #         memory: 128M
+    # NOTE: You can merge the Phase 6 and Phase 7 deploy blocks into one.
+
+  # ---------------------------------------------------------------------------
+  # Nginx -- Reverse proxy
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+    # --- Phase 4: Dependency ---
+    # TODO(human): Nginx should wait for api_gateway AND dashboard to be healthy.
+    # Syntax:
+    #   depends_on:
+    #     api_gateway:
+    #       condition: service_healthy
+    #     dashboard:
+    #       condition: service_healthy
+
+    # --- Phase 5: Networks ---
+    # TODO(human): Attach to "frontend" only.
+    # Nginx talks to api_gateway and dashboard on the frontend network.
+    # It does NOT need access to Redis or workers.
+    # Syntax:
+    #   networks:
+    #     - frontend
+
+    # --- Phase 6: Resource limits ---
+    # TODO(human): Limit to 0.25 CPU and 64MB memory.
+    # Syntax:
+    #   deploy:
+    #     resources:
+    #       limits:
+    #         cpus: "0.25"
+    #         memory: 64M
+
+  # ---------------------------------------------------------------------------
+  # Phase 7: Redis Commander -- Debug UI (profile-gated)
+  # ---------------------------------------------------------------------------
+  # TODO(human): Uncomment and configure this optional debug service.
+  # It should only start when the "debug" profile is active:
+  #   docker compose --profile debug up
+  #
+  # Syntax:
+  #   redis_commander:
+  #     image: rediscommander/redis-commander:latest
+  #     environment:
+  #       REDIS_HOSTS: "local:redis:6379"
+  #     ports:
+  #       - "8081:8081"
+  #     profiles:
+  #       - debug
+  #     depends_on:
+  #       redis:
+  #         condition: service_healthy
+  #     networks:
+  #       - backend
+
+# =============================================================================
+# Phase 5: Network definitions
+# =============================================================================
+# TODO(human): Define the two custom networks used above.
+# Syntax:
+#   networks:
+#     frontend:
+#       driver: bridge
+#     backend:
+#       driver: bridge
+
+# =============================================================================
+# Phase 3: Volume definitions
+# =============================================================================
+# TODO(human): Define the named volume for Redis persistence.
+# Syntax:
+#   volumes:
+#     redis_data:
