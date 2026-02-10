@@ -1,0 +1,11 @@
+[project]
+name = "cqrs-event-sourcing"
+version = "0.1.0"
+description = "Practice 015: CQRS & Event Sourcing with Redpanda"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "aiokafka>=0.13.0",
+    "pydantic>=2.10.0",
+]
