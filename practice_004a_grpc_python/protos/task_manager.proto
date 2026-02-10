@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package taskmanager;
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum TaskStatus {
+    TASK_STATUS_UNSPECIFIED = 0;
+    TASK_STATUS_TODO        = 1;
+    TASK_STATUS_IN_PROGRESS = 2;
+    TASK_STATUS_DONE        = 3;
+}
+
+enum TaskEventType {
+    TASK_EVENT_TYPE_UNSPECIFIED = 0;
+    TASK_EVENT_TYPE_CREATED     = 1;
+    TASK_EVENT_TYPE_UPDATED     = 2;
+    TASK_EVENT_TYPE_DELETED     = 3;
+}
+
+// ──────────────────────────────────────────────
+// Messages
+// ──────────────────────────────────────────────
+
+message Task {
+    string     id          = 1;
+    string     title       = 2;
+    string     description = 3;
+    TaskStatus status      = 4;
+    string     created_at  = 5;  // ISO-8601 timestamp
+    string     updated_at  = 6;  // ISO-8601 timestamp
+}
+
+// ── Requests / Responses ─────────────────────
+
+message CreateTaskRequest {
+    string     title       = 1;
+    string     description = 2;
+}
+
+message CreateTaskResponse {
+    Task task = 1;
+}
+
+message GetTaskRequest {
+    string id = 1;
+}
+
+message GetTaskResponse {
+    Task task = 1;
+}
+
+message UpdateTaskRequest {
+    string     id          = 1;
+    string     title       = 2;  // empty string = no change
+    string     description = 3;  // empty string = no change
+    TaskStatus status      = 4;  // UNSPECIFIED = no change
+}
+
+message UpdateTaskResponse {
+    Task task = 1;
+}
+
+message DeleteTaskRequest {
+    string id = 1;
+}
+
+message DeleteTaskResponse {
+    Task task = 1;  // returns the deleted task as confirmation
+}
+
+message WatchTasksRequest {
+    // empty — client subscribes to all task events
+}
+
+message TaskEvent {
+    TaskEventType event_type = 1;
+    Task          task       = 2;
+}
+
+// ──────────────────────────────────────────────
+// Service
+// ──────────────────────────────────────────────
+
+service TaskManager {
+    // Unary RPCs — CRUD
+    rpc CreateTask (CreateTaskRequest)  returns (CreateTaskResponse);
+    rpc GetTask    (GetTaskRequest)     returns (GetTaskResponse);
+    rpc UpdateTask (UpdateTaskRequest)  returns (UpdateTaskResponse);
+    rpc DeleteTask (DeleteTaskRequest)  returns (DeleteTaskResponse);
+
+    // Server streaming — real-time task event feed
+    rpc WatchTasks (WatchTasksRequest)  returns (stream TaskEvent);
+}
