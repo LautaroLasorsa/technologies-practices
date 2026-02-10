@@ -102,15 +102,7 @@ absl::StatusOr<LogEntry> parse_log_line(absl::string_view line) {
   // Returning an absl::Status error also just works.
   // The compiler won't let you accidentally ignore the error.
 
-  if (int(line.size()) == 0)
-    return absl::InvalidArgumentError("empty line");
-  auto parts =
-      std::vector<std::string>(absl::StrSplit(line, absl::MaxSplits(' ', 3)));
-  if (parts.size() < 4)
-    return absl::InvalidArgumentError(
-        absl::StrCat("malformed log line, expected >=4 fields, got ",
-                     parts.size(), " : \"", line, "\""));
-  return LogEntry{parts[0], parts[1], parts[2], parts[3]};
+  return absl::InvalidArgumentError("not implemented");
 }
 
 // ─── Exercise 2: Load and parse a "file" (simulated) ─────────────────────────
@@ -159,17 +151,7 @@ load_and_parse(absl::string_view filename) {
   // Note: *contents dereferences the StatusOr to get the string.
   // This is safe because we checked .ok() first.
 
-  auto contents = load_file(filename);
-  if (!contents.ok())
-    return contents.status();
-  std::vector<LogEntry> entries;
-  for (auto line : absl::StrSplit(*contents, '\n')) {
-    auto entry = parse_log_line(line);
-    if (entry.ok()) {
-      entries.push_back(std::move(*entry));
-    }
-  }
-  return entries;
+  return absl::InternalError("not implemented");
 }
 
 // ─── Exercise 3: Status with rich error information ──────────────────────────
@@ -199,20 +181,7 @@ absl::StatusOr<LogEntry> find_first_error(const std::vector<LogEntry> &entries,
   // In gRPC, these codes get transmitted over the wire -- choosing
   // correctly matters.
 
-  if (entries.size() == 0)
-    return absl::FailedPreconditionError("log database is empty");
-  bool service_match = false;
-  for (const auto &entry : entries) {
-    if (entry.service == service) {
-      service_match = true;
-      if (entry.level == "ERROR")
-        return entry;
-    }
-  }
-  if (!service_match) {
-    return absl::NotFoundError(absl::StrCat("no logs for service: ", service));
-  }
-  return absl::NotFoundError(absl::StrCat("no errors for service: ", service));
+  return absl::InternalError("not implemented");
 }
 
 // ─── Exercise 4: Consuming StatusOr results ──────────────────────────────────
@@ -243,11 +212,6 @@ void demonstrate_statusor_usage(absl::StatusOr<LogEntry> result) {
   //
   // Implement all four and print the results.
 
-  if (result.ok()) {
-    std::cout << "  Value: " << *result << "\n";
-  } else {
-    std::cout << "  Error: " << result.status() << "\n";
-  }
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────

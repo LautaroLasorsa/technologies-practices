@@ -65,10 +65,8 @@ void print_section(const std::string &title) {
 
 template <typename... Args> void print_all(const Args &...args) {
   // TODO(human): Replace this stub with a fold expression.
-  // See hints above.
-  std::cout << "   ";
-  ((std::cout << args << ", "), ...);
-  std::cout << " \n";
+  // See hints above. Use (expr, ...) to expand for each arg in the pack.
+  std::cout << "  (not implemented)\n";
 }
 
 // ─── Exercise 2: Fold expression for sum/product/all/any ─────────────────────
@@ -84,7 +82,8 @@ template <typename... Args> void print_all(const Args &...args) {
 
 template <typename... Args> auto sum_all(Args... args) {
   // TODO(human): return (args + ...);
-  return (args + ...);
+  // Unary right fold: arg1 + (arg2 + (arg3 + ...))
+  return 0;
 }
 
 // TODO(human): Implement all_true using a fold expression.
@@ -93,7 +92,8 @@ template <typename... Args> auto sum_all(Args... args) {
 
 template <typename... Args> bool all_true(Args... args) {
   // TODO(human): return (args && ...);
-  return (args && ...);
+  // Unary right fold with &&: true only if ALL args are truthy.
+  return false;
 }
 
 // TODO(human): Implement any_true using a fold expression.
@@ -101,7 +101,8 @@ template <typename... Args> bool all_true(Args... args) {
 
 template <typename... Args> bool any_true(Args... args) {
   // TODO(human): return (args || ...);
-  return (args || ...);
+  // Unary right fold with ||: true if ANY arg is truthy.
+  return false;
 }
 
 // ─── Exercise 3: Type-aware serializer with if-constexpr ─────────────────────
@@ -140,17 +141,13 @@ template <typename... Args> bool any_true(Args... args) {
 template <typename T> std::string serialize(const T &value) {
   // TODO(human): Implement with if-constexpr. See hints above.
   // Be careful about the order: check bool before integral!
-  if constexpr (std::is_same_v<T, bool>) {
-    return value ? "bool:true" : "bool:false";
-  } else if constexpr (std::is_integral_v<T>) {
-    return absl::StrCat("int:", value);
-  } else if constexpr (std::is_floating_point_v<T>) {
-    return absl::StrCat("float:", value);
-  } else if constexpr (std::is_same_v<T, std::string>) {
-    return absl::StrCat("str:\"", value, "\"");
-  } else {
-    static_assert(sizeof(T) == 0, "Unsupported type for serialize");
-  }
+  //
+  // Use std::is_same_v<T, bool>, std::is_integral_v<T>,
+  // std::is_floating_point_v<T>, std::is_same_v<T, std::string>
+  // in if-constexpr branches. The false branches are discarded
+  // at compile time -- they don't even need to be valid code for T.
+  (void)value;
+  return "not_implemented";
 }
 
 // ─── Exercise 4: Variadic serialize_all combining folds + if-constexpr ───────
@@ -174,10 +171,11 @@ template <typename T> std::string serialize(const T &value) {
 // at compile time with zero runtime overhead.
 
 template <typename... Args> std::string serialize_all(const Args &...args) {
-  // TODO(human): Implement. See hints above.
-  std::string result, sep;
-  ((absl::StrAppend(&result, sep, serialize(args)), sep = ", "), ...);
-  return result;
+  // TODO(human): Implement using a fold expression that calls serialize()
+  // on each arg and concatenates results with ", " separator.
+  // See hints above. This combines fold expressions + if-constexpr.
+  (void)sizeof...(args);
+  return "not_implemented";
 }
 
 // ─── Exercise 5: Compile-time size calculator ────────────────────────────────
@@ -186,29 +184,16 @@ template <typename... Args> std::string serialize_all(const Args &...args) {
 // This is useful for pre-allocating buffers.
 
 template <typename T> constexpr size_t serialized_size_hint() {
-  // TODO(human): Return an estimated serialized size for each type.
-  //
-  // if constexpr (std::is_same_v<T, int>) {
-  //     return 4 + 11;  // "int:" + max int digits
-  // } else if constexpr (std::is_same_v<T, double>) {
-  //     return 6 + 20;  // "float:" + max double digits
-  // } else if constexpr (std::is_same_v<T, std::string>) {
-  //     return 6 + 64;  // "str:\"" + estimated max length + "\""
-  // } else {
-  //     return 32;  // fallback estimate
-  // }
+  // TODO(human): Return an estimated serialized size for each type
+  // using if-constexpr. Example sizes:
+  //   int: 4 + 11 (prefix + max digits)
+  //   double: 6 + 20 (prefix + max digits)
+  //   std::string: 6 + 64 (prefix + estimated max length)
+  //   fallback: 32
   //
   // Note: constexpr means this is evaluated at compile time.
   // You can use it as a template parameter or array size!
-  if constexpr (std::is_same_v<T, int>) {
-    return 15;
-  } else if constexpr (std::is_same_v<T, double>) {
-    return 26;
-  } else if constexpr (std::is_same_v<T, std::string>) {
-    return 70;
-  } else {
-    return 32;
-  }
+  return 32;
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────

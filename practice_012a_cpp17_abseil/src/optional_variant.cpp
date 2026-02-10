@@ -108,14 +108,7 @@ std::optional<LogEntry> try_parse_log(const std::string &line) {
   // Key insight: returning a LogEntry from this function automatically wraps
   // it in std::optional -- no explicit std::optional<LogEntry>{entry} needed.
 
-  auto splited_line_base = absl::StrSplit(line, absl::MaxSplits(' ', 3));
-  auto splited_line = std::vector<std::string>(splited_line_base.begin(),
-                                               splited_line_base.end());
-  if (splited_line.size() < 4) {
-    return std::nullopt;
-  }
-  return LogEntry{splited_line[0], splited_line[1], splited_line[2],
-                  splited_line[3]};
+  return std::nullopt;
 }
 
 // ─── Exercise 2: Using std::optional results ─────────────────────────────────
@@ -143,15 +136,7 @@ parse_all_logs(const std::vector<std::string> &raw_lines) {
   //
   // Return the vector of successfully parsed entries.
 
-  std::vector<LogEntry> parsed;
-  for (const auto &line : raw_lines) {
-    if (auto entry = try_parse_log(line)) {
-      parsed.push_back(std::move(entry.value()));
-    } else {
-      std::cout << "SKIP: malformed line: " << line << "\n";
-    }
-  }
-  return parsed;
+  return {};
 }
 
 // ─── Exercise 3: std::variant & the overloaded visitor ───────────────────────
@@ -178,16 +163,7 @@ std::string format_log_value(const LogValue &value) {
   // The overloaded struct (defined above) makes this work by combining
   // multiple lambdas into one callable object.
 
-  return std::visit(overloaded{[](int i) -> std::string {
-                                 return "int: " + std::to_string(i);
-                               },
-                               [](double d) -> std::string {
-                                 return "float : " + std::to_string(d);
-                               },
-                               [](const std::string &s) -> std::string {
-                                 return "str:\"" + s + "\"";
-                               }},
-                    value);
+  return {};
 }
 
 // ─── Exercise 4: Variant-based log severity with behavior ────────────────────
@@ -224,22 +200,7 @@ std::string describe_payload(const SeverityPayload &payload) {
   //   "ERROR E_CONN_REFUSED: at line 42"
   //   "METRIC latency_ms=42.5ms"
 
-  return std::visit(overloaded{
-                        [](const DebugInfo &di) -> std::string {
-                          return "DEBUG [" + di.module +
-                                 "] verbosity=" + std::to_string(di.verbosity);
-                        },
-                        [](const ErrorInfo &ei) -> std::string {
-                          return "ERROR " + ei.error_code + " : " +
-                                 ei.stack_trace;
-                        },
-                        [](const MetricInfo &mi) -> std::string {
-                          return "METRIC " + mi.name + "=" +
-                                 std::to_string(mi.value) + mi.unit;
-                        },
-
-                    },
-                    payload);
+  return {};
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────

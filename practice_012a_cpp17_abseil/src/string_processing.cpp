@@ -113,13 +113,7 @@ ServiceMetadata parse_metadata(const std::string &line) {
   //      std::vector<std::string> or iterable as absl::string_view.
   //      The string_view version avoids allocations -- try both!
 
-  auto pipe_split = std::vector<std::string>(absl::StrSplit(line, '|'));
-  auto sm = ServiceMetadata{pipe_split[0], pipe_split[1], pipe_split[2], {}};
-  for (absl::string_view item : absl::StrSplit(pipe_split[3], ',')) {
-    auto kv = std::vector<std::string>(absl::StrSplit(item, '='));
-    sm.config[kv[0]] = kv[1];
-  }
-  return sm;
+  return {};
 }
 
 // ─── Exercise 2: Build a report with absl::StrJoin ───────────────────────────
@@ -151,14 +145,7 @@ std::string build_health_report(const std::vector<ServiceHealth> &data) {
   //
   // The formatter signature is: void(std::string* out, const Element& elem)
   // You append to `out` -- StrJoin handles the separators.
-  auto formatter = [](std::string *out, const ServiceHealth &h) {
-    absl::StrAppendFormat(out,
-                          "   %-15s: %-8s (uptime: %3d%%, latency: %5.1fms)",
-                          h.name, h.status, h.uptime_pct, h.avg_latency_ms);
-  };
-
-  return absl::StrCat("=== Health report ===\n",
-                      absl::StrJoin(data, "\n", formatter), "\n");
+  return {};
 }
 
 // ─── Exercise 3: Efficient concatenation with absl::StrCat ───────────────────
@@ -190,8 +177,7 @@ std::string build_log_line(absl::string_view timestamp, absl::string_view level,
   // Key insight: StrCat accepts any "AlphaNum" type -- strings, ints, floats
   // are all converted efficiently without intermediate std::to_string calls.
 
-  return absl::StrCat("[", timestamp, "] ", level, " ", service,
-                      " req=", request_id, " (", duration_ms, "ms): ", message);
+  return {};
 }
 
 // ─── Exercise 4: String view as zero-copy reference ──────────────────────────
@@ -211,7 +197,7 @@ bool starts_with_service(absl::string_view log_line, absl::string_view prefix) {
   // Note: absl::ConsumePrefix(&sv, prefix) returns true AND advances sv
   // past the prefix -- useful for parsing.
 
-  return absl::StartsWith(log_line, prefix);
+  return false;
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────

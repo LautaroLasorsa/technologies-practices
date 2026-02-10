@@ -85,9 +85,7 @@ LogEntry parse_log_line(const std::string &line) {
   // Pattern:
   //   auto [a, b, c, d] = some_tuple_returning_function();
   //   return LogEntry{a, b, c, d};
-
-  auto [t, l, s, m] = split_log_line(line);
-  return {t, l, s, m};
+  return {};
 }
 
 // ─── Exercise 2: Iterate a map with structured bindings ──────────────────────
@@ -107,24 +105,6 @@ void count_errors_by_service(const std::vector<LogEntry> &entries) {
   //
   // This is straightforward -- the point is practicing the syntax
   // in a non-CP context (string keys, real data).
-
-  std::vector<std::string> errors;
-  for (const auto &log_entry : entries) {
-    if (log_entry.level == "ERROR") {
-      errors.push_back(log_entry.service);
-    }
-  }
-  std::sort(errors.begin(), errors.end());
-  int error_count = 0;
-  for (int i = 0; i < int(errors.size()); i++) {
-    if (i > 0 and errors[i] != errors[i - 1]) {
-      printf("%s : %d errors\n", errors[i - 1].c_str(), error_count);
-      error_count = 0;
-    }
-    error_count++;
-  }
-  if (error_count > 0)
-    printf("%s : %d errors\n", errors.back().c_str(), error_count);
 }
 
 // ─── Exercise 3: if-with-initializer ─────────────────────────────────────────
@@ -151,11 +131,6 @@ void lookup_service_config(
   // Bonus: also try the same pattern with a switch-with-initializer:
   //   switch (auto len = service.size(); len) { case 0: ...; default: ...; }
 
-  if (auto it = config.find(service); it != config.end()) {
-    std::cout << "Config for " << service << ": " << it->second << "\n";
-  } else {
-    std::cout << "No config found for " << service << ", using defaults\n";
-  }
 }
 
 // ─── Exercise 4: Structured bindings with custom struct ──────────────────────
@@ -180,15 +155,7 @@ QueryResult search_logs(const std::vector<LogEntry> &entries,
   //                - first_match: the message of the first matching entry
   //                  (or "" if none found)
 
-  int first_match = -1, match_count = 0;
-  for (int i = int(entries.size()) - 1; i >= 0; i--) {
-    if (entries[i].message.find(keyword) != std::string::npos) {
-      match_count++;
-      first_match = i;
-    }
-  }
-  return {(first_match != -1), match_count,
-          (first_match == -1) ? "" : entries[first_match].message};
+  return {};
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────

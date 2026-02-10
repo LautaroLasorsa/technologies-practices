@@ -120,14 +120,6 @@ void exercise_basic_flat_hash_map(const std::vector<LogEntry> &logs) {
   // Key insight: flat_hash_map has the SAME API as std::unordered_map.
   // The difference is purely in performance, not interface.
 
-  absl::flat_hash_map<std::string, LogEntry> log_index;
-  for (int i = 0; i < int(logs.size()); i++) {
-    log_index[absl::StrCat("log_", i)] = logs[i];
-  }
-  if (auto it = log_index.find("log_0"); it != log_index.end()) {
-    std::cout << "  Found: " << it->second << "\n";
-  }
-  std::cout << log_index.size() << "\n";
 }
 
 // ─── Exercise 2: Aggregate counts by level ───────────────────────────────────
@@ -149,13 +141,6 @@ void exercise_aggregate_by_level(const std::vector<LogEntry> &logs) {
   //        std::cout << "  " << level << ": " << count << "\n";
   //    }
 
-  absl::flat_hash_map<std::string, int> level_counts;
-  for (const auto &log : logs) {
-    level_counts[log.level]++;
-  }
-  for (const auto &[level, count] : level_counts) {
-    std::cout << absl::StrFormat("   %-10s: %3d\n", level, count);
-  }
 }
 
 // ─── Exercise 3: Custom hashing with absl::Hash ─────────────────────────────
@@ -175,11 +160,8 @@ struct ServiceKey {
 
   // TODO(human): Implement AbslHashValue to make ServiceKey hashable.
   //
-  // Pattern:
-  //   template <typename H>
-  //   friend H AbslHashValue(H h, const ServiceKey& key) {
-  //       return H::combine(std::move(h), key.name, key.environment);
-  //   }
+  // Replace the placeholder below with a proper multi-field hash:
+  //   return H::combine(std::move(h), key.name, key.environment);
   //
   // H::combine hashes multiple fields together. Abseil handles the
   // details (mixing, avalanche, etc.) -- you just list the fields.
@@ -187,7 +169,9 @@ struct ServiceKey {
   // This is analogous to deriving Hash in Rust:
   //   #[derive(Hash)] struct ServiceKey { name: String, env: String }
   template <typename H> friend H AbslHashValue(H h, const ServiceKey &key) {
-    return H::combine(std::move(h), key.name, key.environment);
+    // Placeholder: hashes only the name (wrong! collisions for same-name
+    // different-env keys). Fix this to combine BOTH fields.
+    return H::combine(std::move(h), key.name);
   }
 };
 
@@ -206,12 +190,6 @@ void exercise_custom_hash(const std::vector<LogEntry> &logs) {
   //                  << ": " << count << "\n";
   //    }
 
-  absl::flat_hash_map<ServiceKey, int> clogs;
-  for (const auto &entry : logs)
-    clogs[ServiceKey{entry.service, "production"}]++;
-  for (const auto &[key, count] : clogs)
-    printf("   %s / %s : %d \n", key.name.c_str(), key.environment.c_str(),
-           count);
 }
 
 // ─── Exercise 4: Benchmark flat_hash_map vs unordered_map ────────────────────
@@ -262,19 +240,6 @@ void exercise_benchmark(int n) {
   //
   // Expected: flat_hash_map should be noticeably faster, especially
   // for lookups (due to cache-friendly open addressing).
-  std::vector<std::string> keys;
-  for (int i = 0; i < n; i++)
-    keys.push_back(absl::StrCat("key_", i));
-  std::unordered_map<std::string, int> um;
-  absl::flat_hash_map<std::string, int> fm;
-
-  auto [umi, umf] = benchmark(keys, um);
-  auto [fmi, fmf] = benchmark(keys, fm);
-
-  printf("unordered_map: insert : %5.3f ms find: %5.3f ms\n", umi, umf);
-  printf("flat_hash_map: insert : %5.3f ms find: %5.3f ms\n", fmi, fmf);
-  printf("speed_up     : insert : %5.3f x  find: %5.3f x \n", umi / fmi,
-         umf / fmf);
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
