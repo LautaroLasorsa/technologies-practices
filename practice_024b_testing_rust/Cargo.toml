@@ -1,0 +1,13 @@
+[package]
+name = "cache-service"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+
+[dependencies]
+thiserror = "2.0"
+tokio = { version = "1", features = ["full", "test-util"] }
+
+[dev-dependencies]
+mockall = "0.13"
+proptest = "1"
