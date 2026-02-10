@@ -1,0 +1,9 @@
+[project]
+name = "advanced-sql"
+version = "0.1.0"
+description = "Advanced SQL — Window Functions, CTEs & Query Optimization with PostgreSQL"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "psycopg[binary]>=3.2.0",
+]

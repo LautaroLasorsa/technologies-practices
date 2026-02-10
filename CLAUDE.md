@@ -65,6 +65,9 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 021a | Solana Smart Contracts: Anchor & Accounts Model | Rust, Anchor, LiteSVM (WSL) | `not-started` |
 | 021b | Solana Tokens: SPL, Escrow & PDA Vaults | Rust, Anchor, LiteSVM (WSL) | `not-started` |
 | 022 | Concurrent Data Structures: moodycamel & Lock-Free Patterns | C++17, moodycamel, CMake | `not-started` |
+| 023 | Advanced SQL: Window Functions, CTEs & Query Optimization | Python, PostgreSQL, Docker | `not-started` |
+| 024a | Testing Patterns: Python | Python (pytest, Hypothesis) | `not-started` |
+| 024b | Testing Patterns: Rust | Rust (mockall, proptest) | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
