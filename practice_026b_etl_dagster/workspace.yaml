@@ -1,0 +1,11 @@
+# Dagster workspace configuration
+# This tells Dagster where to find your code (Definitions object).
+#
+# COMPARISON WITH AIRFLOW:
+# - Airflow scans a `dags/` folder for Python files containing DAG objects.
+# - Dagster loads a single Definitions object from a Python file.
+#   This is more explicit: you control exactly what's registered.
+
+load_from:
+  - python_file:
+      relative_path: dagster_project/definitions.py

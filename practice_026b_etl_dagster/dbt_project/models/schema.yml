@@ -1,0 +1,82 @@
+# dbt Schema -- model descriptions and tests
+#
+# WHAT IS schema.yml?
+#   This file provides metadata about dbt models:
+#   1. Descriptions (shown in dbt docs and Dagster's asset catalog)
+#   2. Column descriptions
+#   3. Tests (assertions that run after the model is built)
+#
+# dbt TESTS:
+#   dbt has built-in tests: unique, not_null, accepted_values, relationships.
+#   You can also write custom tests as SQL queries.
+#   When integrated with Dagster, test results appear as asset check results
+#   in the Dagit UI -- providing data quality monitoring out of the box.
+#
+# COMPARISON WITH AIRFLOW:
+#   In Airflow, data quality testing requires:
+#   - A separate task (SQLCheckOperator or Great Expectations operator)
+#   - Manual wiring: quality_check_task.set_upstream(transform_task)
+#   - Separate dashboard for test results (Great Expectations data docs)
+#
+#   In Dagster + dbt, tests run automatically when you `dbt build` and results
+#   appear in the same asset graph. No separate tooling needed.
+
+version: 2
+
+models:
+  - name: stg_weather_readings
+    description: >
+      Staged weather readings with standardized city names, explicit type casts,
+      and basic sensor validation. Invalid readings (extreme temperatures, impossible
+      humidity, negative wind) are filtered out. Materialized as a view for low cost.
+    columns:
+      - name: id
+        description: "Primary key from the raw table"
+        tests:
+          - unique
+          - not_null
+      - name: city
+        description: "City name, trimmed and title-cased"
+        tests:
+          - not_null
+      - name: temperature_c
+        description: "Temperature in Celsius, validated to [-60, 60] range"
+        tests:
+          - not_null
+      - name: humidity_pct
+        description: "Relative humidity percentage, validated to [0, 100] range"
+        tests:
+          - not_null
+      - name: wind_speed_kmh
+        description: "Wind speed in km/h, validated to be non-negative"
+        tests:
+          - not_null
+      - name: reading_date
+        description: "Date of the weather reading"
+        tests:
+          - not_null
+      - name: temperature_category
+        description: "Computed category: freezing, cold, mild, warm, or hot"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['freezing', 'cold', 'mild', 'warm', 'hot']
+
+  - name: daily_weather_summary
+    description: >
+      Daily weather statistics aggregated per city. Provides average, min, and max
+      temperature, average humidity, max wind speed, and reading count for each
+      city-date combination. Materialized as a table for query performance.
+    columns:
+      - name: city
+        description: "City name"
+        tests:
+          - not_null
+      - name: reading_date
+        description: "Date of aggregation"
+        tests:
+          - not_null
+      - name: avg_temperature
+        description: "Average temperature for the city on this date"
+      - name: reading_count
+        description: "Number of readings aggregated"

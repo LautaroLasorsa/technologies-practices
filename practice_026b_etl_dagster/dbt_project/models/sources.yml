@@ -1,0 +1,42 @@
+# dbt Sources -- declare external tables that dbt reads from
+#
+# WHAT ARE dbt SOURCES?
+#   Sources are tables that exist OUTSIDE dbt -- they're not created by dbt models.
+#   In our pipeline, the raw_weather_readings table is created by a Python asset
+#   (weather_source in phase4_dbt_assets.py) and populated by generate_weather.py.
+#
+#   By declaring it as a source, dbt knows:
+#   1. This table exists and dbt models can SELECT from it
+#   2. It's NOT managed by dbt (won't be dropped or recreated)
+#   3. It's the entry point for the dbt portion of the pipeline
+#
+# HOW THIS CONNECTS TO DAGSTER:
+#   When Dagster reads the dbt manifest, it sees that dbt models depend on
+#   this source. Dagster maps the source to the upstream Python asset
+#   (weather_source) to build the full lineage graph:
+#       weather_source (Python) -> stg_weather_readings (dbt) -> daily_weather_summary (dbt)
+
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw weather data loaded by Python assets (not managed by dbt)"
+    schema: public
+    tables:
+      - name: raw_weather_readings
+        description: "Raw weather sensor readings with city, temperature, humidity, wind, and date"
+        columns:
+          - name: id
+            description: "Auto-incrementing primary key"
+          - name: city
+            description: "City name where the reading was taken"
+          - name: temperature_c
+            description: "Temperature in Celsius"
+          - name: humidity_pct
+            description: "Relative humidity as percentage (0-100)"
+          - name: wind_speed_kmh
+            description: "Wind speed in km/h"
+          - name: reading_date
+            description: "Date of the weather reading"
+          - name: recorded_at
+            description: "Timestamp when the reading was inserted into the database"
