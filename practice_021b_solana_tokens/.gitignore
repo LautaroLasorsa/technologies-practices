@@ -1,0 +1,26 @@
+# Anchor / Solana
+target/
+node_modules/
+.anchor/
+test-ledger/
+deploy/
+
+# Build artifacts
+*.so
+*.bpf
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keys (never commit keypairs)
+*.json
+!package.json
+!tsconfig.json
+!Anchor.toml

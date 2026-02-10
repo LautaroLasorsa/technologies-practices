@@ -1,0 +1,21 @@
+services:
+  dev:
+    build: .
+    volumes:
+      - .:/workspace
+      - cargo-registry:/root/.cargo/registry
+      - cargo-git:/root/.cargo/git
+      - target-cache:/workspace/target
+      - solana-cache:/root/.local/share/solana
+    ports:
+      - "8899:8899"   # Solana JSON-RPC
+      - "8900:8900"   # Solana WebSocket
+    stdin_open: true
+    tty: true
+    command: sleep infinity
+
+volumes:
+  cargo-registry:
+  cargo-git:
+  target-cache:
+  solana-cache:
