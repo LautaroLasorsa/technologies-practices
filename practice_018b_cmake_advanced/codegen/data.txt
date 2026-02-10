@@ -1,0 +1,15 @@
+Practice 018b: Advanced CMake
+==============================
+
+This text was embedded into the C++ binary at BUILD TIME
+using add_custom_command() and a CMake script.
+
+Key CMake features demonstrated:
+  1. CMake Presets (CMakePresets.json)
+  2. Toolchain files (cross-compilation)
+  3. Custom Find modules (FindMyMath.cmake)
+  4. CTest (labels, fixtures, properties)
+  5. Custom commands (this file!)
+  6. CPack (packaging)
+
+If you can read this at runtime, the code generation pipeline works.

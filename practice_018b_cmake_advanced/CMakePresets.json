@@ -1,0 +1,132 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+
+    "configurePresets": [
+        {
+            "name": "base",
+            "description": "Base preset with shared settings — not directly usable (hidden)",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/_install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "17",
+                "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+                "CMAKE_CXX_EXTENSIONS": "OFF",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+
+        {
+            "name": "msvc-debug",
+            "displayName": "MSVC Debug",
+            "description": "Visual Studio 2022 — Debug build with assertions and debug info",
+            "inherits": "base",
+            "generator": "Visual Studio 17 2022",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+
+        {
+            "name": "msvc-release",
+            "displayName": "MSVC Release",
+            "description": "Visual Studio 2022 — Release build with optimizations",
+            "inherits": "base",
+            "generator": "Visual Studio 17 2022",
+            "architecture": {
+                "value": "x64",
+                "strategy": "set"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+
+        {
+            "name": "mingw-release",
+            "displayName": "MinGW Release",
+            "description": "MinGW GCC — Release build via toolchain file (cross-compilation demo)",
+            "inherits": "base",
+            "generator": "MinGW Makefiles",
+            "toolchainFile": "${sourceDir}/cmake/toolchain-mingw.cmake",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ],
+
+    "buildPresets": [
+        {
+            "name": "msvc-debug",
+            "displayName": "Build MSVC Debug",
+            "description": "Build all targets with MSVC in Debug configuration",
+            "configurePreset": "msvc-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "msvc-release",
+            "displayName": "Build MSVC Release",
+            "description": "Build all targets with MSVC in Release configuration",
+            "configurePreset": "msvc-release",
+            "configuration": "Release"
+        },
+        {
+            "name": "mingw-release",
+            "displayName": "Build MinGW Release",
+            "description": "Build all targets with MinGW GCC in Release configuration",
+            "configurePreset": "mingw-release"
+        }
+    ],
+
+    "testPresets": [
+        {
+            "name": "msvc-debug",
+            "displayName": "Test MSVC Debug",
+            "description": "Run all CTest tests for MSVC Debug build",
+            "configurePreset": "msvc-debug",
+            "configuration": "Debug",
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "default"
+            }
+        },
+        {
+            "name": "msvc-release",
+            "displayName": "Test MSVC Release",
+            "description": "Run all CTest tests for MSVC Release build",
+            "configurePreset": "msvc-release",
+            "configuration": "Release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "mingw-release",
+            "displayName": "Test MinGW Release",
+            "description": "Run all CTest tests for MinGW Release build",
+            "configurePreset": "mingw-release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ],
+
+    "packagePresets": [
+        {
+            "name": "msvc-release",
+            "displayName": "Package MSVC Release",
+            "description": "Create ZIP package from MSVC Release build",
+            "configurePreset": "msvc-release",
+            "generators": ["ZIP"]
+        }
+    ]
+}

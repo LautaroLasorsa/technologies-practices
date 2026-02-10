@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  MyMathConfig.cmake — entry point for find_package(MyMath)                 ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+#
+# This file is processed by configure_package_config_file() at install time.
+# @PACKAGE_INIT@ expands to helper macros that handle relocatable install paths.
+#
+# After installation, other projects can consume this library:
+#   find_package(MyMath 1.0 REQUIRED)
+#   target_link_libraries(my_app PRIVATE MyMath::mymath)
+
+include("${CMAKE_CURRENT_LIST_DIR}/MyMathTargets.cmake")
+
+check_required_components(MyMath)
