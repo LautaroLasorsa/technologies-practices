@@ -1,0 +1,106 @@
+# Backend Deployment
+# -----------------
+# Deploys the backend API with:
+#   - Liveness probe  (restart if deadlocked)
+#   - Readiness probe  (only route traffic when ready)
+#   - Resource requests/limits (scheduler placement + OOM protection)
+#   - Rolling update strategy (zero-downtime deploys)
+#
+# Docs:
+#   Probes:    https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+#   Resources: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+#   Strategy:  https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+
+  # TODO(human): Define the rolling update strategy.
+  #   - strategy type: RollingUpdate
+  #   - maxSurge: 1       (allow 1 extra pod during rollout)
+  #   - maxUnavailable: 0 (never drop below desired replica count)
+  #
+  # Hint: This goes under spec.strategy. The structure is:
+  #   strategy:
+  #     type: RollingUpdate
+  #     rollingUpdate:
+  #       maxSurge: ...
+  #       maxUnavailable: ...
+
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: backend:v1
+          imagePullPolicy: Never   # Use local minikube images
+          ports:
+            - containerPort: 8000
+          env:
+            - name: APP_VERSION
+              value: "v1"
+            - name: STARTUP_DELAY
+              value: "3"
+
+          # TODO(human): Define resource requests and limits.
+          #   requests:  128Mi memory, 100m CPU  (guaranteed minimum)
+          #   limits:    256Mi memory, 250m CPU  (hard ceiling)
+          #
+          # Hint: This goes under spec.containers[].resources:
+          #   resources:
+          #     requests:
+          #       memory: "..."
+          #       cpu: "..."
+          #     limits:
+          #       memory: "..."
+          #       cpu: "..."
+          #
+          # Why it matters:
+          #   - requests: scheduler uses these to decide which node fits the pod
+          #   - limits: kubelet kills/throttles the container if it exceeds these
+          #   - HPA REQUIRES requests to calculate utilization percentages
+
+          # TODO(human): Define the liveness probe.
+          #   - HTTP GET to /health on port 8000
+          #   - periodSeconds: 10
+          #   - failureThreshold: 3
+          #
+          # Hint:
+          #   livenessProbe:
+          #     httpGet:
+          #       path: ...
+          #       port: ...
+          #     periodSeconds: ...
+          #     failureThreshold: ...
+          #
+          # Key concept: If liveness fails 3 times in a row, K8s RESTARTS
+          # the container. Keep this probe simple — don't check dependencies.
+
+          # TODO(human): Define the readiness probe.
+          #   - HTTP GET to /ready on port 8000
+          #   - initialDelaySeconds: 5  (give the app time to start)
+          #   - periodSeconds: 5
+          #   - failureThreshold: 3
+          #
+          # Hint:
+          #   readinessProbe:
+          #     httpGet:
+          #       path: ...
+          #       port: ...
+          #     initialDelaySeconds: ...
+          #     periodSeconds: ...
+          #     failureThreshold: ...
+          #
+          # Key concept: If readiness fails, K8s REMOVES the pod from the
+          # Service's endpoint list — no traffic is routed to it. The pod
+          # stays running (not restarted). This is critical for rolling updates.

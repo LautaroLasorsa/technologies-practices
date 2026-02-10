@@ -1,0 +1,43 @@
+# Backend Service (ClusterIP)
+# ---------------------------
+# Exposes the backend pods INTERNALLY within the cluster.
+# Other pods (like the frontend) reach it via: http://backend-svc:8000
+#
+# ClusterIP is the default Service type. It assigns a virtual IP that
+# is only routable inside the cluster. CoreDNS creates a DNS record:
+#   backend-svc.default.svc.cluster.local -> <ClusterIP>
+#
+# Docs: https://kubernetes.io/docs/concepts/services-networking/service/#type-clusterip
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  labels:
+    app: backend
+spec:
+
+  # TODO(human): Define the service spec.
+  #
+  #   1. Set the type to ClusterIP (or omit it — ClusterIP is the default)
+  #   2. Define the selector to match backend pods (app: backend)
+  #   3. Map port 8000 (service) -> 8000 (targetPort on the pod)
+  #
+  # Hint:
+  #   type: ClusterIP
+  #   selector:
+  #     app: ...
+  #   ports:
+  #     - port: ...
+  #       targetPort: ...
+  #       protocol: TCP
+  #
+  # After applying, verify with:
+  #   kubectl get svc backend-svc
+  #   kubectl describe svc backend-svc   (check Endpoints lists pod IPs)
+  #
+  # Key concept: The selector matches pod LABELS, not deployment names.
+  # If a pod has label "app: backend" AND passes its readiness probe,
+  # it appears in this Service's Endpoints list and receives traffic.
+
+  {}  # <-- Remove this empty object when you add the spec fields

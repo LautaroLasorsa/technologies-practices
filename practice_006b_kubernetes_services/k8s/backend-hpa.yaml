@@ -1,0 +1,60 @@
+# Horizontal Pod Autoscaler (HPA) — Backend
+# -------------------------------------------
+# Automatically scales backend pods based on CPU utilization.
+#
+# How it works:
+#   1. metrics-server collects CPU/memory usage from kubelets every ~15s
+#   2. HPA controller queries metrics-server and computes:
+#        desiredReplicas = ceil( currentReplicas * (currentMetric / targetMetric) )
+#   3. If desiredReplicas != currentReplicas, HPA patches the Deployment's replicas
+#
+# Prerequisites:
+#   - metrics-server must be running: minikube addons enable metrics-server
+#   - Pods MUST have resource requests defined (HPA uses them as the denominator)
+#
+# Docs: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
+# API:  https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/horizontal-pod-autoscaler-v2/
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+spec:
+
+  # TODO(human): Define the HPA spec.
+  #
+  #   1. scaleTargetRef: point to the "backend" Deployment (apiVersion: apps/v1, kind: Deployment)
+  #   2. minReplicas: 2
+  #   3. maxReplicas: 8
+  #   4. metrics: target 50% average CPU utilization
+  #
+  # Hint:
+  #   scaleTargetRef:
+  #     apiVersion: apps/v1
+  #     kind: Deployment
+  #     name: backend
+  #   minReplicas: 2
+  #   maxReplicas: 8
+  #   metrics:
+  #     - type: Resource
+  #       resource:
+  #         name: cpu
+  #         target:
+  #           type: Utilization
+  #           averageUtilization: 50
+  #
+  # After applying, generate CPU load to observe scaling:
+  #   kubectl run load-gen --image=busybox --restart=Never -- \
+  #     /bin/sh -c "while true; do wget -q -O- http://backend-svc:8000/api/cpu-burn; done"
+  #
+  # Then watch:
+  #   kubectl get hpa -w         (TARGETS column shows current vs target)
+  #   kubectl get pods -w        (new pods appear as HPA scales up)
+  #
+  # Scale-down happens after ~5 minutes of low utilization (stabilization window).
+  #
+  # Key formula:
+  #   If you have 2 pods, each using 80% CPU (target is 50%):
+  #   desiredReplicas = ceil(2 * (80/50)) = ceil(3.2) = 4
+
+  {}  # <-- Remove this empty object when you add the spec fields

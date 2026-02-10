@@ -1,0 +1,68 @@
+# Frontend Deployment
+# ------------------
+# Deploys the frontend gateway with the same probe/resource/strategy
+# patterns as the backend. The frontend reaches the backend via
+# the BACKEND_URL env var, which points to the backend's ClusterIP service.
+#
+# Docs:
+#   Service discovery: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+
+  # TODO(human): Define the rolling update strategy.
+  #   - strategy type: RollingUpdate
+  #   - maxSurge: 1
+  #   - maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: frontend:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: APP_VERSION
+              value: "v1"
+            - name: BACKEND_URL
+              value: "http://backend-svc:8000"
+              # ^^^ This is Kubernetes service discovery in action.
+              # CoreDNS resolves "backend-svc" to the ClusterIP of
+              # the backend Service defined in backend-service.yaml.
+
+          # TODO(human): Define resource requests and limits.
+          #   requests:  64Mi memory, 50m CPU
+          #   limits:    128Mi memory, 150m CPU
+          #
+          # Note: frontend is lighter than backend (just proxying),
+          # so it gets smaller resource allocations.
+
+          # TODO(human): Define the liveness probe.
+          #   - HTTP GET to /health on port 8000
+          #   - periodSeconds: 10
+          #   - failureThreshold: 3
+
+          # TODO(human): Define the readiness probe.
+          #   - HTTP GET to /ready on port 8000
+          #   - initialDelaySeconds: 5
+          #   - periodSeconds: 5
+          #   - failureThreshold: 3
+          #
+          # Think about this: The frontend's /ready endpoint checks if
+          # the backend is reachable. What happens if the backend is
+          # temporarily down? The frontend becomes "not ready" and stops
+          # receiving traffic. Is this the right behavior?

@@ -1,0 +1,68 @@
+# Ingress (NGINX)
+# ---------------
+# Layer 7 (HTTP) routing rules that map URL paths to backend Services.
+# The NGINX Ingress Controller (enabled via `minikube addons enable ingress`)
+# watches Ingress resources and configures its internal NGINX accordingly.
+#
+# How it works:
+#   1. Client sends HTTP request to the minikube IP
+#   2. NGINX Ingress Controller receives it (it runs as a pod + NodePort)
+#   3. Ingress rules match the path and route to the correct Service
+#   4. Service forwards to a healthy pod
+#
+# This is analogous to an AWS ALB or GCP HTTP(S) Load Balancer — but
+# running inside the cluster as a pod.
+#
+# Docs: https://kubernetes.io/docs/concepts/services-networking/ingress/
+# NGINX Ingress: https://kubernetes.github.io/ingress-nginx/
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    # This annotation rewrites the URL path before forwarding.
+    # e.g., /api/items -> /api/items (no rewrite needed for /api prefix)
+    # But / -> / (frontend gets the request as-is)
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+
+  # TODO(human): Define the Ingress spec.
+  #
+  #   1. Set ingressClassName: nginx
+  #   2. Define rules for a single host (or omit host for any hostname):
+  #      - Path /api    -> backend-svc on port 8000  (pathType: Prefix)
+  #      - Path /       -> frontend-svc on port 8000 (pathType: Prefix)
+  #
+  # Hint:
+  #   ingressClassName: nginx
+  #   rules:
+  #     - http:
+  #         paths:
+  #           - path: /api
+  #             pathType: Prefix
+  #             backend:
+  #               service:
+  #                 name: ...
+  #                 port:
+  #                   number: ...
+  #           - path: /
+  #             pathType: Prefix
+  #             backend:
+  #               service:
+  #                 name: ...
+  #                 port:
+  #                   number: ...
+  #
+  # IMPORTANT: Order matters! Put /api BEFORE / so the more specific
+  # path matches first. With pathType: Prefix, "/" matches everything.
+  #
+  # After applying, test with:
+  #   curl http://$(minikube ip)/api/items   -> hits backend directly
+  #   curl http://$(minikube ip)/            -> hits frontend
+  #
+  # Key concept: Ingress operates at Layer 7 (HTTP). It can inspect
+  # paths, headers, and hostnames. NodePort/LoadBalancer operate at
+  # Layer 4 (TCP) — they just forward raw connections.
+
+  {}  # <-- Remove this empty object when you add the spec fields
