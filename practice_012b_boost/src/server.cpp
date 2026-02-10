@@ -65,16 +65,8 @@ private:
     // Docs:
     // https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/async_read_until.html
     // ====================================================================
-    boost::asio::async_read_until(
-        socket_, buffer_, '\n',
-        [self](boost::system::error_code ec, std::size_t length) {
-          if (!ec) {
-            self->handle_request(length);
-          } else {
-            std::cerr << "Read error: " << ec.message() << "\n";
-          }
-        });
     // --- YOUR CODE HERE ---
+    (void)self; // suppress unused warning until implemented
   }
 
   void handle_request(std::size_t length) {
@@ -138,13 +130,8 @@ private:
     // Docs:
     // https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/async_write.html
     // ====================================================================
-    boost::asio::async_write(socket_, boost::asio::buffer(response_),
-                             [self](boost::system::error_code ec, std::size_t) {
-                               if (ec) {
-                                 std::cerr << "Write error: " << ec.message()
-                                           << "\n";
-                               }
-                             });
+    // --- YOUR CODE HERE ---
+    (void)self; // suppress unused warning until implemented
   }
 
   tcp::socket socket_;
@@ -200,14 +187,7 @@ private:
     // https://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/basic_socket_acceptor/async_accept.html
     // ====================================================================
 
-    acceptor_.async_accept([this](boost::system::error_code ec,
-                                  tcp::socket socket) {
-      if (!ec) {
-        std::cout << "Client connected: " << socket.remote_endpoint() << "\n";
-        std::make_shared<Session>(std::move(socket), graph_)->start();
-      }
-      do_accept();
-    });
+    // --- YOUR CODE HERE ---
   }
 
   tcp::acceptor acceptor_;
@@ -248,13 +228,7 @@ void run_server(const Graph &graph, uint16_t port, int timeout_seconds) {
   // https://www.boost.org/doc/libs/release/doc/html/boost_asio/tutorial/tuttimer2.html
   // ========================================================================
 
-  boost::asio::steady_timer timer(io, std::chrono::seconds(timeout_seconds));
-  timer.async_wait([&io](boost::system::error_code ec) {
-    if (!ec) {
-      std::cout << "Server timeout -- shutting down\n";
-      io.stop();
-    }
-  });
+  // --- YOUR CODE HERE ---
 
   std::cout << "Server will shut down in " << timeout_seconds << " seconds.\n"
             << "Test with: echo '0' | nc localhost " << port << "\n";

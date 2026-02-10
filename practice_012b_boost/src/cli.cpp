@@ -37,37 +37,26 @@ std::optional<CliConfig> parse_cli(int argc, char *argv[]) {
 
   po::options_description desc("Graph Analysis Tool");
 
-  // TODO(human): Define options + parse CLI (see guidance below)
+  // TODO(human): Define options + parse CLI
+  //
+  // 1. Use desc.add_options() to register each CLI flag. Chain calls like:
+  //      desc.add_options()("help,h", "Produce help message");
+  //      desc.add_options()("vertices,v", po::value<int>(&config.num_vertices)->default_value(10), "...");
+  //    Add options for: help, vertices, edges, source, mode, port, output
+  //    (see the TODO block at the top of this function for the full list).
+  //
+  // 2. Create a po::variables_map, then:
+  //      po::store(po::parse_command_line(argc, argv, desc), vm);
+  //      po::notify(vm);
+  //    notify() applies default values and triggers any value-semantic callbacks.
+  //
+  // 3. Check vm.count("help") -- if set, print `desc` and return std::nullopt.
+  //
+  // Docs: https://www.boost.org/doc/libs/release/doc/html/program_options/tutorial.html
 
-  desc.add_options()("help,h", "Produce help message");
-  desc.add_options()("vertices,v",
-                     po::value<int>(&config.num_vertices)->default_value(10),
-                     "Number of vertices");
-  desc.add_options()("edges,e",
-                     po::value<int>(&config.num_edges)->default_value(20),
-                     "Number of edges");
-  desc.add_options()("source,s",
-                     po::value<int>(&config.source_vertex)->default_value(0),
-                     "Source vertex");
-  desc.add_options()("mode,m",
-                     po::value<std::string>(&config.mode)->default_value("all"),
-                     "Run mode - all, graph or server -");
-  desc.add_options()("port,p",
-                     po::value<uint16_t>(&config.port)->default_value(9090),
-                     "TCP server port");
-  desc.add_options()("output,o",
-                     po::value<std::string>(&config.output_file)
-                         ->default_value("dijkstra_results.txt"),
-                     "File to save the output");
+  // --- YOUR CODE HERE ---
+
   po::variables_map vm;
-
-  po::store(po::parse_command_line(argc, argv, desc), vm);
-  po::notify(vm);
-
-  if (vm.count("help")) {
-    std::cout << desc << "\n\n";
-    return std::nullopt;
-  }
 
   // ========================================================================
   // Validation (provided) -- ensures source vertex is in range

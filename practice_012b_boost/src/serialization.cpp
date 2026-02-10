@@ -30,9 +30,7 @@ void save_results(const DijkstraResult &result, const std::string &filename) {
   // https://www.boost.org/doc/libs/release/libs/serialization/doc/tutorial.html
   // ========================================================================
 
-  std::ofstream of(filename);
-  boost::archive::text_oarchive tof(of);
-  tof << result;
+  // --- YOUR CODE HERE ---
 }
 
 DijkstraResult load_results(const std::string &filename) {
@@ -53,9 +51,8 @@ DijkstraResult load_results(const std::string &filename) {
   // When called with a text_iarchive, operator& reads data.
   // This is why serialize() uses `ar &` instead of `ar <<` or `ar >>`.
   // ========================================================================
-  std::ifstream in(filename);
-  boost::archive::text_iarchive fin(in);
-  fin >> result;
+  // --- YOUR CODE HERE ---
+
   return result;
 }
 

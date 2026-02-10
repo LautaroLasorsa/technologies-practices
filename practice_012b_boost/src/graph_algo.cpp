@@ -83,10 +83,6 @@ public:
 
   // --- YOUR CODE HERE ---
 
-  template <typename G> void discover_vertex(Vertex v, const G &g) {
-    order_.push_back(static_cast<int>(v));
-  }
-
 private:
   std::vector<int> &order_;
 };
@@ -112,8 +108,6 @@ std::vector<int> run_bfs(const Graph &g, Vertex source) {
   // --- YOUR CODE HERE ---
 
   std::cout << "BFS discovery order from vertex " << source << ": ";
-  BfsDiscoveryRecorder bfsdr(discovery_order);
-  boost::breadth_first_search(g, source, boost::visitor(bfsdr));
   for (int v : discovery_order) {
     std::cout << v << " ";
   }
@@ -175,14 +169,6 @@ DijkstraResult run_dijkstra(const Graph &g, Vertex source) {
   // ========================================================================
 
   // --- YOUR CODE HERE ---
-
-  boost::dijkstra_shortest_paths(
-      g, source,
-      boost::predecessor_map(
-          boost::make_iterator_property_map(result.predecessors.begin(),
-                                            boost::get(boost::vertex_index, g)))
-          .distance_map(boost::make_iterator_property_map(
-              result.distances.begin(), boost::get(boost::vertex_index, g))));
 
   std::cout << "Dijkstra from vertex " << source << ":\n";
   for (int i = 0; i < n; ++i) {
