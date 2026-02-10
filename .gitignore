@@ -39,6 +39,7 @@ shared_db/
 # IDE / Editor
 .idea/
 .vscode/
+.cache/
 *.swp
 *.swo
 *~
