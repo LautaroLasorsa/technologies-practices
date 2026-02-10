@@ -101,4 +101,4 @@ Run from `practice_001_lmdb/rust_lmdb/`.
 
 ## State
 
-`completed`
+`not-started`

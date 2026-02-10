@@ -192,17 +192,17 @@ def store_embeddings(env: lmdb.Environment, words: list[str]) -> int:
     - The db handle must be passed to `env.begin(db=...)` OR to `txn.put(..., db=db)`
     - Remember: keys and values must be `bytes`, not `str`
     """
-    emb_db = env.open_db(b"embeddings")
-    words_stored = 0
-    with env.begin(write=True, db=emb_db) as txn:
-        try:
-            for word in words:
-                word_emb = generate_embedding(word)
-                txn.put(word.encode(), word_emb.tobytes())
-                words_stored += 1
-        except Exception:
-            return 0
-    return words_stored
+    # TODO(human): Implement the batch write logic here.
+    #
+    # Use env.open_db(b"embeddings") to get the named database handle.
+    # Then open a WRITE transaction with env.begin(write=True, db=...).
+    # Inside the transaction, loop over `words`:
+    #   - Call generate_embedding(word) to get the numpy vector
+    #   - Call serialize_embedding(vec) to get raw bytes
+    #   - Use txn.put(key_bytes, value_bytes) to store the pair
+    # The `with` block auto-commits on success, auto-aborts on exception.
+    # Return the count of words successfully stored.
+    pass
 
 
 def store_metadata(env: lmdb.Environment, word_count: int) -> None:

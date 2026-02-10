@@ -54,16 +54,16 @@ def benchmark_lmdb_reads(
 
     Then try both approaches and compare!
     """
-    sample = random.choices(words, k=n_reads)
-    emb_db = env.open_db(b"embeddings")
-
-    start = time.perf_counter()
-    for word in sample:
-        with env.begin(db=emb_db) as txn:
-            emb = txn.get(word.encode())
-            assert emb is not None
-            emb = np.frombuffer(emb)
-    return time.perf_counter() - start
+    # TODO(human): Implement the LMDB read benchmark here.
+    #
+    # 1. Use random.choices(words, k=n_reads) to pick random words to look up.
+    # 2. Open the 'embeddings' named database.
+    # 3. Start a timer with time.perf_counter().
+    # 4. For each word, open a read txn, call txn.get(word.encode()),
+    #    and deserialize with np.frombuffer(raw, dtype=np.float32).
+    #    Using one txn per read simulates real production access patterns.
+    # 5. Return elapsed time in seconds.
+    pass
 
 
 def benchmark_dict_reads(

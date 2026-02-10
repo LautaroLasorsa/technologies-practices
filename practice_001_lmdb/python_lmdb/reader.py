@@ -37,12 +37,13 @@ def get_embedding(env: lmdb.Environment, word: str) -> np.ndarray | None:
 
     Hint: txn.get() returns None if key doesn't exist — no exception.
     """
-    emb_db = env.open_db(EMBEDDINGS)
-    with env.begin(db=emb_db) as txn:
-        value = txn.get(word.encode())
-        if value is None:
-            return None
-        return deserialize_embedding(bytes(value))
+    # TODO(human): Implement single-key lookup here.
+    #
+    # Open the named database with env.open_db(EMBEDDINGS).
+    # Start a read-only transaction with env.begin(db=...) — no write=True needed.
+    # Use txn.get(word.encode()) to fetch the raw bytes.
+    # If the key exists, pass the bytes through deserialize_embedding() and return.
+    # If the key doesn't exist, txn.get() returns None — propagate that.
     pass
 
 
@@ -64,18 +65,16 @@ def prefix_search(env: lmdb.Environment, prefix: str) -> list[str]:
     makes prefix search efficient. set_range() jumps directly to the right
     position in the B+ tree, no scanning from the beginning.
     """
-    words = []
-    db = env.open_db(EMBEDDINGS)
-    with env.begin(db=db) as txn:
-        cursor = txn.cursor()
-        if cursor.set_range(prefix.encode()):
-            for key, _ in cursor.iternext():
-                key = bytes(key).decode()
-                if key.startswith(prefix):
-                    words.append(key)
-                else:
-                    break
-    return words
+    # TODO(human): Implement cursor-based prefix search here.
+    #
+    # Open the named database and start a read-only transaction.
+    # Create a cursor with txn.cursor().
+    # Use cursor.set_range(prefix.encode()) to jump to the first key >= prefix.
+    # Then iterate with cursor.iternext(), decoding each key from bytes to str.
+    # Collect keys that start with `prefix`; stop as soon as one doesn't
+    # (LMDB keys are sorted, so all matches are contiguous in the B+ tree).
+    # Return the list of matching word strings.
+    pass
 
 
 def cosine_similarity(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
@@ -89,7 +88,14 @@ def cosine_similarity(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
     this simplifies to just the dot product. But implement the
     full formula anyway — it's more robust if vectors aren't normalized.
     """
-    return np.dot(vec_a / np.linalg.norm(vec_a), vec_b / np.linalg.norm(vec_b))
+    # TODO(human): Implement cosine similarity here.
+    #
+    # Formula: cosine_sim(a, b) = dot(a, b) / (||a|| * ||b||)
+    # Use np.dot() for the dot product and np.linalg.norm() for magnitudes.
+    # Even though our embeddings are pre-normalized (norm ~= 1.0), implement
+    # the full formula — it's more robust and teaches the concept properly.
+    # Return a single float.
+    pass
 
 
 def main() -> None:
