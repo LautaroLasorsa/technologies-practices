@@ -1,0 +1,20 @@
+# Terraform local state and cache
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.d/
+.terraform.lock.hcl
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Variable overrides (may contain sensitive values)
+*.auto.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Generated graph images
+*.png

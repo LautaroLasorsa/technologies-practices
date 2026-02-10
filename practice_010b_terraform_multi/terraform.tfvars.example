@@ -1,0 +1,26 @@
+# Copy this file to terraform.tfvars and customize values.
+# terraform.tfvars is auto-loaded by Terraform on plan/apply.
+
+project_name        = "practice010b"
+nginx_external_port = 8080
+redis_external_port = 6379
+network_subnet      = "172.28.0.0/16"
+network_gateway     = "172.28.0.1"
+
+# Extra containers for the for_each exercise (Phase 5).
+# Uncomment and modify to experiment:
+#
+# extra_containers = {
+#     "alpine1" = {
+#         image    = "alpine:latest"
+#         internal = 80
+#         external = 9001
+#         env      = []
+#     }
+#     "alpine2" = {
+#         image    = "alpine:latest"
+#         internal = 80
+#         external = 9002
+#         env      = []
+#     }
+# }
