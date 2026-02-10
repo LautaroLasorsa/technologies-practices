@@ -1,0 +1,19 @@
+# Rust build artifacts
+target/
+
+# Node.js
+node_modules/
+
+# Anchor
+.anchor/
+test-ledger/
+
+# Solana keypairs (never commit real keys)
+*.json
+!Anchor.toml
+!package.json
+!tsconfig.json
+
+# OS
+.DS_Store
+Thumbs.db
