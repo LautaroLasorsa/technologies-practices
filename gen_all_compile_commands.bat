@@ -1,4 +1,10 @@
 @echo off
+REM Requires VCPKG_ROOT environment variable pointing to your vcpkg installation.
+REM Set it with: setx VCPKG_ROOT "C:\path\to\vcpkg"
+if not defined VCPKG_ROOT (
+    echo ERROR: VCPKG_ROOT is not set. Run: setx VCPKG_ROOT "C:\path\to\vcpkg"
+    exit /b 1
+)
 call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 >nul 2>&1
 
 set "CMAKE=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
