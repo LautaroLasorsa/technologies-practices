@@ -3,8 +3,8 @@ call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDe
 
 set "CMAKE=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
 set "NINJA=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
-set "VCPKG=literal:%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
-set "ROOT=literal:%~dp0."
+set "VCPKG=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
+set "ROOT=%~dp0."
 
 REM ---- Helper function ----
 goto :start

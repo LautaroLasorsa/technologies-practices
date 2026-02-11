@@ -3,7 +3,7 @@ call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDe
 
 set "CMAKE=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
 set "NINJA=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
-set "VCPKG_TOOLCHAIN=literal:%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
+set "VCPKG_TOOLCHAIN=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
 set "SRCDIR=%~dp0."
 set "BLDDIR=%~dp0build_clangd"
 
