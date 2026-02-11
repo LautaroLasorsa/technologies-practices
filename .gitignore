@@ -52,6 +52,9 @@ Desktop.ini
 # Claude Code local config
 .claude/
 
+# Testing
+.hypothesis/
+
 # Misc
 nul
 *.log

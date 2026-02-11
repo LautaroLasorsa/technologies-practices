@@ -93,13 +93,13 @@ This practice focuses on Boost libraries that remain **essential in production C
 
 ## Commands
 
-All commands are run from the `practice_012b_boost/` folder root. The cmake binary on this machine is at `C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe`. Boost is installed via vcpkg at `literal:%VCPKG_ROOT%`.
+All commands are run from the `practice_012b_boost/` folder root. The cmake binary on this machine is at `C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe`. Boost is installed via vcpkg at `%VCPKG_ROOT%`.
 
 ### Configure
 
 | Command | Description |
 |---------|-------------|
-| `powershell.exe -Command "& 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe' -S . -B build -DCMAKE_TOOLCHAIN_FILE='literal:%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake' 2>&1"` | Configure the project with vcpkg toolchain (finds Boost automatically) |
+| `powershell.exe -Command "& 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe' -S . -B build -DCMAKE_TOOLCHAIN_FILE='%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake' 2>&1"` | Configure the project with vcpkg toolchain (finds Boost automatically) |
 
 ### Build
 
