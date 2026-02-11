@@ -30,7 +30,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 
 | # | Name | Stack | State |
 |---|------|-------|-------|
-| 001 | LMDB | Python, Rust | `not-started` |
+| 001 | LMDB | Python, Rust | `completed` |
 | 002 | Cloud Pub/Sub | Python, Docker (emulator) | `not-started` |
 | 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | `not-started` |
 | 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | `not-started` |
@@ -47,8 +47,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 010b | Terraform: Multi-Resource Orchestration | HCL, Docker provider | `not-started` |
 | 011a | Spark: Core Transformations | Python, Docker | `not-started` |
 | 011b | Spark: Real Data Pipeline | Python, Docker | `not-started` |
-| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | `not-started` |
-| 012b | Boost Deep-Dive | C++17, Boost | `not-started` |
+| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | `completed` |
+| 012b | Boost Deep-Dive | C++17, Boost | `completed` |
 | 013 | Financial C++: QuickFIX & QuantLib | C++17, QuickFIX, QuantLib | `not-started` |
 | 014 | SAGA Pattern | Python, Docker Compose, Redpanda | `not-started` |
 | 015 | CQRS & Event Sourcing | Python, Docker Compose, Redpanda | `not-started` |
@@ -90,20 +90,6 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 
 ---
 
-## Branch Management
-
-The repository has two long-lived branches:
-
-- **`master`** — Contains completed practice implementations (human answers filled in). State tags reflect actual progress.
-- **`template`** — Contains scaffolded practices with `TODO(human)` stubs only (no human answers). All practice states are `not-started`.
-
-**Rules:**
-1. When a **new practice is added** to `master`, it must also be added to `template` (via `git merge` or `git cherry-pick` from `master`). The template version should have all human implementations replaced with `TODO(human)` stubs and state set to `not-started`.
-2. When a **practice is completed** on `master` (state → `completed`), the `template` branch must already have the scaffolded version. No state changes propagate to `template` — it always stays `not-started`.
-3. **Never merge `template` into `master`** — that would overwrite completed implementations with stubs.
-
----
-
 ## Practice CLAUDE.md Template
 
 Each practice folder must contain a `CLAUDE.md` with:
@@ -115,3 +101,4 @@ Each practice folder must contain a `CLAUDE.md` with:
 - **Instructions** — Step-by-step setup and execution guide
 - **Motivation** — Why this technology matters (market demand, gap in profile, complementary to current skills)
 - **Commands** — **(MANDATORY)** A table of every command needed to run the practice, grouped by phase/stage. Each command must have a description. If a command is run with different options for different phases, list each variant as a separate entry explaining the option used. Commands should be runnable from the practice folder root.
+- **Notes** — **(Optional, added during practice)** Notable observations, cross-domain connections, or insights that emerged while solving the practice. When a note originated from the user or from a user–Claude interaction, attribute it accordingly (e.g., "User observation:", "From discussion:"). This section captures the learner's own thinking — not the scaffold's instructions.
