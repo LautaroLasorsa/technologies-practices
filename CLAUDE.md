@@ -101,3 +101,4 @@ Each practice folder must contain a `CLAUDE.md` with:
 - **Instructions** — Step-by-step setup and execution guide
 - **Motivation** — Why this technology matters (market demand, gap in profile, complementary to current skills)
 - **Commands** — **(MANDATORY)** A table of every command needed to run the practice, grouped by phase/stage. Each command must have a description. If a command is run with different options for different phases, list each variant as a separate entry explaining the option used. Commands should be runnable from the practice folder root.
+- **Notes** — **(Optional, added during practice)** Notable observations, cross-domain connections, or insights that emerged while solving the practice. When a note originated from the user or from a user–Claude interaction, attribute it accordingly (e.g., "User observation:", "From discussion:"). This section captures the learner's own thinking — not the scaffold's instructions.

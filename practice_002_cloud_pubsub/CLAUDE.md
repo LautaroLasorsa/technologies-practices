@@ -122,6 +122,10 @@ All commands run from `practice_002_cloud_pubsub/`.
 |---------|-------------|
 | `cd app && uv run python subscriber_deadletter.py` | Listen on `ordered-sub`, NACK "Monitor" orders (poison), then check `dead-letter-sub` for routed messages |
 
+## Notes
+
+- **User observation:** Pub/Sub's ordered publish returns independent futures per ordering key — handling failures as values (`str | Exception`) instead of raising preserves the batch length invariant, mirroring Rust's `Result<T, E>` / monadic error handling pattern. This is preferable in batch/pipeline scenarios where you want to resolve all futures before propagating errors.
+
 ## State
 
 `in-progress`
