@@ -15,6 +15,7 @@ from google.cloud import pubsub_v1
 
 import config
 
+
 # ── TODO(human): Implement this function ─────────────────────────────
 
 
@@ -62,29 +63,7 @@ def pull_and_process(
 
     Docs: https://cloud.google.com/pubsub/docs/pull#synchronous_pull
     """
-
-    response = subscriber.pull(
-        request={"subscription": subscription_path, "max_messages": max_messages}
-    )
-
-    if not response.received_messages:
-        print("No message was received")
-        return []
-
-    ack_ids = []
-    result = []
-
-    for rmessage in response.received_messages:
-        message: dict = json.loads(rmessage.message.data.decode("utf-8"))
-        result.append(message)
-        print(f"({message['order_id']}, {message['item']}, {message['quantity']} )")
-        ack_ids.append(rmessage.ack_id)
-
-    subscriber.acknowledge(
-        request={"subscription": subscription_path, "ack_ids": ack_ids}
-    )
-
-    return result
+    raise NotImplementedError("TODO(human): implement pull_and_process")
 
 
 # ── Orchestration ────────────────────────────────────────────────────

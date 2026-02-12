@@ -31,7 +31,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | # | Name | Stack | State |
 |---|------|-------|-------|
 | 001 | LMDB | Python, Rust | `completed` |
-| 002 | Cloud Pub/Sub | Python, Docker (emulator) | `completed` |
+| 002 | Cloud Pub/Sub | Python, Docker (emulator) | `not-started` |
 | 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | `not-started` |
 | 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | `not-started` |
 | 004a | gRPC & Protobuf: Python Service | Python | `not-started` |

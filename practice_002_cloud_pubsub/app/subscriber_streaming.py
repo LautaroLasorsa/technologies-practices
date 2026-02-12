@@ -10,12 +10,16 @@ Run after publishing messages:
 """
 
 import json
+import signal
+import sys
+
 from concurrent.futures import TimeoutError
 
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
 
 import config
+
 
 # ── TODO(human): Implement this function ─────────────────────────────
 
@@ -42,10 +46,7 @@ def process_message(message: Message) -> None:
 
     Docs: https://cloud.google.com/pubsub/docs/pull#stream_pull
     """
-
-    decoded = json.loads(message.data.decode("utf-8"))
-    print(f"{decoded['order_id']} {decoded['item']} {decoded['quantity']}")
-    message.ack()
+    raise NotImplementedError("TODO(human): implement process_message")
 
 
 # ── Orchestration ────────────────────────────────────────────────────
