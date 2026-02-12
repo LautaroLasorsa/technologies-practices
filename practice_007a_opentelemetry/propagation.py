@@ -29,6 +29,10 @@ from opentelemetry.propagate import extract, inject
 
 # ── TODO(human): Implement these two functions ───────────────────────
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches context injection, the first half of distributed tracing across services.
+# Learning to serialize trace context into headers enables requests to carry their tracing identity
+# across process and network boundaries, which is fundamental to understanding distributed traces.
 
 def inject_context(carrier: dict[str, str]) -> dict[str, str]:
     """Inject the current trace context into a carrier dict (HTTP headers).
@@ -57,6 +61,10 @@ def inject_context(carrier: dict[str, str]) -> dict[str, str]:
     """
     raise NotImplementedError("TODO(human): implement inject_context")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches context extraction, the second half of distributed tracing.
+# Extracting trace context from incoming headers allows a service to become a child span
+# in an existing trace, creating the parent-child relationship visible in tracing UIs.
 
 def extract_context(headers: dict[str, str]) -> Context:
     """Extract trace context from incoming HTTP headers.

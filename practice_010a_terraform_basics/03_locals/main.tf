@@ -1,6 +1,11 @@
 # =============================================================================
 # Exercise 3: Locals & Multiple Resources
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches multi-resource orchestration and implicit dependencies via
+# resource references. Understanding locals vs variables clarifies when to use
+# computed values vs external inputs -- critical for maintainable infrastructure code.
+#
 # Goal: Deploy nginx + Redis on a shared Docker network. Use locals to keep
 # naming consistent and DRY.
 #

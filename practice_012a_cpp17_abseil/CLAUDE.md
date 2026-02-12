@@ -11,6 +11,43 @@
 - C++17
 - abseil-cpp (fetched via CMake FetchContent)
 
+## Theoretical Context
+
+C++17 introduced a wave of features that modernize the language with expressive syntax and stronger type safety, closing the gap with Rust-like idioms. abseil-cpp (Abseil) is Google's open-source C++ standard library extension, originally developed to support Google's internal codebase and now used by Chromium, gRPC, Protobuf, and TensorFlow. It provides high-performance containers, utilities, and patterns that either complement the STL or provide superior alternatives. Together, C++17 + Abseil represent the modern production C++ stack.
+
+### C++17 Key Features
+
+**Structured bindings** (`auto [a, b] = pair;`) decompose tuples, pairs, and structs into named variables, improving readability over `std::tie`. **std::optional<T>** is a type-safe nullable value (like Rust's `Option<T>`), eliminating sentinel values (e.g., `-1` for "not found"). **std::variant<T1, T2, ...>** is a type-safe union (like Rust's `enum`), and **std::visit** provides pattern matching over variants without manual type checks.
+
+**std::string_view** is a non-owning reference to a string (like Rust's `&str`), enabling zero-copy substring operations and efficient function parameters. **if-constexpr** allows compile-time branching in templates, eliminating SFINAE boilerplate. **Fold expressions** (`(... + args)`) concisely expand variadic templates. **Class Template Argument Deduction (CTAD)** lets you write `std::pair(1, 2)` instead of `std::pair<int, int>(1, 2)`.
+
+### abseil-cpp Key Components
+
+**String utilities** (`absl::StrCat`, `absl::StrJoin`, `absl::StrSplit`) are optimized for composition and avoid the performance pitfalls of `operator+` chains (which create temporary strings). They work seamlessly with `std::string_view` and custom formatters.
+
+**Containers**: `absl::flat_hash_map` and `absl::flat_hash_set` implement Swiss Tables — a cache-friendly hash table design that's 2-3x faster than `std::unordered_map` for most workloads. They use open addressing with SIMD-accelerated probing.
+
+**Error handling**: `absl::Status` (like gRPC status codes) and `absl::StatusOr<T>` (like Rust's `Result<T, E>`) provide value-based error handling without exceptions. This is crucial for systems where exception overhead is unacceptable (trading systems, embedded systems, games).
+
+**Time utilities**: `absl::Time`, `absl::Duration`, and time zone handling are more ergonomic and precise than `std::chrono`.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Structured Bindings** | Decompose aggregates: `auto [x, y] = point;` (C++17) |
+| **std::optional<T>** | Nullable value without pointers or sentinel values (C++17) |
+| **std::variant<T1, T2>** | Type-safe union; pattern match with `std::visit` (C++17) |
+| **std::string_view** | Non-owning string reference for zero-copy operations (C++17) |
+| **if-constexpr** | Compile-time branching in templates (C++17) |
+| **absl::flat_hash_map** | Swiss Table hash map: faster than `std::unordered_map` |
+| **absl::StatusOr<T>** | Result type for error handling without exceptions |
+| **absl::StrCat/StrJoin** | Efficient string building/formatting utilities |
+
+### Ecosystem Context
+
+C++17 + Abseil competes with Rust (stronger safety guarantees, steeper learning curve), C++20/23 (newer standards with `std::span`, `std::expected`, coroutines), and Boost (larger, older, less focused). Choose C++17 + Abseil when you need **Google-scale battle-tested performance**, **broad compiler support** (C++17 is widely available, C++20/23 less so), and **interop with Google projects** (gRPC, Protobuf). Abseil's Swiss Tables and `StatusOr` are production-proven at Google, handling trillions of operations per day. This practice bridges competitive programming C++ (where you mostly use `<bits/stdc++.h>` and STL) with production C++ (where you need Abseil, error handling discipline, and modern idioms).
+
 ## Description
 
 Build a **mini log analytics engine**: parse structured log lines, extract fields, store them in fast containers, query/filter/aggregate, and handle errors gracefully. This teaches modern C++17 features you rarely use in competitive programming alongside abseil utilities that are standard in production C++ (Google, Chromium, gRPC).

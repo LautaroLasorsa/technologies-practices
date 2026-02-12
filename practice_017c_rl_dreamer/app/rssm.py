@@ -58,6 +58,11 @@ class RSSM(nn.Module):
         # Input: concat of deterministic state h_t and observation embedding e_t
         # Output: mean and (log) std of Gaussian over z_t
         #
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # The posterior infers the stochastic latent state given both the deterministic state
+        # and the actual observation. It's trained via reconstruction loss and learns to capture
+        # what actually happened (ground truth from observations).
+
         # TODO(human): Build the posterior network.
         #
         # Architecture:
@@ -75,6 +80,11 @@ class RSSM(nn.Module):
         # Input: deterministic state h_t only (no observation!)
         # Output: mean and (log) std of Gaussian over z_t
         #
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # The prior predicts the stochastic state from ONLY the deterministic state (no observation).
+        # This is what enables imagination: the model can generate plausible latent trajectories
+        # without needing real observations, using only its learned dynamics.
+
         # TODO(human): Build the prior network. Same structure as posterior
         # but input is only h_t (size det), not h_t + embedding.
         #
@@ -116,6 +126,11 @@ class RSSM(nn.Module):
         Returns:
             h_t: (batch, deterministic_dim) -- new deterministic state
         """
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This implements the deterministic backbone of the RSSM: the GRU that maintains
+        # sequential information across timesteps. It teaches how recurrent models capture
+        # temporal dependencies in world-model architectures.
+
         # TODO(human): Implement the recurrent step.
         #
         # Steps:

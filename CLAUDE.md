@@ -85,7 +85,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 
 - **No real external APIs or services.** Emulate everything locally using Docker containers, emulators, or local-only tools.
 - **Per-practice stack.** Each practice chooses its own language/framework based on what best fits the technology.
-- **Guided learning format.** Claude Code scaffolds boilerplate and explains concepts, but leaves critical/interesting/most-educational parts for the user to implement. Each session targets 60–120 minutes.
+- **Guided learning format.** Claude Code scaffolds boilerplate (config files, Docker, build systems, glue code) and explains concepts, but leaves critical/interesting/most-educational parts for the user to implement. Each session targets 60–120 minutes. **Important:** Technology setup code (creating databases, topics, subscriptions, indexes, schemas, etc.) is NOT boilerplate — it is part of the exercises. Learning to provision and configure the technology's resources is essential to understanding how it works.
 - **Standalone sessions.** Each practice folder is a self-contained session — no dependency on completing previous practices (unless explicitly noted).
 
 ---
@@ -97,8 +97,9 @@ Each practice folder must contain a `CLAUDE.md` with:
 - **Title** — Practice name
 - **Technologies** — Libraries, frameworks, and tools used
 - **Stack** — Language(s) and runtime
+- **Theoretical Context** — **(MANDATORY)** Conceptual explanation of the technology being practiced. Should cover: what the technology is and the problem it solves, how it works internally (key mechanisms/architecture), key concepts with brief definitions, and where it fits in the ecosystem (alternatives, trade-offs). Written for a developer experienced in general programming but new to this specific technology. Thorough enough that the learner understands the "why" behind every exercise.
 - **Description** — What this practice covers and builds
-- **Instructions** — Step-by-step setup and execution guide
+- **Instructions** — Step-by-step setup and execution guide. Each exercise (TODO(human) in source code) must include a brief context explanation of what it teaches and why it matters for understanding the technology.
 - **Motivation** — Why this technology matters (market demand, gap in profile, complementary to current skills)
 - **Commands** — **(MANDATORY)** A table of every command needed to run the practice, grouped by phase/stage. Each command must have a description. If a command is run with different options for different phases, list each variant as a separate entry explaining the option used. Commands should be runnable from the practice folder root.
 - **Notes** — **(Optional, added during practice)** Notable observations, cross-domain connections, or insights that emerged while solving the practice. When a note originated from the user or from a user–Claude interaction, attribute it accordingly (e.g., "User observation:", "From discussion:"). This section captures the learner's own thinking — not the scaffold's instructions.

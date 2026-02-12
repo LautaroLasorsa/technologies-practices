@@ -245,6 +245,11 @@ void benchmark_task_queue() {
 // the task and sets task_done=1. The kernel exits when it sees
 // shutdown=1.
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches persistent kernels—the ultimate low-latency GPU pattern.
+// Eliminates kernel launch overhead (~5-10 µs) by polling a work queue instead of launching per-task.
+// Used in HFT for sub-microsecond pricing updates; trades GPU resource idle time for latency predictability.
+
 // TODO(human): Implement the persistent kernel's work loop.
 //
 // Pseudocode:

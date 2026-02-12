@@ -12,6 +12,33 @@
 
 - Python 3.12+ (uv)
 
+## Theoretical Context
+
+### REST: Architectural Constraints for Scalable Web Services
+
+REST (Representational State Transfer) is an architectural style defined by Roy Fielding in his 2000 PhD dissertation. REST prescribes six constraints: **client-server** (separation of UI from data storage), **stateless** (each request contains all information needed; no session state on server), **cacheable** (responses must declare cacheability), **uniform interface** (standardized communication via URIs, HTTP methods, and hypermedia), **layered system** (client can't tell if connected directly to server or intermediary), and optionally **code-on-demand** (server can extend client functionality via scripts). These constraints enable scalability, simplicity, and evolvability.
+
+The uniform interface constraint has four sub-constraints: (1) **resource identification via URIs** (e.g., `/books/123`), (2) **resource manipulation through representations** (clients act on JSON/XML representations, not the resources directly), (3) **self-descriptive messages** (each message includes metadata like `Content-Type`, status codes), and (4) **HATEOAS** (Hypermedia As The Engine Of Application State). HATEOAS means responses contain links to related resources and available actions, allowing clients to navigate the API without hardcoding URLs. For example, a book resource returns links to its author, update, and delete endpoints. This decouples clients from server URL schemes.
+
+**HTTP method semantics** are critical for RESTful APIs. **GET** is safe (no side effects) and idempotent (repeated calls produce the same result). **POST** is neither safe nor idempotent (creates resources; repeated calls create duplicates unless idempotency keys are used). **PUT** is idempotent (full replacement; calling twice yields the same result). **PATCH** is partial update (may or may not be idempotent, depending on patch format). **DELETE** is idempotent (deleting a deleted resource is a no-op or returns 404). Using the correct method enables HTTP caching, safe retries, and intermediary optimizations.
+
+**RFC 9457 Problem Details** standardizes error responses with five fields: `type` (URI identifying the error class, e.g., `https://api.example.com/problems/rate-limit-exceeded`), `title` (short human-readable summary), `status` (HTTP status code), `detail` (specific explanation), and `instance` (URI identifying this specific occurrence, e.g., request path). The `Content-Type` must be `application/problem+json`. This structure enables clients to programmatically handle errors (e.g., detect rate limiting by checking `type`) and provide rich feedback to users. Before RFC 9457, error formats were ad-hoc, causing client parsing fragility.
+
+**Key concepts**:
+
+| Concept | Description |
+|---------|-------------|
+| **Resource** | An addressable entity identified by a URI (e.g., `/books/123`) |
+| **Representation** | A serialized form of a resource (e.g., JSON, XML) sent in request/response bodies |
+| **Idempotency** | Property where multiple identical requests have the same effect as a single request (GET, PUT, DELETE are idempotent; POST is not) |
+| **HATEOAS** | Responses include hypermedia links to related resources and available actions, enabling client navigation |
+| **Richardson Maturity Model** | 4-level scale: Level 0 (HTTP tunneling), Level 1 (resources), Level 2 (HTTP verbs + status codes), Level 3 (hypermedia/HATEOAS) |
+| **Status Codes** | 200 (OK), 201 (Created), 204 (No Content), 400 (Bad Request), 404 (Not Found), 409 (Conflict), 422 (Validation Error), 429 (Rate Limit) |
+| **Pagination** | Offset-based (limit/offset) or cursor-based (opaque token); cursor-based scales better for large datasets |
+| **Rate Limiting** | Throttling requests per client using headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After` (429 response) |
+
+**Ecosystem context**: REST alternatives include **GraphQL** (client-driven queries, single endpoint, over-fetching solved but loses HTTP caching), **gRPC** (RPC over HTTP/2, Protocol Buffers, lower latency but less human-readable), and **WebSockets** (bidirectional real-time, not request-response). REST's strengths: HTTP caching, statelessness (scales horizontally), ubiquitous tooling (curl, browsers), and simplicity. Weaknesses: over-fetching/under-fetching (mitigated by GraphQL), chattiness (multiple roundtrips for related resources), and weak contract enforcement (solved by OpenAPI specs). For public-facing APIs, REST dominates due to HTTP ubiquity. For internal microservices with strict performance needs, gRPC is common. For real-time features, WebSockets or Server-Sent Events supplement REST.
+
 ## Description
 
 Build a **Book Collection API** that demonstrates professional REST API design: proper resource naming, correct HTTP method/status code semantics, structured error responses (RFC 9457), cursor and offset pagination, filtering, HATEOAS hypermedia links, rate limiting middleware, idempotency, and OpenAPI documentation customization.

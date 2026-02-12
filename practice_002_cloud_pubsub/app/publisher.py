@@ -15,15 +15,19 @@ from google.cloud import pubsub_v1
 
 import config
 
-
 # ── Sample data ──────────────────────────────────────────────────────
 
 SAMPLE_ORDERS = [
-    {"order_id": "ORD-001", "customer_id": "CUST-A", "item": "Laptop",    "quantity": 1},
-    {"order_id": "ORD-002", "customer_id": "CUST-B", "item": "Mouse",     "quantity": 3},
-    {"order_id": "ORD-003", "customer_id": "CUST-A", "item": "Keyboard",  "quantity": 1},
-    {"order_id": "ORD-004", "customer_id": "CUST-C", "item": "Monitor",   "quantity": 2},
-    {"order_id": "ORD-005", "customer_id": "CUST-A", "item": "USB Cable", "quantity": 5},
+    {"order_id": "ORD-001", "customer_id": "CUST-A", "item": "Laptop", "quantity": 1},
+    {"order_id": "ORD-002", "customer_id": "CUST-B", "item": "Mouse", "quantity": 3},
+    {"order_id": "ORD-003", "customer_id": "CUST-A", "item": "Keyboard", "quantity": 1},
+    {"order_id": "ORD-004", "customer_id": "CUST-C", "item": "Monitor", "quantity": 2},
+    {
+        "order_id": "ORD-005",
+        "customer_id": "CUST-A",
+        "item": "USB Cable",
+        "quantity": 5,
+    },
 ]
 
 
@@ -59,14 +63,24 @@ def publish_order(
 
     Docs: https://cloud.google.com/pubsub/docs/publisher#publish_messages
     """
-    raise NotImplementedError("TODO(human): implement publish_order")
+    data = json.dumps(
+        {
+            "order_id": order_id,
+            "item": item,
+            "quantity": quantity,
+            "timestamp": time.time(),
+        }
+    ).encode("utf-8")
+
+    future = publisher.publish(topic_path, data=data, order_id=order_id, item=item)
+    return future.result()
 
 
 def publish_orders_with_ordering(
     publisher: pubsub_v1.PublisherClient,
     topic_path: str,
     orders: list[dict],
-) -> list[str]:
+) -> list[str | Exception]:
     """Publish multiple orders using ordering keys grouped by customer_id.
 
     TODO(human): Implement this function.
@@ -93,7 +107,39 @@ def publish_orders_with_ordering(
 
     Docs: https://cloud.google.com/pubsub/docs/ordering
     """
-    raise NotImplementedError("TODO(human): implement publish_orders_with_ordering")
+    futures = []
+    for order in orders:
+        data = json.dumps(
+            {
+                "order_id": order["order_id"],
+                "item": order["item"],
+                "quantity": order["quantity"],
+                "timestamp": time.time(),
+            }
+        ).encode("utf-8")
+
+        futures.append(
+            (
+                publisher.publish(
+                    topic_path,
+                    data=data,
+                    order_id=order["order_id"],
+                    item=order["item"],
+                    ordering_key=order["customer_id"],
+                ),
+                order["customer_id"],
+            )
+        )
+
+    ids = []
+    for future, ordering_key in futures:
+        try:
+            ids.append(future.result())
+        except Exception as e:
+            publisher.resume_publish(topic_path, ordering_key)
+            ids.append(e)
+
+    return ids
 
 
 # ── Orchestration ────────────────────────────────────────────────────
@@ -118,7 +164,8 @@ def run_basic_publish(publisher: pubsub_v1.PublisherClient, topic_path: str) -> 
     print("\n=== Publishing orders (basic, no ordering) ===")
     for order in SAMPLE_ORDERS:
         msg_id = publish_order(
-            publisher, topic_path,
+            publisher,
+            topic_path,
             order_id=order["order_id"],
             item=order["item"],
             quantity=order["quantity"],
@@ -132,12 +179,16 @@ def run_ordered_publish(publisher: pubsub_v1.PublisherClient, topic_path: str) -
     print("\n=== Publishing orders (with ordering keys by customer_id) ===")
     msg_ids = publish_orders_with_ordering(publisher, topic_path, SAMPLE_ORDERS)
     for order, msg_id in zip(SAMPLE_ORDERS, msg_ids):
-        print(f"  Published {order['order_id']} [key={order['customer_id']}]: message_id={msg_id}")
+        print(
+            f"  Published {order['order_id']} [key={order['customer_id']}]: message_id={msg_id}"
+        )
     print(f"Published {len(msg_ids)} ordered orders.")
 
 
 def main() -> None:
-    topic_path = pubsub_v1.PublisherClient.topic_path(config.PROJECT_ID, config.ORDERS_TOPIC)
+    topic_path = pubsub_v1.PublisherClient.topic_path(
+        config.PROJECT_ID, config.ORDERS_TOPIC
+    )
 
     # Phase 2: basic publish
     basic_pub = create_basic_publisher()

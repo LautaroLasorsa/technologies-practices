@@ -75,7 +75,13 @@ from app.agents import counting, enrichment, windowing  # noqa: F401, E402
 
 @app.page("/status/")
 async def status_page(self, request):
-    """TODO(human): Return current table state as JSON.
+    """
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches Faust's web endpoints: exposing internal table state
+    # over HTTP for monitoring, debugging, or integration with external systems.
+    # This demonstrates how stream processors can be queryable services, not just pipelines.
+
+    TODO(human): Return current table state as JSON.
 
     This is a Faust web endpoint accessible at http://localhost:6066/status/
     while the worker is running.

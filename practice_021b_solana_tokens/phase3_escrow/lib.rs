@@ -94,6 +94,12 @@ pub mod escrow {
         deposit_amount: u64,
         receive_amount: u64,
     ) -> Result<()> {
+        // ── Exercise Context ──────────────────────────────────────────────────
+        // This exercise teaches the escrow pattern—THE foundational primitive of Solana DeFi.
+        // Every atomic swap, DEX limit order, and marketplace uses this: deposit into a vault
+        // PDA, record terms, release when conditions met. This is Solana's answer to Ethereum's
+        // smart contract escrows.
+        //
         // TODO(human): Implement make_escrow in two steps.
         //
         // Step 1: Save the escrow terms to the EscrowAccount.

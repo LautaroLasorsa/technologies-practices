@@ -17,6 +17,72 @@
 - Node.js / TypeScript (for tests)
 - Docker (dev container -- replaces WSL requirement)
 
+## Theoretical Context
+
+### What Solana's Account Model Is
+
+Solana is a high-throughput Layer 1 blockchain distinguished by its **account model**: programs (smart contracts) are stateless code that operates on separate **Account** data structures passed as transaction arguments. This contrasts sharply with Ethereum's contract storage model, where each contract owns its own state in a global trie.
+
+Think of Solana programs as pure functions: `fn process_instruction(accounts: &[Account], data: &[u8]) -> Result<()>`. The program receives references to accounts, validates their ownership and constraints, and mutates their data in-place. No global state, no storage opcodes—just direct reads and writes to byte buffers.
+
+This design enables Solana's flagship feature: **parallel transaction execution**. Transactions declare all accounts they'll access upfront. If two transactions touch disjoint account sets, they execute in parallel across multiple cores. Ethereum must serialize all transactions because any contract might access arbitrary global state.
+
+### How the Accounts Model Works Internally
+
+**Account structure:** Every account has four fields:
+1. `lamports` (u64): Balance in lamports (1 SOL = 10^9 lamports). Covers rent and transfer value.
+2. `data` (Vec<u8>): Raw byte buffer storing account state. Programs deserialize this via Borsh.
+3. `owner` (Pubkey): The program that owns this account. Only the owner can mutate `data` or transfer `lamports`.
+4. `executable` (bool): Is this account a program? Executable accounts cannot be mutated after deployment.
+
+**Rent:** Solana charges rent (0.00000348 SOL per byte-epoch) to prevent blockchain bloat. Accounts must maintain a balance ≥ 2 years of rent to stay alive ("rent-exempt"). Anchor's `init` constraint auto-calculates this. Accounts below rent-exemption threshold are periodically garbage-collected.
+
+**Program Derived Addresses (PDAs):** Deterministic addresses derived from seeds via:
+```rust
+let (pda, bump) = Pubkey::find_program_address(&[b"vault", user.key().as_ref()], program_id);
+```
+PDAs have **no private key**—only the program can "sign" for them by providing the original seeds. This enables programs to custody funds: a PDA acts as a vault that only the program's logic can unlock. Think of PDAs as a deterministic HashMap: `HashMap<(seed1, seed2, ...), Account>` where keys are computed, not stored.
+
+**Cross-Program Invocation (CPI):** Programs call other programs via CPIs, analogous to smart contract external calls in Ethereum. The runtime verifies the callee's ownership of all accounts passed in the CPI. PDAs can sign CPIs using their seeds (via `invoke_signed`), enabling programs to control funds without private keys.
+
+**Anchor macros:**
+- `#[program]`: Marks the module containing instruction handlers
+- `#[derive(Accounts)]`: Declares an instruction's account requirements + constraints (`init`, `mut`, `has_one`, `seeds`)
+- `#[account]`: Marks a struct as account data (auto-serialized via Borsh + 8-byte discriminator prepended)
+- `#[error_code]`: Defines custom error enums that emit structured error messages
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Account** | The fundamental data unit: `{lamports, owner, data, executable}`. Programs operate on accounts passed as arguments. |
+| **Program** | Stateless compiled Rust (BPF/SBF bytecode). Deployed accounts with `executable=true`. Process instructions that mutate other accounts. |
+| **Instruction** | A call to a program with a specific handler function + account list + data payload. Analogous to Ethereum's `msg.data`. |
+| **Transaction** | Atomic batch of instructions. Either all succeed or all revert. Declares all accounts upfront for parallel execution. |
+| **PDA (Program Derived Address)** | Deterministic address derived from seeds. No private key. Only the program can sign for it (via `invoke_signed` + seeds). |
+| **CPI (Cross-Program Invocation)** | Program calling another program. Callee validates account ownership. PDAs can sign CPIs to transfer funds programmatically. |
+| **Rent** | On-chain storage fee. Accounts must stay rent-exempt (≥2 years of rent deposited) or get garbage-collected. |
+| **Discriminator** | 8-byte hash prepended to account data by Anchor to identify account type. Prevents type confusion. |
+| **Signer** | Account that must sign the transaction. `user.is_signer` validated by runtime. Used for authorization checks. |
+| **System Program** | Built-in program (ID: `11111111111111111111111111111111`) that creates accounts and transfers SOL. |
+
+### Ecosystem Context and Trade-offs
+
+Solana's account model optimizes for **parallel execution** and **predictable fees** (no dynamic gas costs like Ethereum—fees are deterministic based on transaction size and compute units).
+
+**Trade-offs:**
+- **Upfront account declaration** → Transactions must know all accounts ahead of time. Dynamic account access (e.g., iterating over unbounded sets) is hard. Solution: use PDAs as deterministic keys.
+- **No global state** → No equivalent to Ethereum's contract storage mappings. All state must live in accounts. Programs cannot "discover" accounts—callers must pass them explicitly.
+- **Fixed account sizes** → Accounts have fixed data lengths set at creation (`space` field). Reallocating requires complex patterns (closing + recreating or using `realloc`). Makes dynamic arrays/strings challenging.
+- **Rent** → Storage isn't free. Every account must maintain a balance. Adds complexity vs Ethereum's "pay once, store forever" model (though Ethereum has its own rent proposals like EIP-4844).
+
+**Alternatives:**
+- **Ethereum's storage model**: Global trie, dynamic access patterns, simpler mental model but no parallel execution
+- **Sui's object model**: Similar to Solana (explicit account ownership) but with more granular locking
+- **Cosmos SDK**: State is a key-value store; closer to traditional databases
+
+Solana's model trades flexibility (global state access) for performance (parallel execution, 400ms slot times, 65k TPS theoretical). It's well-suited for DeFi (orderbooks, AMMs, lending) and payments, less suited for applications needing unbounded dynamic state (social graphs, some gaming use cases).
+
 ## Description
 
 Build a series of on-chain programs that progressively teach Solana's **account model** -- the single most important concept that distinguishes Solana from Ethereum and other blockchains. You start with a trivial counter, then learn PDAs (deterministic addressing), CPI (inter-program calls), and events. Everything runs locally -- no devnet, no real SOL.

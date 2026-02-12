@@ -11,6 +11,59 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+Apache Kafka is a distributed event streaming platform designed for high-throughput, fault-tolerant, and scalable message processing. Originally built at LinkedIn to handle activity streams and operational metrics at massive scale, Kafka is now the de-facto standard for real-time data pipelines, event sourcing, and microservice communication. Unlike traditional message queues (RabbitMQ, Pub/Sub), Kafka is built around an immutable **commit log** that allows consumers to replay messages, making it suitable for both messaging and stream processing.
+
+### Architecture
+
+Kafka organizes data into **topics**, each split into one or more **partitions** for parallelism. A partition is an ordered, immutable sequence of records (the commit log). Each record within a partition has a unique **offset** (sequential ID). Kafka brokers are servers that store partitions and serve read/write requests. Partitions can be replicated across multiple brokers for fault tolerance.
+
+**KRaft mode** (Kafka Raft): Starting with Kafka 3.x, Kafka can run without ZooKeeper. Instead, a subset of brokers form a **Raft consensus group** to manage cluster metadata (topic/partition assignments, configuration). KRaft simplifies deployment and improves scalability — this is the modern Kafka architecture.
+
+### Producers & Consumers
+
+**Producers** write messages to topics. Each message has:
+- **Key** (optional): Used to determine which partition the message goes to (hash-based partitioning)
+- **Value**: The message payload
+- **Timestamp**: When the message was produced
+
+**Consumers** read messages from topics. They track their progress via **offsets**. Kafka does not delete messages on consumption — messages are retained for a configurable period (default 7 days), allowing multiple consumers to read the same data independently.
+
+### Consumer Groups
+
+A **consumer group** is a set of consumers that coordinate to consume partitions of a topic. Each partition is assigned to exactly one consumer in the group (but one consumer can handle multiple partitions). This enables:
+- **Horizontal scaling**: Add more consumers to process more partitions in parallel
+- **Fault tolerance**: If a consumer dies, its partitions are reassigned to others (**rebalancing**)
+
+Rebalancing is triggered when consumers join/leave or when partition count changes. During rebalancing, consumption pauses briefly.
+
+### Ordering & Delivery Guarantees
+
+- **Ordering**: Kafka guarantees order **within a partition**, not across partitions. Messages with the same key go to the same partition (deterministic).
+- **Delivery semantics**:
+  - **At-least-once** (default): Consumer might process a message multiple times if it crashes before committing offset.
+  - **At-most-once**: Consumer commits offset before processing (risks data loss on crash).
+  - **Exactly-once**: Requires transactions (Kafka 0.11+) — complex but possible.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Broker** | A Kafka server that stores and serves messages. |
+| **Topic** | A named feed of messages (like a database table). |
+| **Partition** | An ordered, immutable log within a topic. Unit of parallelism. |
+| **Offset** | Sequential ID of a message within a partition (0, 1, 2, ...). |
+| **Producer** | Client that writes messages to topics. |
+| **Consumer** | Client that reads messages from topic partitions. |
+| **Consumer Group** | Set of consumers sharing partition assignments for a topic. |
+| **Rebalancing** | Reassignment of partitions when consumers join/leave a group. |
+| **KRaft** | Kafka Raft — metadata managed by Kafka brokers, no ZooKeeper. |
+
+### Ecosystem Context
+
+Kafka competes with Google Pub/Sub (managed, simpler, no replay), RabbitMQ (lower latency, AMQP, no replay), AWS Kinesis (managed, AWS-only, more expensive), and Pulsar (newer, similar to Kafka but with tiered storage). Choose Kafka when you need **high throughput** (millions of messages/sec), **message replay** (consumers can rewind offsets), **stream processing** (Kafka Streams, ksqlDB), and **on-prem or self-managed cloud deployments**. Kafka is the industry standard for event-driven architectures, data integration (CDC with Kafka Connect), and real-time analytics.
+
 ## Description
 
 Build an **Event Log System** that demonstrates core Kafka producer/consumer patterns: producing messages with keys and partitions, consuming with manual and automatic offset commits, consumer groups, and partition rebalancing -- all running locally against a single Kafka broker in KRaft mode.

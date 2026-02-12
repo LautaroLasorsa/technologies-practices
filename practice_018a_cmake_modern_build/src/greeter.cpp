@@ -12,6 +12,11 @@
 Greeter::Greeter(std::string name) : name_(std::move(name)) {}
 
 std::string Greeter::greet() const {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise shows how library implementation accesses CMake options.
+    // The ENABLE_GREETING_EMOJI macro comes from configure_file (config.h).
+    // This is how you make build-time toggles affect runtime behavior.
+
     // TODO(human): Return a greeting string.
     //
     // Requirements:
@@ -31,6 +36,10 @@ std::string Greeter::greet() const {
 }
 
 std::vector<std::string> Greeter::greet_many(const std::vector<std::string>& names) const {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise practices implementing library methods that consumers call.
+    // Focus on clean C++ idioms; the CMake side (target linkage) is already set up.
+
     // TODO(human): For each name in `names`, produce a greeting string.
     //
     // Format: "Hey <name>, greetings from <name_>!"

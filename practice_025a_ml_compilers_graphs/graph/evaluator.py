@@ -51,6 +51,11 @@ from graph.ir import Graph, Node, Op
 def topological_sort(graph: Graph) -> list[Node]:
     """Return nodes in topological order (inputs before their consumers).
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches graph traversal algorithms fundamental to compilers.
+    # Every IR transformation pass needs topo sort to process nodes in dependency order.
+    # Kahn's algorithm is used in schedulers, build systems, and dataflow analysis.
+
     TODO(human): Implement topological sort using Kahn's algorithm or DFS.
 
     This is the foundational algorithm for graph evaluation. Without correct
@@ -119,6 +124,11 @@ def topological_sort(graph: Graph) -> list[Node]:
 
 def evaluate(graph: Graph, inputs: dict[str, float]) -> dict[str, float]:
     """Evaluate the graph in forward (topological) order.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches interpreter implementation — executing an IR by walking
+    # its nodes. This is what PyTorch eager mode and TensorFlow do under the hood.
+    # Understanding this clarifies why static graphs (XLA, TorchScript) can be faster.
 
     TODO(human): Implement forward evaluation.
 

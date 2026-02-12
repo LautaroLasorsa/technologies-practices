@@ -41,6 +41,15 @@ router = APIRouter(prefix="/v1/books", tags=["Books"])
 def _book_to_response(book: dict) -> BookResponse:
     """Convert an internal book dict to a BookResponse with HATEOAS links.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches HATEOAS link construction. HATEOAS (Hypermedia As
+    # The Engine Of Application State) is REST's Level 3 (Richardson Maturity
+    # Model): responses guide clients to available actions via links. This decouples
+    # clients from server URL schemes and enables API discoverability. Production
+    # APIs use HATEOAS for workflows (next steps in a multi-step process) and
+    # navigation (related resources).
+    # ──────────────────────────────────────────────────────────────────────
+
     TODO(human): Build the _links list. Each book response should include:
       - "self"       -> GET /v1/books/{book_id}
       - "author"     -> GET /v1/authors/{author_id}
@@ -81,6 +90,14 @@ async def list_books(
     order: str = Query("asc", pattern="^(asc|desc)$", description="Sort order"),
 ) -> PaginatedBooks:
     """Return a paginated, filtered, sorted list of books.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches RESTful collection endpoint design: pagination,
+    # filtering, sorting, and HATEOAS navigation links. Offset pagination is
+    # simple but inefficient for large datasets (cursor-based pagination scales
+    # better). Returning next/prev links enables client pagination without hardcoding
+    # URL logic. Production APIs add ETag headers for caching and conditional requests.
+    # ──────────────────────────────────────────────────────────────────────
 
     TODO(human): Implement this endpoint. Steps:
 
@@ -136,6 +153,15 @@ async def create_book(
 ) -> BookResponse:
     """Create a new book resource.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches idempotent POST via the Idempotency-Key header.
+    # POST is not naturally idempotent (retries create duplicates), but clients
+    # can send a unique key; the server caches responses keyed by this header.
+    # This is critical for payment APIs (prevent double-charging on retries) and
+    # production systems with unreliable networks. Stripe, PayPal, and Twilio all
+    # use idempotency keys. Return 201 Created with Location header (RFC 7231).
+    # ──────────────────────────────────────────────────────────────────────
+
     TODO(human): Implement this endpoint. Steps:
 
     1. IDEMPOTENCY CHECK — If idempotency_key is not None:
@@ -179,6 +205,14 @@ async def create_book(
 async def get_book(book_id: str) -> BookResponse:
     """Return a single book by its ID.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches safe, idempotent GET semantics. GET must not modify
+    # state (safe) and must return the same result on repeat (idempotent). This
+    # enables HTTP caching (proxies, CDNs) and safe retries. Return 200 OK with
+    # HATEOAS links to guide clients. Production APIs add ETag headers for
+    # conditional requests (304 Not Modified when client cache is fresh).
+    # ──────────────────────────────────────────────────────────────────────
+
     TODO(human): Implement this endpoint. Steps:
 
     1. Look up book_id in store.books
@@ -204,6 +238,15 @@ async def get_book(book_id: str) -> BookResponse:
 )
 async def replace_book(book_id: str, body: BookUpdate) -> BookResponse:
     """Fully replace an existing book.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches PUT semantics: full replacement (all fields required).
+    # PUT is idempotent: sending the same body twice yields identical results.
+    # This differs from PATCH (partial update, may not be idempotent depending on
+    # format). Production APIs often use optimistic concurrency (If-Match/ETag) to
+    # prevent lost updates from concurrent clients. Return 200 OK with updated
+    # resource (some APIs return 204 No Content without body for efficiency).
+    # ──────────────────────────────────────────────────────────────────────
 
     TODO(human): Implement this endpoint. Steps:
 
@@ -234,6 +277,14 @@ async def replace_book(book_id: str, body: BookUpdate) -> BookResponse:
 )
 async def delete_book(book_id: str) -> None:
     """Delete a book by its ID.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches DELETE semantics: idempotent removal. Deleting a
+    # deleted resource can return 404 (resource no longer exists) or 204 (operation
+    # succeeded, no-op). Both are valid; 204 emphasizes idempotency. Return 204
+    # No Content with empty body (RFC 7231). Production APIs may implement soft
+    # deletes (mark as deleted, don't physically remove) for audit trails and undo.
+    # ──────────────────────────────────────────────────────────────────────
 
     TODO(human): Implement this endpoint. Steps:
 

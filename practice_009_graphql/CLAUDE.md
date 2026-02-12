@@ -12,6 +12,53 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+GraphQL is a query language and runtime for APIs developed by Facebook in 2012 and open-sourced in 2015. Unlike REST, where the server defines fixed endpoints that return predetermined data shapes, GraphQL gives clients control over the structure of responses. A client specifies exactly which fields it needs in a single request, and the server returns only that data — solving the problems of **over-fetching** (receiving unnecessary data) and **under-fetching** (making multiple requests to assemble a view).
+
+### How GraphQL Works
+
+At its core, GraphQL has:
+1. **Schema**: A strongly-typed contract defining all available types, queries, mutations, and subscriptions (written in Schema Definition Language, SDL).
+2. **Resolvers**: Functions that fetch data for each field in the schema. When a query arrives, GraphQL walks the query tree and calls the corresponding resolvers.
+3. **Execution**: Parse query → validate against schema → resolve fields → format response.
+
+For example, if a client queries `{ user(id: 1) { name, posts { title } } }`, the GraphQL server calls:
+- `Query.user(id: 1)` resolver → returns a user object
+- For that user, calls `User.posts` resolver → returns a list of posts
+- For each post, calls `Post.title` resolver → returns the title string
+
+This is where the **N+1 problem** arises: if `User.posts` is called for 10 users, and each calls a database query, you get 1 + 10 queries. **DataLoader** solves this by batching and caching resolver calls.
+
+### Code-First vs Schema-First
+
+- **Schema-first**: Write SDL manually, then implement resolvers. More explicit but requires keeping two sources of truth in sync.
+- **Code-first**: Write Python classes with type hints, and the library generates SDL automatically. Strawberry is code-first, leveraging Python's type system for schema generation and validation.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Schema** | Type definitions for queries, mutations, subscriptions, and data types (SDL). |
+| **Query** | Read-only operation to fetch data (like GET in REST). |
+| **Mutation** | Write operation to modify data (like POST/PUT/DELETE in REST). |
+| **Subscription** | Real-time operation that streams data over WebSocket. |
+| **Resolver** | Function that fetches data for a specific field in the schema. |
+| **N+1 Problem** | Anti-pattern where resolvers trigger cascading queries (1 query for parent + N queries for children). |
+| **DataLoader** | Batching and caching mechanism to solve N+1 by collecting resolver calls and executing them in one batch. |
+| **Introspection** | GraphQL's built-in ability to query the schema itself (enables tools like GraphiQL). |
+| **Fragment** | Reusable selection of fields to reduce query verbosity. |
+
+### Error Handling
+
+GraphQL has two error channels:
+1. **Errors array**: Top-level `errors` field for query validation failures, resolver exceptions. Partial data can still be returned.
+2. **Errors-as-data**: Model errors as part of the schema (e.g., `MutationResult { success: bool, errors: [String] }`). Gives clients more control over error handling and avoids non-nullable field failures.
+
+### Ecosystem Context
+
+GraphQL competes with REST (simpler, better caching, established standards) and gRPC (binary protocol, better performance, less flexible). Choose GraphQL when you need **flexible queries** (mobile apps with varying data needs), **strongly-typed schemas** (auto-generated clients), **real-time updates** (subscriptions), and **aggregation of multiple data sources** (single API gateway). Choose REST when you need **simpler caching** (HTTP caching just works), **file uploads** (harder in GraphQL), or when clients have predictable access patterns. GraphQL is widely adopted by GitHub, Shopify, Stripe, and Airbnb for their public APIs.
+
 ## Description
 
 Build a **Bookstore API** that demonstrates core GraphQL patterns: queries, mutations, subscriptions, cursor-based pagination, DataLoader for N+1 prevention, and errors-as-data — all using Strawberry's code-first approach integrated with FastAPI.

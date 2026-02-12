@@ -15,6 +15,32 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+### CQRS & Event Sourcing: Separated Concerns for Complex Domains
+
+CQRS (Command Query Responsibility Segregation) and Event Sourcing are complementary patterns often used together. **CQRS** separates write operations (commands) from read operations (queries), using independent models optimized for each concern. The write model enforces business invariants and produces events; the read model consumes events to build denormalized views optimized for queries. This separation enables independent scaling (read-heavy workloads can scale reads without burdening writes), polyglot persistence (different databases for write and read sides), and specialized optimizations (write model uses normalized relational schema, read model uses NoSQL document store).
+
+**Event Sourcing** stores state changes as immutable events instead of mutable current state. Every state mutation is recorded as a domain event (e.g., `AccountOpened`, `MoneyDeposited`). The current state is derived by replaying all events from the beginning (or from a snapshot). This design provides a complete audit trail (every historical state is queryable), temporal queries (what was the balance on January 15th?), event-driven integration (other systems consume events), and natural support for undo/replay (rebuild state after a bug fix by replaying events through corrected logic).
+
+The aggregate is the consistency boundary in Event Sourcing. An aggregate receives commands, validates them against current state (derived from replayed events), and emits new events. The `apply()` method is a pure state transition function: `apply(event) → new state`. This method must be side-effect-free and idempotent (replaying the same events twice produces the same state). Commands validate business rules and emit events; `apply()` only mutates state. Separating command validation from event application is critical: validation rules may change over time, but old events must remain replayable without modification.
+
+CQRS+ES introduces eventual consistency: after a command executes (persisting events to the write-side event store), there's a brief delay before the read-side projection updates. This is acceptable for many business domains (e.g., banking: your balance might lag by milliseconds, but consistency is guaranteed eventually). For strong consistency requirements (e.g., preventing double-spending), the write-side enforces invariants synchronously; reads can tolerate staleness.
+
+**Key concepts**:
+
+| Concept | Description |
+|---------|-------------|
+| **Command** | An intent to change state (imperative, validated before execution, can be rejected) |
+| **Event** | A fact that state changed (past tense, immutable, always accepted once persisted) |
+| **Aggregate** | Consistency boundary that validates commands and emits events |
+| **Event Store** | Append-only log of domain events (the source of truth) |
+| **Projection** | A read model built by consuming and transforming events (optimized for queries) |
+| **Rehydration** | Rebuilding aggregate state by replaying its event history |
+| **Optimistic Concurrency** | Detect concurrent modifications using event version numbers (prevent lost updates) |
+
+**Ecosystem context**: Event-sourcing frameworks include Axon (Java, with Axon Server event store), EventStoreDB (dedicated event store with projections), Marten (.NET, PostgreSQL as event store), and Akka Persistence (JVM, actor-based ES). Cloud-native solutions: AWS DynamoDB Streams (change data capture), Azure Cosmos DB change feed, Google Cloud Firestore listeners. Trade-offs: Event Sourcing adds complexity (event versioning, schema evolution, replay performance) and storage overhead (full event history). It shines in domains with complex business logic, auditing requirements, or frequent state queries across time (financial systems, healthcare, order management). For simple CRUD apps with no audit or temporal queries, traditional CRUD with database snapshots suffices. CQRS without Event Sourcing is also viable (separate read/write models, but store current state instead of events).
+
 ## Description
 
 Build a **Bank Account System** that demonstrates CQRS and Event Sourcing end-to-end:

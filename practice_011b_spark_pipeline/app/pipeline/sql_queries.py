@@ -19,6 +19,10 @@ def register_views(spark: SparkSession, enriched: DataFrame) -> None:
     """
     enriched.createOrReplaceTempView("sales")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches SQL aggregation with time-based grouping in Spark.
+# Understanding how to extract date parts and perform multi-level grouping is essential for
+# building time-series reports and dashboards that business stakeholders can actually read.
 
 def monthly_revenue_by_category(spark: SparkSession) -> DataFrame:
     """SQL: Monthly revenue summary grouped by category.
@@ -48,6 +52,10 @@ def monthly_revenue_by_category(spark: SparkSession) -> DataFrame:
     """
     raise NotImplementedError("Implement monthly_revenue_by_category")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches subqueries in SQL for computing dynamic thresholds.
+# Understanding how to use nested queries with aggregate comparisons is crucial for building
+# filters like "above average", "top 10%", or "outliers" — common in analytics and reporting.
 
 def above_average_products(spark: SparkSession) -> DataFrame:
     """SQL: Products whose total revenue exceeds the overall average product revenue.
@@ -78,6 +86,10 @@ def above_average_products(spark: SparkSession) -> DataFrame:
     """
     raise NotImplementedError("Implement above_average_products")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches customer segmentation using CASE WHEN conditional logic in SQL.
+# Understanding how to create categorical labels based on business rules is fundamental for
+# building segmentation models, cohort analysis, and personalized marketing campaigns.
 
 def customer_segments(spark: SparkSession) -> DataFrame:
     """SQL: Segment customers by purchase frequency using CASE WHEN.

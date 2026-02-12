@@ -10,6 +10,59 @@
 
 Python 3.12+ (uv), CPU-only (GPU optional via WSL)
 
+## Theoretical Context
+
+### What is XLA?
+
+**XLA (Accelerated Linear Algebra)** is Google's domain-specific compiler for machine learning. It takes high-level tensor operations (from JAX, TensorFlow, or PyTorch/XLA) and compiles them into optimized machine code for CPUs, GPUs, and TPUs. XLA's key innovation is **whole-program optimization**: it sees the entire computation graph at once, enabling aggressive fusion and cross-operation optimizations that framework executors (like PyTorch eager mode) cannot perform.
+
+XLA solves the **expressiveness vs performance trade-off** in ML frameworks. High-level APIs (like JAX's jnp.dot or TensorFlow ops) are easy to use but individually inefficient — each operation dispatches a separate kernel, wasting memory bandwidth. XLA compiles sequences of operations into fused kernels that compute multiple operations without intermediate memory roundtrips, achieving 2-10x speedups on typical workloads.
+
+### How XLA Works Internally
+
+XLA's compilation pipeline has three stages:
+
+1. **Frontend IR → HLO**: Framework-specific IR (JAX's Jaxpr, TensorFlow GraphDef) is lowered to **HLO (High-Level Optimizer)**, XLA's intermediate representation. HLO is a graph-based SSA IR with 100+ operation types (dot, convolution, reduce, broadcast, transpose, etc.). It's similar to LLVM IR but specialized for array computations.
+
+2. **HLO Optimization Passes**: XLA runs 50+ optimization passes on the HLO graph:
+   - **Algebraic simplification**: x + 0 → x, x * 1 → x, broadcast(constant) → constant
+   - **Operator fusion**: Merge element-wise ops, broadcasts, reductions into single kernels
+   - **Layout assignment**: Choose memory layouts (row/column-major) per tensor to optimize access patterns
+   - **Constant folding**: Evaluate operations on constants at compile time
+   - **Dead code elimination**, CSE, loop invariant code motion
+
+3. **Backend Codegen**: Optimized HLO is lowered to device-specific code (LLVM IR for CPU, PTX for NVIDIA GPUs, custom ASM for TPUs). The backend emits kernel code for each HLO instruction, respecting layout decisions and fusion boundaries.
+
+**JAX's role**: JAX is a frontend for XLA. `jax.jit(fn)` traces `fn` to Jaxpr, then XLA lowers Jaxpr → HLO → optimized machine code. JAX provides functional transformations (`grad`, `vmap`, `pmap`) that operate on Jaxpr, generating new Jaxprs that XLA then compiles.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **HLO (High-Level Optimizer)** | XLA's intermediate representation. Graph-based SSA IR for array ops. |
+| **Jaxpr (JAX Program Representation)** | JAX's IR before lowering to HLO. Functional, first-order, simpler than HLO. |
+| **StableHLO** | Portable HLO dialect for serialization. Bridge between frameworks and XLA. |
+| **Algebraic Simplification** | Compile-time evaluation and simplification of expressions (x+0→x, constant folding). |
+| **Layout Assignment** | Choosing memory layout (row/column-major) per tensor. Critical for CPU/GPU perf. |
+| **Fusion** | Merging ops into single kernels to eliminate memory roundtrips. XLA's primary optimization. |
+| **Whole-Program Optimization** | Optimizing across operation boundaries, not just within ops. Enables fusion. |
+| **JIT Compilation** | Compiling Python functions to machine code on-demand via `jax.jit`. |
+| **Tracing** | Recording operations on abstract values (shapes+dtypes) to build Jaxpr/HLO. |
+| **Primitive Operations** | Atomic ops in Jaxpr (dot_general, add, broadcast). Map to HLO instructions. |
+
+### Ecosystem Context
+
+XLA competes with and complements other ML compilers:
+
+- **TorchInductor** (torch.compile's backend): Similar goals (fusion, whole-program opt) but PyTorch-specific. Uses Triton for GPU code generation instead of XLA's backend.
+- **TVM**: More flexible scheduling but requires manual optimization. XLA is fully automatic.
+- **TensorRT**: NVIDIA's inference optimizer, highly tuned for their GPUs. Proprietary, less portable than XLA.
+- **MLIR**: A compiler infrastructure XLA is migrating toward (StableHLO is an MLIR dialect). MLIR enables better interoperability between compilers.
+
+**Trade-offs**: XLA's whole-program optimization requires **pure functions** (no side effects, no mutation). This is why JAX enforces functional style. PyTorch eager mode allows arbitrary Python, but can't optimize across operation boundaries. XLA achieves higher performance at the cost of Python flexibility.
+
+**XLA adoption**: JAX (100%), TensorFlow (via `@tf.function(jit_compile=True)`), PyTorch/XLA (experimental), StableHLO (interchange format). Google's TPUs are designed around XLA — understanding XLA is essential for TPU programming.
+
 > **Platform note:** JAX CPU works natively on Windows: `pip install jax`. GPU support (`jax[cuda12]`) requires Linux or WSL. This practice focuses on IR inspection — CPU is sufficient. All exercises produce meaningful output on CPU; the compiler optimizations are the same (fusion, layout, simplification), only the backend-specific code generation differs.
 
 ## Description

@@ -12,6 +12,78 @@
 - C++17
 - abseil-cpp (fetched via CMake FetchContent)
 
+## Theoretical Context
+
+### What Limit Order Books and Matching Engines Are
+
+A limit order book (LOB) is the foundational data structure of every financial exchange. It maintains all resting (unmatched) orders organized by price and time, implementing the **price-time priority rule**: at each price level, orders execute in first-in-first-out (FIFO) order. The matching engine is the stateful process that accepts incoming orders and either matches them against the book (generating trades) or adds them to the book as resting orders.
+
+This seemingly simple data structure is the engine of global finance. Nasdaq processes ~1 billion order book messages per day. The CME's Glob ex handles 100M+ orders/day across futures and options. Every stock, futures, options, and crypto exchange runs a matching engine at its core.
+
+The cancel-to-fill ratio on modern exchanges is ~30:1—for every trade executed, roughly 30 orders are placed and then cancelled. This is driven by high-frequency market makers who continuously update quotes as prices move. The implication: **O(1) cancel performance is non-negotiable**. A hash map from order ID to location is the standard solution.
+
+### How Order Books Work Internally
+
+An order book maintains two sides: **bids** (buy orders) and **asks** (sell orders). Each side is a sorted collection of price levels. Each price level contains a FIFO queue of orders at that price.
+
+**Data structure design:**
+- `std::map<price_t, PriceLevel>` for each side (bids and asks)
+  - Map gives O(log N) insert/erase and O(1) access to best price (begin/rbegin)
+  - N = number of distinct active price levels (~20-100 in practice, so log N ~ 5-7)
+- `std::deque<Order>` at each price level for FIFO time priority
+  - In production, intrusive doubly-linked lists enable O(1) removal; deque is O(N) but simpler
+- `absl::flat_hash_map<OrderId, OrderLocation>` for O(1) cancel lookup
+  - Without this, cancel requires scanning every order on one side—unacceptable at scale
+
+**Matching process:**
+1. Incoming **aggressive order** (market or marketable limit) walks the opposite side's price levels
+2. Starting from best price (highest bid for sells, lowest ask for buys), match against resting orders
+3. Generate **Trade** messages for each fill (maker + taker)
+4. Update order remaining quantities; remove fully-filled orders
+5. If incoming order not fully filled and is a limit order, rest it in the book at its limit price
+
+**Market data generation:**
+- **L1 (top-of-book)**: best bid and ask prices + quantities
+- **L2 (depth)**: top N price levels on each side with aggregate quantity
+- **L3 (full book)**: every individual order (exchange-internal only; not broadcast publicly)
+
+Nasdaq ITCH, CME MDP 3.0, and other market data protocols are essentially serialized order book updates: Add, Modify, Cancel, Trade messages.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Price-time priority** | Orders match first by price (best price first), then by arrival time (FIFO) within each price level. |
+| **Maker vs taker** | Maker = resting order providing liquidity; taker = aggressive order removing liquidity. Makers often pay lower fees. |
+| **Aggressive order** | Market order or marketable limit (crosses the spread). Always matches immediately (or IOC/FOK). |
+| **Passive order** | Limit order that does not cross the spread. Rests in the book until matched or cancelled. |
+| **IOC (Immediate-Or-Cancel)** | Order type: execute as much as possible immediately, cancel the rest. Never rests in the book. |
+| **FOK (Fill-Or-Kill)** | Order type: execute entire quantity immediately or cancel the whole order. All-or-nothing semantics. |
+| **Spread** | Difference between best ask and best bid. Tighter spreads indicate more liquid markets. |
+| **Book imbalance** | Ratio of bid liquidity to ask liquidity at top of book. Predictive of short-term price movement. |
+| **Feed handler** | Component that consumes market data protocol messages (ITCH, MDP, FIX FAST) and reconstructs the order book locally. |
+| **Sequence number** | Monotonic counter in market data feed. Gap = missed message, triggers snapshot recovery. |
+
+### Ecosystem Context and Trade-offs
+
+Real exchange matching engines optimize for:
+1. **Deterministic latency** (P99.9 < 100 microseconds from order receipt to ack)
+2. **Throughput** (millions of messages/second peak)
+3. **Fairness** (FIFO order processing, no priority inversions)
+
+**Design trade-offs:**
+- `std::map` vs `absl::flat_hash_map` for price levels: map wins because sorted iteration (best bid/ask) is frequent
+- `std::deque` vs intrusive list at each level: intrusive list enables O(1) removal but requires custom memory management
+- Centralized matching (one thread) vs distributed (sharded by symbol): centralized is simpler and ensures strict FIFO; distributed scales but complicates cross-symbol orders
+- Synchronous order-by-order matching vs batched auctions: synchronous is standard for continuous markets; batching (IEX, some crypto exchanges) reduces latency arbitrage but sacrifices continuous price discovery
+
+**Alternatives:**
+- **Pro-rata matching** (CME, some futures): fills split proportionally by resting quantity, not FIFO. Rewards large orders.
+- **Hybrid matching** (some options exchanges): FIFO for public orders, pro-rata for market makers
+- **Frequent batch auctions** (IEX, EBS): batch orders over tiny intervals (350 microseconds), match at single clearing price
+
+Most major equity exchanges (NYSE, Nasdaq, LSE, Euronext) and crypto exchanges (Coinbase, Binance, Kraken) use price-time priority with continuous matching—the design implemented in this practice.
+
 ## Description
 
 Build the **core components of a high-frequency trading system**: a limit order book, matching engine, market data feed handler, signal generator, and order management system. This practice applies the low-latency patterns from 020a (SPSC queues, memory pools, cache optimization, TSC timing) to real financial domain structures.

@@ -9,6 +9,55 @@
 - C++17 (host), CUDA C++ (device)
 - Windows, VS 2022, CUDA Toolkit 12.6
 
+## Theoretical Context
+
+### What CUDA Is and What Problem It Solves
+
+CUDA (Compute Unified Device Architecture) is NVIDIA's parallel computing platform that exposes GPUs for general-purpose computing (GPGPU). Traditional CPUs excel at sequential tasks with complex control flow; GPUs excel at data-parallel tasks (applying the same operation to thousands of elements). CUDA solves the problem of harnessing GPU parallelism for workloads beyond graphics: scientific computing (weather simulation, molecular dynamics), machine learning (training neural networks), and finance (Monte Carlo option pricing, risk aggregation).
+
+The core abstraction is **SIMT (Single Instruction, Multiple Threads)**: thousands of lightweight threads execute the same kernel code on different data. Unlike CPU threads (OS-scheduled, context-switching overhead), GPU threads are hardware-scheduled with near-zero context-switch cost. A modern GPU has thousands of CUDA cores organized into **streaming multiprocessors (SMs)**, each capable of running 1024-2048 threads concurrently. This architecture trades off single-thread performance (lower clock speeds, simpler cores) for massive parallelism—perfect for embarrassingly parallel workloads.
+
+### How CUDA Works Internally
+
+CUDA's execution model is **hierarchical**: a **grid** of **blocks**, each containing **threads**. When you launch a kernel with `<<<gridDim, blockDim>>>`, you specify this hierarchy. For example, `<<<256, 512>>>` launches 256 blocks of 512 threads each (131,072 threads total). The GPU schedules blocks onto SMs; each SM executes blocks' threads in groups of 32 called **warps**. Warps are the fundamental execution unit—all 32 threads in a warp execute the same instruction in lockstep (SIMT). Divergent control flow (if/else branches) within a warp causes serialization: both paths execute, with inactive threads masked out.
+
+CUDA's **memory hierarchy** is explicit and tiered for latency/bandwidth tradeoffs:
+
+| Memory | Scope | Latency | Bandwidth | Typical Size | Use Case |
+|--------|-------|---------|-----------|--------------|----------|
+| **Registers** | Per-thread | 1 cycle | ~TB/s | 64 KB per SM (256 KB per thread) | Loop counters, temp variables |
+| **Shared Memory** | Per-block | ~20 cycles | ~TB/s | 48-164 KB per SM | Inter-thread communication, user-managed cache |
+| **L1/L2 Cache** | Per-SM / Global | ~30 / ~200 cycles | ~TB/s / ~GB/s | 128 KB / 40 MB (A100) | Automatic caching of global memory |
+| **Global Memory** | All threads | ~400 cycles | ~GB/s (HBM2e: 2 TB/s on A100) | 8-80 GB | Input/output data, large arrays |
+| **Constant Memory** | All threads | cached ~20 cycles | ~GB/s | 64 KB | Read-only parameters broadcast to all threads |
+
+**Memory coalescing** is critical for performance: when threads in a warp access consecutive addresses in global memory, the hardware coalesces requests into a single transaction. Strided or random access patterns cause multiple transactions, drastically reducing bandwidth utilization (from 900 GB/s to 50 GB/s on an RTX 3090).
+
+**Shared memory** acts as a user-managed cache—up to 48-164 KB per block, shared by all threads in that block. Algorithms use it for **tiling**: load a tile of global memory data into shared memory, perform computations using fast shared memory accesses, write results back to global memory. This pattern (load → compute → store) is ubiquitous in matrix multiplication, convolution, and reduction kernels.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Kernel** | Function marked `__global__` that runs on the GPU. Callable from host (CPU), executes on device (GPU). Each thread runs the kernel independently. |
+| **Grid** | 1D/2D/3D array of blocks. Configured via `<<<gridDim, blockDim>>>`. Total threads = gridDim * blockDim (per dimension, multiplied together). |
+| **Block** | 1D/2D/3D array of threads within a grid. All threads in a block execute on the same SM and can share data via shared memory and synchronize. |
+| **Thread** | Smallest execution unit. Identified by `threadIdx` (within block) and `blockIdx` (within grid). Each thread computes a unique global index. |
+| **Warp** | Group of 32 threads executed in lockstep on an SM. The fundamental SIMT execution unit. Divergent control flow causes warp serialization. |
+| **Shared Memory** | Fast on-chip memory (~TB/s bandwidth) shared by all threads in a block. Used for tiling, inter-thread communication. Requires `__syncthreads()`. |
+| **Global Memory** | Large off-chip DRAM (8-80 GB). High latency (~400 cycles), high bandwidth (~GB/s HBM). Accessed via `cudaMalloc`, `cudaMemcpy`. |
+| **Memory Coalescing** | Hardware optimization that combines adjacent memory accesses from threads in a warp into a single transaction. Critical for bandwidth utilization. |
+| **`__syncthreads()`** | Block-level barrier. All threads in a block wait until all reach this point. Used to synchronize shared memory writes before reads. |
+| **Occupancy** | Ratio of active warps to maximum possible warps on an SM. Higher occupancy hides latency. Controlled by register usage, shared memory, block size. |
+
+### Ecosystem Context
+
+**CUDA vs alternatives**: CUDA is NVIDIA-exclusive. **OpenCL** (open standard) works on NVIDIA, AMD, and Intel GPUs but has lower adoption and performance. **ROCm** (AMD) and **oneAPI** (Intel) are vendor-specific alternatives. For production ML/HPC, CUDA dominates due to ecosystem maturity (cuDNN, cuBLAS, TensorRT). For portability, teams write high-level code (PyTorch, TensorFlow) that compiles to CUDA/ROCm/oneAPI under the hood.
+
+**CUDA vs CPU**: CUDA shines when (1) data parallelism is high (millions of independent operations), (2) memory access patterns are coalesced, (3) arithmetic intensity is high (many FLOPs per byte). CUDA loses when (1) serial logic dominates, (2) irregular memory access (random indexing), (3) frequent host-device transfers. For HFT, CUDA handles batch pricing (1000s of options in parallel) but not order matching (serial, latency-sensitive).
+
+**CUDA in the ML stack**: Modern ML frameworks (PyTorch, JAX) abstract CUDA via **kernels** (cuDNN for convolution, cuBLAS for matmul). Users write Python; the framework compiles to CUDA kernels. Custom CUDA kernels (via Triton, CuPy, or raw CUDA) are written for novel operations (fused attention, custom activations). Understanding CUDA fundamentals is essential for writing high-performance custom layers.
+
 ## Description
 
 Hands-on introduction to GPU programming with CUDA. Six progressive phases covering the core mental model: thousands of threads executing the same kernel in parallel, with an explicit memory hierarchy you control. Each phase builds a working program that verifies GPU results against a CPU reference.

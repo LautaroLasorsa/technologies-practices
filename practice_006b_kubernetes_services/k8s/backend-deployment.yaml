@@ -1,5 +1,10 @@
 # Backend Deployment
 # -----------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches production-readiness patterns: liveness/readiness probes,
+# resource requests/limits, and rolling update strategies. These are critical for
+# zero-downtime deploys and preventing cascading failures in production clusters.
+#
 # Deploys the backend API with:
 #   - Liveness probe  (restart if deadlocked)
 #   - Readiness probe  (only route traffic when ready)

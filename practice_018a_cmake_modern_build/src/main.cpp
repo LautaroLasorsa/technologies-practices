@@ -14,6 +14,11 @@
 #include <string>
 #include <vector>
 
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches how to use CMake-generated headers via configure_file.
+// You'll read macros that CMake injected at configure time from config.h.
+// This pattern is how real projects inject version info into binaries.
+
 // TODO(human): Implement print_version_info()
 //
 // Print the project name, version (major.minor.patch), compiler ID,
@@ -38,6 +43,11 @@ void print_version_info() {
 int main() {
     print_version_info();
     std::cout << "---\n";
+
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise tests target_link_libraries linkage. The Greeter class is
+    // defined in a separate library target, and this executable links against it.
+    // Understanding transitive dependencies is key to modern CMake.
 
     // TODO(human): Create a Greeter, call greet(), and call greet_many()
     //

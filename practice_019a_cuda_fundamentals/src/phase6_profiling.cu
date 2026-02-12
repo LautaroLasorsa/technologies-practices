@@ -107,6 +107,11 @@ void demonstrate_error_handling() {
 // Profiling with CUDA events
 // --------------------------------------------------------------------------- //
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches CUDA profiling tools—essential for optimization.
+// CUDA events measure GPU time (not wall-clock time affected by CPU-GPU async).
+// Real profiling uses Nsight Compute (detailed metrics: occupancy, memory throughput, SM utilization).
+
 // TODO(human): Use CUDA events to measure kernel execution time.
 //
 // The CudaTimer class in cuda_helpers.h wraps CUDA events, but here you'll

@@ -12,6 +12,45 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+Spark ETL pipelines orchestrate data extraction, transformation, and loading at scale using Spark's DataFrame API and SparkSQL. This practice builds on Spark fundamentals (011a) to implement production-grade patterns: multi-source ingestion, data cleaning, broadcast joins, window functions for time-series analytics, and partitioned Parquet output.
+
+**ETL vs ELT:**
+
+Traditional ETL (Extract-Transform-Load) transforms data before loading into the warehouse. Modern cloud systems often use ELT (Extract-Load-Transform), loading raw data first and transforming in the warehouse. Spark excels at both: it can transform complex data before loading (ETL) or read from data lakes and transform on-demand (ELT). This practice follows ETL: read CSV/JSON, clean and enrich in Spark, then write optimized Parquet.
+
+**Broadcast Joins:**
+
+Spark joins are expensive when both sides are large (requires shuffling both datasets). A **broadcast join** optimizes the common case of large-table-join-small-table by sending the small table to every executor, eliminating the shuffle on the large side. Spark auto-broadcasts tables under 10MB (configurable via `spark.sql.autoBroadcastJoinThreshold`), but you can hint explicitly with `F.broadcast(small_df)`. Broadcast joins are critical for dimension-table enrichment (joining fact tables with lookup tables).
+
+**Window Functions:**
+
+Window functions perform calculations across a "window" of rows related to the current row, without collapsing groups like `groupBy`. The window is defined by partitioning (which rows to group) and ordering (how to arrange them within each partition). Key functions: `row_number()` (unique sequential rank), `rank()` (ties share rank, gaps after), `dense_rank()` (ties share rank, no gaps), `lag()`/`lead()` (access previous/next row), and aggregations like `sum().over(window)` (running totals). Window functions are essential for time-series analysis, rankings, and period-over-period comparisons—common in business analytics.
+
+**Parquet and Partitioning:**
+
+Parquet is a columnar storage format optimized for analytics—it stores data by column instead of by row, enabling efficient reads when querying subsets of columns (select 3 out of 100 columns reads only 3% of data). Parquet also compresses well (Snappy, Gzip) and supports predicate pushdown (Spark skips reading chunks that don't match filters). **Partition pruning** takes this further: writing Parquet with `.partitionBy("year", "month")` creates a folder hierarchy (`year=2024/month=01/`) where Spark skips entire folders when queries filter on partition columns (`WHERE year=2024 AND month=1`).
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **ETL Pipeline** | Extract data from sources, transform (clean/enrich/aggregate), load into target storage |
+| **Broadcast Join** | Optimization where a small table is sent to all executors, avoiding shuffle on the large side |
+| **Window Function** | Computation over a "window" of rows (partitioned/ordered) without collapsing groups |
+| **Partition (Window)** | Subset of rows for a window function (e.g., per category) |
+| **Ordering (Window)** | Sort order within each partition (e.g., by date) |
+| **Parquet** | Columnar storage format with compression, predicate pushdown, and schema evolution support |
+| **Partition Pruning** | Skipping entire folders/files based on partition column filters (e.g., skip non-matching years) |
+| **Caching** | Materializing a DataFrame in memory/disk to reuse across multiple actions |
+
+**Ecosystem Context:**
+
+Spark ETL pipelines are the backbone of data platforms at scale. They power data lakes (Databricks Delta Lake, AWS Lake Formation), warehouses (Snowflake ingestion, BigQuery ETL), and ML feature pipelines (Feast, Tecton). Window functions are a standard SQL feature (Postgres, Oracle, etc.), but Spark's distributed implementation lets you run them on petabyte-scale data. Parquet is the de facto standard for big data storage (used by AWS Athena, Google BigQuery, Snowflake, Delta Lake, Iceberg). Understanding Spark ETL patterns transfers directly to tools like dbt (SQL-based transformations), Databricks workflows, and Airflow-orchestrated pipelines.
+
+Sources: [PySpark DataFrame API](https://spark.apache.org/docs/3.5.0/api/python/reference/pyspark.sql/dataframe.html), [Broadcast Joins](https://sparkbyexamples.com/pyspark/pyspark-broadcast-join-with-example/), [Window Functions](https://sparkbyexamples.com/pyspark/pyspark-window-functions/)
+
 ## Description
 
 Build a complete **retail analytics ETL pipeline** that reads sales transactions (CSV) and a product catalog (JSON), cleans and joins the data, computes business metrics using window functions and SparkSQL, then writes optimized Parquet output partitioned by date.

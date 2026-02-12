@@ -140,6 +140,11 @@ def show_generated_source(sch: te.Schedule, tensors: list, label: str) -> None:
 def run_benchmark(M: int, K: int, N: int) -> None:
     """Build, benchmark, and compare schedule variants.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches empirically measuring schedule impact. Understanding which
+    # optimizations help (tiling, parallelization) and when (problem size dependencies)
+    # is critical for performance tuning in production ML systems.
+
     TODO(human): Implement the benchmark comparison.
 
     This function should:

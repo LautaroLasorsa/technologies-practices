@@ -228,6 +228,11 @@ def get_benchmark_backends() -> list[str]:
 def run_benchmark_suite() -> None:
     """Benchmark eager vs compiled across models and batch sizes.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches empirically measuring torch.compile's impact. Understanding
+    # when compilation helps (model size, batch size, operation mix) and measuring
+    # compilation overhead vs speedup is critical for production deployment decisions.
+
     TODO(human): Implement this function.
 
     This is the core exercise of Phase 5. You will measure compilation overhead,

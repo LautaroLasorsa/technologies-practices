@@ -11,6 +11,60 @@
 
 Python 3.12+ (uv), Docker (for full Inductor/Triton backend)
 
+## Theoretical Context
+
+### What is torch.compile?
+
+**torch.compile** is PyTorch 2.x's JIT compilation system that transforms eager PyTorch code into optimized kernels. Unlike TorchScript (PyTorch's previous compiler, now deprecated), `torch.compile` operates via **Python bytecode rewriting** at runtime: it intercepts PyTorch operations *as your Python code runs*, captures them into FX graphs, and dispatches those graphs to backend compilers (TorchInductor by default). This "define-by-run" approach preserves PyTorch's dynamic, Pythonic API while achieving static-graph optimization performance.
+
+torch.compile solves the **ease-of-use vs performance dilemma** in deep learning frameworks. Eager execution (PyTorch's default) is flexible (arbitrary Python, easy debugging) but slow (kernel-level overhead, no cross-operation optimization). Static graphs (TorchScript, XLA) are fast (operator fusion, whole-program optimization) but restrictive (limited Python support, hard to debug). torch.compile achieves **both**: you write normal PyTorch code, and Dynamo automatically extracts optimizable subgraphs without sacrificing Python flexibility.
+
+### How torch.compile Works Internally
+
+The torch.compile pipeline has three stages:
+
+1. **TorchDynamo (Graph Capture)**: Dynamo rewrites Python bytecode at import time, inserting hooks that intercept PyTorch operations. When a `torch.compile(model)` calls `model(x)`, Dynamo **traces** execution: it records every tensor operation (`torch.matmul`, `torch.relu`, etc.) into an **FX graph** (torch.fx IR from Practice 025b). If Dynamo encounters unsupported operations (print statements, data-dependent control flow, non-torch operations), it emits a **graph break** — ending the current graph and starting a new one. Multiple graphs are compiled separately.
+
+2. **AOTAutograd (Ahead-Of-Time Autograd)**: Before handing graphs to backends, PyTorch runs AOTAutograd to **precompute backward graphs**. For each forward FX graph, AOTAutograd generates the corresponding backward graph using PyTorch's autograd engine. This eliminates runtime autodiff overhead — the backward pass becomes a compiled graph too.
+
+3. **TorchInductor (Code Generation)**: The default backend. Inductor takes FX graphs and generates device-specific code:
+   - **GPU**: Emits **Triton kernels** (Practice 025d). Inductor's fusion pass identifies fusible patterns (matmul+bias+relu → single kernel) and generates corresponding Triton code. Triton compiles to PTX/CUDA.
+   - **CPU**: Emits **C++ loops with OpenMP parallelization**. Uses vectorization (AVX) and tiling for cache locality.
+
+**Graph breaks** are the most common issue when adopting torch.compile. When Dynamo cannot trace an operation (e.g., `if x.item() > 0:`), it stops the current graph, compiles what it has so far, returns to eager mode for the unsupported operation, then starts tracing a new graph. Multiple graphs → multiple kernel launches → less optimization opportunity.
+
+**Dynamic shapes**: torch.compile supports dynamic batch sizes (shape polymorphism). When a model is first compiled with shape `[batch, 3, 224, 224]`, Dynamo generates code parameterized by batch size. Subsequent calls with different batch sizes reuse the same compiled graph (no recompilation) as long as other dimensions match. This is critical for production deployment with varying batch sizes.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **TorchDynamo** | Python bytecode rewriter that captures PyTorch operations into FX graphs at runtime. |
+| **FX Graph** | torch.fx IR (from 025b) — dataflow graph of tensor operations. Dynamo's output. |
+| **Graph Break** | When Dynamo encounters non-traceable code (print, control flow). Splits into multiple graphs. |
+| **AOTAutograd** | Precomputes backward graphs from forward graphs before compilation. |
+| **TorchInductor** | Default backend. Generates Triton (GPU) or C++/OpenMP (CPU) code from FX graphs. |
+| **Triton** | OpenAI's GPU kernel DSL (025d). Inductor's code generation target for CUDA. |
+| **Operator Fusion** | Merging ops (matmul+bias+relu) into single kernels. Inductor's primary optimization. |
+| **Dynamic Shapes** | Supporting variable batch sizes without recompilation. Uses symbolic shape inference. |
+| **Backends** | `eager` (noop), `aot_eager` (AOTAutograd only), `inductor` (full compilation). |
+| **Warmup** | First call pays compilation cost. Subsequent calls reuse compiled code. |
+
+### Ecosystem Context
+
+torch.compile replaces PyTorch's previous compilation attempts:
+
+- **TorchScript** (deprecated): Required annotating models with `@torch.jit.script`. Restrictive (no dynamic control flow), hard to debug. Replaced by torch.compile.
+- **PyTorch/XLA**: Compiles PyTorch to XLA's HLO (025c). Used for TPUs. torch.compile + XLA backend is newer, preferred approach.
+- **ONNX Runtime**: Export PyTorch → ONNX → optimize → run in ONNX Runtime. Requires static graphs. torch.compile compiles eagerly without export.
+
+**Trade-offs vs alternatives**:
+- vs **TensorRT**: TensorRT (NVIDIA's optimizer) is faster on NVIDIA GPUs but proprietary and requires ONNX export. torch.compile is open-source and native to PyTorch.
+- vs **JAX/XLA** (025c): JAX requires rewriting models in JAX's functional style. torch.compile works with existing PyTorch code.
+- vs **TVM** (025e): TVM provides more portable backends (ARM, FPGA) but requires manual integration. torch.compile is native to PyTorch.
+
+**Adoption**: torch.compile is PyTorch's primary optimization path as of 2.x. Meta uses it in production (FAIR, Instagram, WhatsApp). Google uses it for YouTube recommendations. Microsoft uses it in Azure ML. Understanding torch.compile is now table stakes for ML infrastructure roles.
+
 **Platform note:** Phases 1--3 work natively on Windows using the `eager` and `aot_eager` backends. Phases 4--5 require the `inductor` backend with Triton code generation, which only works on Linux --- use Docker for those phases.
 
 ## Description

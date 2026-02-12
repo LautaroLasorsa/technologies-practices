@@ -31,6 +31,11 @@
 // ── PriceLevel implementation ───────────────────────────────────────────────
 
 Order& PriceLevel::add_order(Order order) {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches FIFO queue management for time priority. Orders at the same
+    // price execute in arrival order—the foundation of price-time priority matching used
+    // by NYSE, Nasdaq, and CME.
+    //
     // TODO(human): Add the order to the back of the FIFO queue.
     //
     // Steps:
@@ -52,6 +57,11 @@ Order& PriceLevel::add_order(Order order) {
 }
 
 bool PriceLevel::remove_order(OrderId order_id) {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches order removal within a price level. Cancel-to-fill ratios
+    // of ~30:1 make cancel performance critical—production systems use intrusive lists
+    // for O(1) removal, but linear scan is acceptable here for learning.
+    //
     // TODO(human): Find and remove the order with the given ID.
     //
     // Steps:
@@ -90,6 +100,11 @@ qty_t PriceLevel::total_quantity() const {
 // ── OrderBook implementation ────────────────────────────────────────────────
 
 void OrderBook::add_order(Order order) {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches order book insertion with price-level management. Choosing
+    // std::map over unordered_map enables O(1) best bid/ask queries via begin/rbegin,
+    // critical for matching engine hot paths.
+    //
     // TODO(human): Add a resting order to the correct side of the book.
     //
     // Steps:
@@ -112,6 +127,11 @@ void OrderBook::add_order(Order order) {
 }
 
 bool OrderBook::cancel_order(OrderId order_id) {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches O(1) cancel via hash map—the key architectural decision
+    // that enables exchanges to handle 1B+ messages/day. Without the location map,
+    // cancel would require scanning every price level.
+    //
     // TODO(human): Remove an order by ID using the O(1) lookup.
     //
     // Steps:
@@ -150,6 +170,11 @@ std::optional<L2Level> OrderBook::best_ask() const {
 }
 
 L2Snapshot OrderBook::get_l2_snapshot(int depth) const {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches L2 market data generation—the aggregate view of liquidity
+    // broadcast by exchanges (Nasdaq ITCH, CME MDP). L2 shows price + total quantity
+    // at each level, hiding individual order details (that's L3, exchange-internal).
+    //
     // TODO(human): Build an L2 snapshot with the top `depth` levels on each side.
     //
     // Steps:

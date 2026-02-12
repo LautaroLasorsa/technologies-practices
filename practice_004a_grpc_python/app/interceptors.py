@@ -34,6 +34,11 @@ class LoggingInterceptor(grpc.ServerInterceptor):
         continuation: grpc.HandlerCallDetails,
         handler_call_details: grpc.HandlerCallDetails,
     ) -> grpc.RpcMethodHandler | None:
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches gRPC interceptors: middleware that wraps every RPC call
+        # for cross-cutting concerns (logging, metrics, auth). This is the pattern for
+        # adding observability to services without modifying individual handlers.
+
         # TODO(human): Implement the logging interceptor.
         #
         # Steps:

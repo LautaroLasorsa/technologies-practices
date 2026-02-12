@@ -12,6 +12,10 @@ services:
   # ---------------------------------------------------------------------------
   # Phase 3 [1/4]: Redis -- Message broker and result store
   # ---------------------------------------------------------------------------
+  # ── Exercise Context ──────────────────────────────────────────────────
+  # This exercise teaches Docker Compose's fundamental resource declarations:
+  # ports, volumes, and health checks. Understanding these patterns is essential
+  # for defining reliable, observable services in any Compose project.
   redis:
     image: redis:7-alpine
     # TODO(human): Expose port 6379 to the host for local debugging.
@@ -59,6 +63,10 @@ services:
   # ---------------------------------------------------------------------------
   # Phase 3 [2/4]: API Gateway -- Receives task submissions
   # ---------------------------------------------------------------------------
+  # ── Exercise Context ──────────────────────────────────────────────────
+  # This exercise demonstrates building custom images with Compose's `build` directive
+  # and injecting runtime configuration via environment variables. This pattern separates
+  # image build logic from deployment configuration -- critical for CI/CD workflows.
   api_gateway:
     # TODO(human): Build from the api_gateway Dockerfile.
     # Syntax:
@@ -121,6 +129,10 @@ services:
   # ---------------------------------------------------------------------------
   # Phase 3 [3/4]: Dashboard -- Shows pipeline status
   # ---------------------------------------------------------------------------
+  # ── Exercise Context ──────────────────────────────────────────────────
+  # This exercise reinforces the patterns from api_gateway with minor variations.
+  # Repetition with slight differences builds fluency in service definition and
+  # prepares you to debug port conflicts and naming collisions in real projects.
   dashboard:
     # TODO(human): Build from the dashboard Dockerfile.
     # Syntax:
@@ -181,6 +193,10 @@ services:
   # ---------------------------------------------------------------------------
   # Phase 3 [4/4]: Worker -- Processes tasks from Redis queue
   # ---------------------------------------------------------------------------
+  # ── Exercise Context ──────────────────────────────────────────────────
+  # This exercise teaches background service patterns: no exposed ports, polling
+  # loops, and horizontal scaling via replicas. Understanding stateless worker design
+  # is fundamental for building scalable distributed systems.
   worker:
     # TODO(human): Build from the worker Dockerfile.
     # Syntax:
@@ -236,6 +252,10 @@ services:
   # ---------------------------------------------------------------------------
   # Nginx -- Reverse proxy
   # ---------------------------------------------------------------------------
+  # ── Exercise Context ──────────────────────────────────────────────────
+  # This exercise demonstrates using official images as infrastructure components
+  # and bind-mounting config files for customization without rebuilding. This pattern
+  # is critical for proxy/load balancer layers in multi-service architectures.
   nginx:
     image: nginx:alpine
     ports:

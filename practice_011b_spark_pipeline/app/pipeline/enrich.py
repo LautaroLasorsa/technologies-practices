@@ -12,6 +12,10 @@ Docs: https://spark.apache.org/docs/3.5.0/api/python/reference/pyspark.sql/api/p
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches broadcast join optimization, a critical production pattern for Spark.
+# Understanding when and how to use broadcast joins can reduce job runtime from hours to minutes
+# by eliminating expensive shuffles when joining large fact tables with small dimension tables.
 
 def enrich_sales(
     clean_sales: DataFrame,

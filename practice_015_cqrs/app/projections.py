@@ -69,6 +69,14 @@ class ProjectionStore:
     def project_event(self, event: DomainEvent) -> None:
         """Route an event to the correct projection handler.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches projection event dispatching. Projections consume
+        # events to build read models optimized for queries. Unlike aggregates
+        # (which enforce invariants), projections are denormalized views. Multiple
+        # projections can consume the same events to build different read models
+        # (balance view, transaction log, analytics dashboard).
+        # ──────────────────────────────────────────────────────────────────────
+
         TODO(human): Implement this dispatcher.
 
         Steps:
@@ -86,6 +94,13 @@ class ProjectionStore:
 
     def _project_account_opened(self, event: AccountOpened) -> None:
         """Project an AccountOpened event into the read model.
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches building a read model from events. The projection
+        # transforms domain events into a queryable schema (account_balances table).
+        # This is the "Query" side of CQRS: a denormalized view optimized for fast
+        # reads. The write side (event store) remains normalized and immutable.
+        # ──────────────────────────────────────────────────────────────────────
 
         TODO(human): Implement this method.
 
@@ -109,6 +124,14 @@ class ProjectionStore:
 
     def _project_money_deposited(self, event: MoneyDeposited) -> None:
         """Project a MoneyDeposited event into the read model.
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches incremental projection updates. Each event updates
+        # the read model incrementally (UPDATE balance, INSERT transaction log entry).
+        # This is more efficient than rebuilding the entire read model on every event.
+        # Production systems handle projection failures by storing consumer offsets
+        # and restarting from the last successfully processed event.
+        # ──────────────────────────────────────────────────────────────────────
 
         TODO(human): Implement this method.
 

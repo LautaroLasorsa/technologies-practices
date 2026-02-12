@@ -25,6 +25,10 @@ using json = nlohmann::json;
 int main() {
     // ─── Part A: Parse a JSON string ────────────────────────────────────────
     //
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise demonstrates FetchContent in action. nlohmann/json was pulled
+    // from GitHub at configure time. You're now using it as if it were installed.
+
     // TODO(human): Parse the JSON string below into a nlohmann::json object.
     //
     // JSON to parse:
@@ -54,6 +58,10 @@ int main() {
 
     // ─── Part B: Extract values and format with fmt ─────────────────────────
     //
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise uses two FetchContent libraries together (json + fmt).
+    // Real projects compose multiple dependencies this way—CMake handles transitive includes.
+
     // TODO(human): Extract fields from the parsed JSON and format them using fmt.
     //
     // 1. Get "project" as a std::string
@@ -87,6 +95,10 @@ int main() {
 
     // ─── Part C: Modify and serialize back to string ────────────────────────
     //
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise completes the FetchContent demo. You've now used header-only
+    // (nlohmann/json) and compiled (fmt) libraries fetched via FetchContent.
+
     // TODO(human): Add a new field to the JSON and print the result.
     //
     // 1. Add "build_system": "CMake" to the root object

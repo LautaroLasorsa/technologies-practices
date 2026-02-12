@@ -78,6 +78,11 @@ __global__ void matmul_naive(const float* A, const float* B, float* C,
 //          plus TILE reads from shared memory per tile (fast)
 //   Shared memory reads are ~100x faster, so total time drops significantly.
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches shared memory tiling—the core GPU optimization pattern.
+// Shared memory (~TB/s) is 10x faster than global memory (~GB/s). Load tiles once, reuse many times.
+// This pattern appears in every high-performance GPU algorithm (convolution, FFT, sort).
+
 // TODO(human): Implement the tiled matmul kernel.
 //   The scaffolding provides shared memory declarations and the tile loop.
 //   You need to fill in:

@@ -153,6 +153,11 @@ def auto_tune_matmul(
 ) -> tvm.runtime.Module | None:
     """Auto-tune a matmul using Ansor and return the compiled module.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches TVM's auto-scheduling (Ansor) — learned cost models for
+    # automatic schedule search. Understanding auto-tuning is critical for production
+    # ML deployment where manual scheduling doesn't scale.
+
     TODO(human): Implement the auto-tuning pipeline.
 
     Ansor's API follows a clear pipeline:

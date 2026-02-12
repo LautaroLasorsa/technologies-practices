@@ -42,6 +42,11 @@ constexpr int BLOCK_SIZE = 16;
 //
 // Each thread computes ONE element of C: C[row][col] = dot(A[row,:], B[:,col])
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches 2D thread indexing and global memory access patterns.
+// Matrix multiplication is the "hello world" of GPU computing—every thread computes one output element.
+// The naive version has poor memory access (loads same data repeatedly); Phase 4 fixes this with shared memory.
+
 // TODO(human): Implement the naive matmul kernel.
 //   1. Compute the global row and col indices from 2D block/thread IDs:
 //        row = blockIdx.y * blockDim.y + threadIdx.y

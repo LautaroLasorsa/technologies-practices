@@ -11,6 +11,83 @@
 
 - Python 3.12+ (uv)
 
+## Theoretical Context
+
+### What are pytest, fixtures, and property-based testing, and what problems do they solve?
+
+**pytest** is Python's de facto testing framework, solving the problem of **test complexity** and **boilerplate** in unittest (the standard library). pytest's key innovations: automatic test discovery, powerful fixtures with dependency injection, parametrization for data-driven tests, and expressive assertions (plain `assert`, no `self.assertEqual` noise).
+
+**Fixtures** solve the **setup/teardown duplication** problem. Instead of repeating resource creation (`setup_method`) in every test class, fixtures are reusable, composable functions that pytest automatically injects by parameter name. They support scopes (function, class, module, session) for controlling lifecycle and sharing expensive resources.
+
+**Property-based testing (Hypothesis)** solves the **example bias** problem. Traditional tests use hand-picked examples (`test_add_positive_numbers()`), which miss edge cases (what about overflow? negative numbers? zero?). Property-based testing generates **hundreds of random inputs** from strategies, finds failing cases via **shrinking** (automatically minimizing the failing input to the simplest counterexample), and verifies **invariants** that should hold for ALL valid inputs.
+
+### How they work internally
+
+**pytest test discovery and execution:**
+
+1. **Discovery**: pytest recursively searches for files matching `test_*.py` or `*_test.py`, then collects functions/classes matching `test_*` or `Test*`.
+2. **Fixture resolution**: For each test function, pytest inspects its parameters, matches them to registered fixtures (from `conftest.py` or the same file), builds a **dependency graph**, and resolves in topological order.
+3. **Execution**: pytest runs setup (fixtures), then the test body, then teardown (fixture finalizers). If a fixture has `scope="module"`, it's created once and reused across all tests in that module.
+4. **Assertion rewriting**: pytest hooks into the import system to rewrite `assert` statements at bytecode level, enabling rich failure messages (shows left/right values, not just "AssertionError").
+
+**Fixture scopes and caching:**
+
+- `scope="function"` (default): Fresh instance per test. Full isolation but slower.
+- `scope="class"`: Shared across all tests in a class. Faster but tests can interfere.
+- `scope="module"`: Shared across all tests in a file. Use for expensive setup (database connection).
+- `scope="session"`: Shared across the entire test run. Use for global resources (Docker containers).
+
+Fixtures can `yield` a value, run test code, then execute teardown after the yield (context manager pattern).
+
+**Hypothesis: strategies, shrinking, and invariant testing:**
+
+1. **Strategy**: A description of how to generate random test data (e.g., `st.integers(min_value=0, max_value=100)`, `st.lists(st.text())`, `st.floats(allow_nan=False)`). Strategies can be composed (e.g., `st.tuples(st.integers(), st.booleans())`).
+2. **Execution**: Hypothesis calls your test function 100+ times (configurable) with different generated inputs. If any input fails, Hypothesis **shrinks** it — repeatedly tries smaller/simpler inputs that still fail, stopping at the minimal failing example.
+3. **Shrinking algorithm**: Hypothesis uses a **greedy best-first search** that tries deleting elements, reducing numbers, replacing strings with shorter versions, etc., always keeping changes that preserve the failure.
+4. **Database**: Hypothesis caches failing examples in `.hypothesis/` so they're re-run on future executions (regression detection).
+
+**Property testing mental model:** Instead of "assert f(5) == 25", write "for all x, f(f_inverse(x)) == x" (round-trip property) or "for all deposits d, balance_after >= balance_before" (invariant).
+
+### Key concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Fixture** | A reusable setup function that pytest injects by parameter name; supports scopes and teardown via yield |
+| **conftest.py** | A special file where fixtures are defined and automatically discovered across the test suite |
+| **Parametrize** | `@pytest.mark.parametrize` runs the same test with multiple input/output pairs (data-driven testing) |
+| **Marker** | `@pytest.mark.unit`, `@pytest.mark.slow` — tags for categorizing tests; run subsets via `pytest -m unit` |
+| **Monkeypatch** | pytest fixture for replacing attributes/env vars at runtime, automatically reverts after the test |
+| **mocker (pytest-mock)** | Wraps `unittest.mock` with pytest-friendly API; creates mocks/spies, verifies calls, and auto-cleans up |
+| **Property-based testing** | Testing approach that generates random inputs and checks invariants, not specific examples |
+| **Hypothesis strategy** | A specification of how to generate random test data (e.g., `st.integers()`, `st.lists(st.text())`) |
+| **Shrinking** | Hypothesis's algorithm for minimizing a failing input to the simplest counterexample |
+| **Invariant** | A property that should always hold (e.g., "sorted list is never longer than input list") |
+| **@given decorator** | Hypothesis decorator that wraps a test function, injecting generated arguments from strategies |
+
+### Ecosystem context
+
+**Alternatives and trade-offs:**
+
+| Framework | Strengths | Weaknesses |
+|-----------|-----------|------------|
+| **unittest** | Standard library, no dependencies | Verbose (self.assertEqual, setUp/tearDown), no auto-discovery by default |
+| **pytest** | Minimal boilerplate, powerful fixtures, parametrize, plugins | Extra dependency (though nearly universal) |
+| **Hypothesis** | Finds edge cases automatically, shrinks to minimal failing input | Slower (runs 100+ cases), requires thinking in invariants |
+| **doctest** | Tests embedded in docstrings, ensures docs stay correct | Limited assertions, poor failure messages, hard to maintain |
+
+**When to use each:**
+
+- **pytest fixtures**: Anything needing setup/teardown (DB connections, API clients, test data)
+- **parametrize**: Testing the same logic with multiple inputs (boundary values, equivalence classes)
+- **mocking (mocker)**: Isolating unit tests from external dependencies (network, filesystem, time, random)
+- **Hypothesis**: Testing invariants that should hold for all inputs (parsers, encoders, data structures, math functions)
+
+**Limitations:**
+
+- **Hypothesis**: Requires rethinking tests as properties, not examples. Not suitable for tests that depend on specific inputs (e.g., "user 123 exists").
+- **Fixtures**: Over-use can make tests hard to understand (magic injection). Balance with explicit setup when clarity matters.
+- **Mocking**: Over-mocking tests implementation details instead of behavior (brittle tests). Mock only external dependencies, not internal calls.
+
 ## Description
 
 Build a Wallet service and its comprehensive test suite, practicing every major Python testing pattern. The domain is a simple banking wallet: deposit, withdraw, transfer between wallets, and transaction history. This domain naturally demonstrates invariants (balance never negative), external dependencies (notification service), stateful behavior (transaction lifecycle), and TDD workflow.

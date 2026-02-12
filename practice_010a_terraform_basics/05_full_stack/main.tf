@@ -1,6 +1,11 @@
 # =============================================================================
 # Exercise 5: Full Stack
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise synthesizes all previous concepts into a realistic multi-service
+# deployment. Understanding the `count` meta-argument and volume mounts is essential
+# for building production-grade Terraform modules that scale beyond single resources.
+#
 # Goal: Tie everything together. Deploy a multi-container stack:
 #
 #   [nginx reverse proxy] --> [app-1] [app-2] (httpbin echo servers)

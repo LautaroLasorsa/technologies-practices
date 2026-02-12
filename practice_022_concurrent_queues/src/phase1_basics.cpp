@@ -72,6 +72,11 @@
 void exercise1_basic_enqueue_dequeue() {
     print_subheader("Exercise 1: Basic Enqueue and Dequeue");
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches the basic ConcurrentQueue API. Understanding unbounded queue
+    // semantics (always succeeds, dynamic allocation) vs bounded queues (fixed capacity,
+    // pre-allocated) is critical for choosing the right data structure for your workload.
+    //
     // TODO(human): Implement this exercise.
     //
     // STEPS:

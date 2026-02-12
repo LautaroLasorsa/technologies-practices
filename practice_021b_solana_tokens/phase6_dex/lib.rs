@@ -107,6 +107,11 @@ pub mod mini_dex {
     // This means only the program can move tokens or mint/burn LP tokens.
     //
     pub fn initialize_pool(ctx: Context<InitializePool>) -> Result<()> {
+        // ── Exercise Context ──────────────────────────────────────────────────
+        // This exercise teaches AMM pool initialization—creating the vault PDAs and LP token
+        // mint that form the foundation of a constant-product market maker. This is how Uniswap
+        // V2, Raydium CPMM, and Orca pools work: two token vaults + deterministic pricing.
+        //
         // TODO(human): Initialize the pool state.
         //
         //   let pool = &mut ctx.accounts.pool;

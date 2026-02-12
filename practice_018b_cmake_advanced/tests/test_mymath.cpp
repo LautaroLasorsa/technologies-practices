@@ -34,6 +34,10 @@ void check(bool condition, const char* test_name) {
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 void test_add() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise writes tests that CTest will discover and run.
+    // These tests validate the mymath library across different build configurations.
+
     // TODO(human): Test mymath::add with several cases.
     //
     // Suggestions:
@@ -52,6 +56,10 @@ void test_add() {
 }
 
 void test_multiply() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // CTest can filter tests by labels. These unit tests will get a "unit" label,
+    // allowing selective execution (ctest -L unit).
+
     // TODO(human): Test mymath::multiply with several cases.
     //
     // Suggestions:
@@ -68,6 +76,10 @@ void test_multiply() {
 }
 
 void test_factorial() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This tests a more complex function. CTest will report pass/fail for each
+    // registered test, making it easy to identify which functions break.
+
     // TODO(human): Test mymath::factorial with several cases.
     //
     // Suggestions:
@@ -87,6 +99,10 @@ void test_factorial() {
 }
 
 void test_fibonacci() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // Fibonacci tests validate correctness across edge cases (n=0, n=1, negative).
+    // Real libraries test edge cases exhaustively—CTest makes this practical.
+
     // TODO(human): Test mymath::fibonacci with several cases.
     //
     // Suggestions:
@@ -106,6 +122,10 @@ void test_fibonacci() {
 }
 
 void test_fibonacci_sequence() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This tests a container-returning function. CTest doesn't care about implementation—
+    // it just runs the executable and checks the exit code.
+
     // TODO(human): Test mymath::fibonacci_sequence.
     //
     // Suggestions:

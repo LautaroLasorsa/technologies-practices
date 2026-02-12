@@ -15,6 +15,51 @@
 - Boost >= 1.74
 - CMake >= 3.16
 
+## Theoretical Context
+
+Boost is a collection of peer-reviewed, portable C++ libraries that extend the standard library. Many Boost libraries have been standardized into C++ (e.g., `std::shared_ptr`, `std::thread`, `std::regex` originated in Boost). However, four core Boost libraries remain essential in production C++ because they provide functionality absent from the STL: **Asio** (async I/O), **Graph** (graph algorithms), **Program_options** (CLI parsing), and **Serialization** (object persistence). These libraries are industry standards in networking, scientific computing, and systems programming.
+
+### Boost.Asio
+
+Boost.Asio is a cross-platform C++ library for **asynchronous I/O** and networking. It provides abstractions for TCP/UDP sockets, timers, serial ports, and file I/O, all orchestrated by an **io_context** (event loop). Asio's programming model is based on **completion handlers**: you initiate an async operation (e.g., `async_read`) and provide a callback to execute when it completes. This avoids blocking threads and enables high concurrency.
+
+Asio underpins many production systems: **Beast** (HTTP/WebSocket, now part of Boost), **gRPC C++** (uses Asio for async operations), and high-frequency trading systems. The STL has no async I/O facilities — `std::async` only does compute tasks, not I/O. C++20 coroutines integrate with Asio for cleaner async code, but Asio's callback-based model remains dominant.
+
+### Boost.Graph (BGL)
+
+Boost.Graph Library (BGL) provides generic, STL-style graph data structures and algorithms. The core abstraction is `adjacency_list<OutEdgeList, VertexList, Directed, VertexProperties, EdgeProperties>` — a highly customizable graph template. BGL includes classic algorithms: BFS, DFS, Dijkstra, Bellman-Ford, minimum spanning tree (Kruskal, Prim), topological sort, and strongly connected components.
+
+BGL uses **property maps** to associate data with vertices/edges, decoupling algorithms from storage. This is powerful but has a learning curve. BGL is used in scientific computing (network analysis, bioinformatics), CAD software, and competitive programming training (though CP typically uses ad-hoc adjacency lists).
+
+### Boost.Program_options
+
+Boost.Program_options provides **type-safe command-line argument parsing** with automatic help generation, validation, and support for config files. You define an `options_description`, parse into a `variables_map`, and query values with `vm["option"].as<T>()`. It handles positional arguments, defaults, required options, and multi-value options.
+
+Unlike simple parsers (`getopt`, `argparse` equivalents), Program_options integrates with `iostream` and provides strong type checking. It's used in CMake, many scientific tools, and anywhere complex CLI interfaces are needed.
+
+### Boost.Serialization
+
+Boost.Serialization provides **object persistence**: save/load C++ objects to/from archives (text, XML, binary). You define a `serialize()` method (intrusive) or a free `serialize()` function (non-intrusive), and the library handles pointer tracking, versioning, and type registration. Archives are streams — you can serialize over network sockets, files, or memory buffers.
+
+Serialization is critical for checkpointing (save simulation state), inter-process communication, and data pipelines. While Protobuf and JSON are more interoperable, Boost.Serialization is the C++ native solution for complex object graphs.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **io_context** (Asio) | Event loop that dispatches async operations and completion handlers |
+| **Completion Handler** (Asio) | Callback invoked when an async operation finishes |
+| **adjacency_list** (BGL) | Generic graph container parameterized by storage and property types |
+| **Property Map** (BGL) | Abstraction to associate data with graph vertices/edges |
+| **Visitor** (BGL) | Object with callbacks invoked during graph traversal (BFS, DFS) |
+| **options_description** (Program_options) | Defines CLI options with types, descriptions, defaults |
+| **variables_map** (Program_options) | Parsed CLI arguments stored as typed values |
+| **Archive** (Serialization) | Stream-like object for reading/writing serialized data (text, XML, binary) |
+
+### Ecosystem Context
+
+Boost competes with the STL (Boost often provides features before standardization), abseil-cpp (Google's focused alternative), and domain-specific libraries (e.g., ZeroMQ for messaging, nlohmann/json for serialization). Choose Boost when you need **battle-tested async I/O** (Asio has no STL equivalent), **graph algorithms** (STL has none), or **complex CLI parsing** (STL has none). Boost's main tradeoffs are **large binary size** (Boost is 100+ libraries) and **compilation time** (heavy template usage). However, Boost.Asio, BGL, Program_options, and Serialization are irreplaceable in their domains — no serious C++ systems programmer can avoid them. This practice focuses on these four because they represent the Boost knowledge baseline for production C++ roles.
+
 ## Description
 
 Build a **graph analysis CLI tool** that ties four core Boost libraries into a single cohesive project. The tool reads a graph from a file (or generates a sample one), runs classic algorithms on it (BFS, DFS, Dijkstra), serializes results to disk, and exposes an async TCP server that answers shortest-path queries. Command-line arguments are parsed with Boost.Program_options.

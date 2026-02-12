@@ -1,6 +1,11 @@
 # =============================================================================
 # Root Module -- orchestrates the full stack
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates calling reusable modules and composing them into
+# a complete stack. Understanding how to pass dependencies (network_id, volume name)
+# between modules is essential for building production Terraform architectures.
+#
 # Phase 4: Implement the module calls for Nginx and Redis.
 # Phase 6: Add a local-exec provisioner to the null_resource for health checks.
 # =============================================================================

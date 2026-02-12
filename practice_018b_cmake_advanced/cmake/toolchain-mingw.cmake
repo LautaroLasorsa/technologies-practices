@@ -35,6 +35,11 @@ set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
 # ─── Compiler paths ─────────────────────────────────────────────────────────
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how toolchain files specify compilers for cross-compilation.
+# CMAKE_C_COMPILER and CMAKE_CXX_COMPILER are the first things CMake checks.
+# This pattern applies to any cross-compilation scenario (embedded, mobile, Docker).
+
 # TODO(human): Set the paths to your MinGW compilers.
 #
 # MinGW is typically installed at C:\MinGW\bin on your system.

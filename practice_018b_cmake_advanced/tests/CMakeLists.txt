@@ -32,6 +32,10 @@ target_link_libraries(test_advanced PRIVATE mymath)
 # NAME: unique identifier used by ctest to refer to this test
 # COMMAND: the executable to run (use the target name — CMake resolves the path)
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how to register tests with CTest and use labels for filtering.
+# Real projects have hundreds of tests; labels enable selective execution (unit vs integration).
+
 # TODO(human): Register the test_mymath executable as a CTest test.
 #
 # 1. Use add_test() with NAME "mymath_unit_tests" and COMMAND test_mymath

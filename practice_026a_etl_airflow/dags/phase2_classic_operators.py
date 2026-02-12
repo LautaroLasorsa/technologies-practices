@@ -120,6 +120,11 @@ def validate_data(**kwargs):
     """
     Validate the extracted data by pulling it from XCom.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This teaches explicit XCom pull/push in classic Airflow. You manually retrieve
+    # data from a previous task, process it, and store results for downstream tasks.
+    # It demonstrates Airflow's task-centric model and separation of concerns.
+
     TODO(human): Implement this function. Here's what it should do:
 
     1. Pull the extracted data from XCom:
@@ -156,6 +161,11 @@ def validate_data(**kwargs):
 def transform_data(**kwargs):
     """
     Transform the extracted data: convert Fahrenheit to Celsius, categorize humidity.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This demonstrates data transformation in Airflow pipelines. It teaches chaining
+    # tasks via XCom, where each task adds value to the data flowing through the pipeline.
+    # This pattern is common in ETL workflows.
 
     TODO(human): Implement this function. Here's what it should do:
 

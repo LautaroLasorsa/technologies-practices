@@ -54,6 +54,11 @@
 // RUST EQUIVALENT: #[repr(C, align(64))] struct OrderUpdate { ... }
 // =============================================================================
 
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches cache-line alignment for eliminating wasted memory transfers.
+// Every memory access loads a full 64-byte cache line—structs that don't fit exactly
+// waste bandwidth and cache capacity, directly reducing hot-path throughput.
+//
 // TODO(human): Design OrderUpdate to fit exactly in 64 bytes.
 //
 // Fields you need to represent a market order update:
@@ -144,6 +149,11 @@ void exercise1_aligned_struct() {
 //   frameworks (bevy_ecs, specs) use this exact pattern for game entities.
 // =============================================================================
 
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches hot/cold data splitting to maximize cache density. Separating
+// frequently-accessed fields from rarely-used ones lets you fit 3-4× more "hot" entries
+// in L1 cache, dramatically improving scan throughput in tight loops.
+//
 // TODO(human): Define OrderHot and OrderCold structs.
 //
 // OrderHot (accessed every tick in the matching engine):
@@ -228,6 +238,11 @@ void exercise2_hot_cold_split() {
 void exercise3_sequential_vs_random() {
     std::cout << "\n=== Exercise 3: Sequential vs Random Access ===\n\n";
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This benchmark demonstrates the 100-300× cost of cache misses by comparing sequential
+    // (cache-friendly) vs random (cache-hostile) array traversal. Sequential access enables
+    // hardware prefetching; random access causes every load to stall on DRAM latency.
+    //
     // TODO(human): Implement this benchmark.
     //
     // STEPS:

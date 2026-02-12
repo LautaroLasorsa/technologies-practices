@@ -201,6 +201,11 @@ def demo_simple_hlo() -> None:
 def demo_mlp_hlo() -> None:
     """Trigger XLA compilation of the MLP and inspect the HLO output.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches reading HLO IR — XLA's internal representation after
+    # optimization. HLO shows what the compiler actually compiles to machine code.
+    # This is the #1 skill for debugging JAX/TPU performance issues.
+
     TODO(human): Use the JAX lowering/compilation API to extract HLO
     for the MLP forward pass, and then for the loss+gradient computation.
     Read the HLO text and identify key patterns.

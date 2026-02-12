@@ -11,6 +11,49 @@
 
 - Python 3.12+ (uv)
 
+## Theoretical Context
+
+### What is gRPC and What Problem Does It Solve?
+
+[gRPC](https://grpc.io/docs/what-is-grpc/introduction/) is a high-performance RPC (Remote Procedure Call) framework developed by Google that makes distributed systems communication efficient, type-safe, and language-agnostic. Unlike REST APIs where you send HTTP requests to URLs and parse JSON responses, gRPC lets you call remote methods on a server **as if they were local functions**. You define services and message types in a `.proto` file, generate client/server code in any language, and the framework handles serialization, networking, and error propagation.
+
+The problem gRPC solves is **inefficient microservice communication**. Traditional REST/JSON APIs are designed for human-readable data (browser-friendly, cacheable) but suffer from performance penalties in service-to-service calls: JSON parsing is CPU-intensive, text serialization is verbose, and HTTP/1.1 lacks multiplexing (one request per TCP connection). In high-throughput microservice architectures (Google, Netflix, Slack), these overheads compound. [gRPC with HTTP/2](https://arpitbhayani.me/blogs/grpc-http2/) and Protocol Buffers delivers 2-10x performance improvements: smaller payloads, faster parsing, and connection reuse via multiplexing.
+
+### How gRPC Works: HTTP/2, Protobuf, and Code Generation
+
+gRPC uses three core technologies: **Protocol Buffers** (protobuf) for serialization, **HTTP/2** for transport, and **code generation** for type-safe clients/servers.
+
+**Protocol Buffers** is a binary serialization format. You define message schemas in `.proto` files using a simple IDL (Interface Definition Language): field names, types, and numbers. The `protoc` compiler generates language-specific classes with getter/setter methods and efficient binary encoding. [Protobuf serialization](https://medium.com/@lchang1994/deep-dive-grpc-protobuf-http-2-0-74e6295f1d38) is dramatically faster than JSON: messages are 3-10x smaller (no field name duplication, compact varint encoding for integers) and parsing is 5-10x faster (binary decoding vs text parsing). Field numbers (not names) are encoded, so renaming fields doesn't break compatibility — this is protobuf's versioning superpower.
+
+**HTTP/2** is the transport layer that [enables gRPC's streaming and multiplexing](https://www.ibm.com/think/topics/grpc). Unlike HTTP/1.1 (one request → one response per connection), HTTP/2 uses **streams**: multiple requests/responses can be interleaved over a single TCP connection. This eliminates the overhead of opening dozens of connections (TLS handshakes, slow-start) for concurrent requests. HTTP/2 also provides **flow control** (backpressure) and **header compression** (HPACK), further reducing latency. For gRPC, this means a single connection can handle thousands of concurrent RPCs — critical for microservice meshes.
+
+**Code generation** ensures type safety and eliminates boilerplate. From `service TaskManager { rpc CreateTask(...) ... }` in the proto, `protoc` generates: (1) message classes (`Task`, `CreateTaskRequest`), (2) server base classes (`TaskManagerServicer`), and (3) client stubs (`TaskManagerStub`). You implement the servicer methods (server) or call stub methods (client) — the framework handles everything else (serialization, HTTP/2 framing, error codes). This is contract-first development: the proto is the single source of truth, and clients/servers in different languages are guaranteed to agree on the API shape.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Proto File (.proto)** | IDL file defining messages (data structures) and services (RPC methods). The contract shared by client and server. |
+| **Message** | A typed data structure (like a class or struct). Defines fields with types, numbers, and optionality (required, optional, repeated). |
+| **Service** | A collection of RPC methods. Each method specifies request/response message types and streaming mode (unary, client streaming, server streaming, bidirectional). |
+| **Unary RPC** | Single request → single response (like a REST POST). Most common RPC pattern. |
+| **Server Streaming** | Single request → stream of responses. Used for pagination, live feeds, or chunked results. |
+| **Client Streaming** | Stream of requests → single response. Used for uploads or batching. |
+| **Bidirectional Streaming** | Stream of requests ↔ stream of responses. Used for chat, real-time collaboration, or duplex protocols. |
+| **Status Codes** | gRPC's error model. [Standard codes](https://grpc.io/docs/guides/status-codes/) like `NOT_FOUND`, `INVALID_ARGUMENT`, `UNAUTHENTICATED` replace HTTP status codes. Richer than HTTP (e.g., `DEADLINE_EXCEEDED`). |
+| **Interceptor** | Middleware that wraps RPC calls. Server interceptors run before/after handlers; client interceptors wrap outgoing calls. Used for logging, auth, metrics, retries. |
+| **Metadata** | Key-value headers sent with requests/responses. gRPC's equivalent of HTTP headers. Used for auth tokens, tracing IDs, etc. |
+| **Servicer** | Server-side class that implements the service methods (generated base class). You subclass and override methods. |
+| **Stub** | Client-side proxy that exposes service methods as Python functions. Generated by `protoc`. |
+
+### Ecosystem Context: gRPC vs REST
+
+**When to use gRPC**: [Internal microservices](https://aws.amazon.com/compare/the-difference-between-grpc-and-rest/), high QPS (queries per second), low latency requirements, streaming (real-time updates, telemetry), and polyglot systems (Go server + Python client). gRPC [outperforms REST by up to 7x](https://boldsign.com/blogs/grpc-vs-rest-api-performance-guide/) in microservice architectures due to binary serialization and HTTP/2 multiplexing. Companies like Google, Netflix, and Slack use gRPC for inter-service calls where performance and streaming matter more than browser accessibility.
+
+**When to use REST**: Public APIs, third-party developers, browser-first requirements (browsers can't speak HTTP/2 binary streams natively), caching/CDN friendliness (HTTP GET is cacheable; gRPC POST is not), and debugging simplicity (curl vs gRPC clients). REST's human-readable JSON and stateless design make it ideal for external APIs where developer experience and ecosystem tooling (Postman, Swagger) matter.
+
+**Trade-offs**: gRPC requires code generation (language-specific tooling), lacks browser support without grpc-web (a proxy layer), and is harder to debug (binary payloads vs JSON). REST is universally supported, human-readable, and has mature caching infrastructure (Cloudflare, Fastly), but sacrifices performance and streaming. Hybrid architectures are common: gRPC for backend-to-backend, REST for frontend-to-backend or external APIs.
+
 ## Description
 
 Build a **TaskManager gRPC service** that supports CRUD operations on tasks plus a server-streaming RPC for watching task updates in real time. This teaches gRPC's core mechanics in Python: proto file design, code generation, unary and streaming RPCs, interceptors, and error handling with status codes.

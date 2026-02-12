@@ -1,5 +1,10 @@
 # Frontend Service (NodePort)
 # ---------------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates external access to Kubernetes services via NodePort.
+# Understanding when to use NodePort vs LoadBalancer vs Ingress is critical for
+# making production architecture decisions about external traffic patterns.
+#
 # Exposes the frontend pods EXTERNALLY via a port on every cluster node.
 #
 # NodePort builds on top of ClusterIP:

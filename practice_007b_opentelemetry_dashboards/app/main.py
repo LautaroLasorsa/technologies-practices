@@ -47,6 +47,10 @@ meter = metrics.get_meter("order-service", version="0.1.0")
 # You need to create THREE instruments and store them in module-level variables
 # so the endpoint handlers below can use them.
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches the three fundamental OpenTelemetry metric types and when to use each.
+# Understanding Counter vs Histogram vs UpDownCounter is critical for designing observable systems—
+# choosing the wrong instrument type can make metrics useless for their intended queries.
 
 def create_metrics(
     m: metrics.Meter,
@@ -98,6 +102,11 @@ async def process_order(
     fail: bool = Query(False, description="Force this order to fail"),
 ) -> dict[str, str]:
     """Simulate processing a single order.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches how to record metric values at the right points in request lifecycle.
+    # Learning when to increment counters, record histogram samples, and adjust gauges is essential
+    # for creating metrics that accurately reflect application behavior in production.
 
     TODO(human): Record metrics inside this handler.
 

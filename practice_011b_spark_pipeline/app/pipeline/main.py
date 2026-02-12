@@ -25,6 +25,11 @@ from pipeline.sql_queries import (
 )
 
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches Spark DataFrame caching and physical plan inspection.
+# Understanding when to cache (reused DataFrames) and how to read explain() output is essential
+# for optimizing Spark jobs—caching prevents redundant computation, explain() reveals bottlenecks.
+
 def run_pipeline() -> None:
     """Execute the full ETL pipeline.
 

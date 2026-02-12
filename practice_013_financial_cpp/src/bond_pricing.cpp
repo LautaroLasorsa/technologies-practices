@@ -91,6 +91,15 @@ void price_fixed_rate_bond()
         false                 // End of month convention
     );
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches yield curve construction, the foundation of all
+    // fixed-income pricing. A flat curve is the simplest term structure; production
+    // systems use bootstrapped curves (from deposits, futures, swaps) with
+    // interpolation (linear, cubic spline, Nelson-Siegel). Understanding that
+    // yield curves are live objects (observable via QuantLib's Observer pattern)
+    // is key for real-time pricing systems.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Build the flat yield curve.
     //
     // A FlatForward creates a constant-rate discount curve. This is the
@@ -115,6 +124,13 @@ void price_fixed_rate_bond()
 
     // --- Your code here (create yield_curve) ---
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches bond construction: schedules (coupon dates), day
+    // count conventions (ActualActual, 30/360), and settlement conventions (T+2).
+    // These details matter in production: a wrong day count convention can cause
+    // pricing discrepancies of several basis points, leading to P&L breaks.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Create the FixedRateBond instrument.
     //
     // Constructor:
@@ -138,6 +154,14 @@ void price_fixed_rate_bond()
     // Reference: https://www.quantlib.org/reference/class_quant_lib_1_1_fixed_rate_bond.html
 
     // --- Your code here (create bond) ---
+
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches bond analytics: clean vs dirty price (market quoting
+    // convention vs actual payment), yield to maturity (inverse calculation from
+    // price to yield), and accrued interest (prorated coupon since last payment).
+    // Understanding these conventions is essential for fixed-income trading systems:
+    // counterparties trade clean prices but settle dirty prices.
+    // ──────────────────────────────────────────────────────────────────────
 
     // TODO(human): Set the pricing engine and compute bond analytics.
     //

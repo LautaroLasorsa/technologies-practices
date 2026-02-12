@@ -87,6 +87,9 @@ async def create_order(order: OrderRequest) -> dict:
 
 # ── Phase 3: Validation span ────────────────────────────────────────
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches manual span creation with attributes, events, and error recording.
+# These are the building blocks of rich, searchable traces that capture both success and failure paths.
 
 def validate_order(order: OrderRequest, parent_span: trace.Span) -> None:
     """Validate the incoming order.
@@ -156,6 +159,10 @@ def validate_order(order: OrderRequest, parent_span: trace.Span) -> None:
 
 # ── Phase 3: Database simulation span ────────────────────────────────
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches adding semantic attributes that follow OpenTelemetry conventions.
+# Using standard attribute names (db.system, db.operation) makes traces understandable
+# across teams and enables compatibility with observability tools that recognize these conventions.
 
 def save_order_to_db(order_id: str, order: OrderRequest) -> None:
     """Simulate saving the order to a database.
@@ -187,6 +194,10 @@ def save_order_to_db(order_id: str, order: OrderRequest) -> None:
 
 # ── Phase 5: Payment call with context propagation ───────────────────
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches distributed tracing across service boundaries using context injection.
+# Understanding CLIENT vs SERVER span kinds and how trace context flows through HTTP headers
+# is essential for instrumenting microservice architectures and debugging cross-service issues.
 
 async def request_payment(order_id: str, order: OrderRequest) -> PaymentResponse:
     """Call the Payment Service, propagating the trace context.

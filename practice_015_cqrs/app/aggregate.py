@@ -42,6 +42,14 @@ class BankAccount:
     def apply(self, event: DomainEvent) -> None:
         """Apply a single event to update the aggregate's state.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches the core of Event Sourcing: state is derived from
+        # events, not stored directly. The apply() method is a pure function (no
+        # side effects, no I/O) that transitions state. Keeping it separate from
+        # command validation enables temporal queries and event replay after rule
+        # changes. This is the foundation of event-sourced domain modeling.
+        # ──────────────────────────────────────────────────────────────────────
+
         TODO(human): Implement this method.
 
         This is the ONLY place where aggregate state changes. Each event type
@@ -69,6 +77,14 @@ class BankAccount:
 
     def open_account(self, owner_name: str, initial_balance: float = 0.0) -> None:
         """Command: open a new bank account.
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches command validation and event emission. Commands
+        # enforce business rules (initial balance >= 0, no double-open) and emit
+        # events describing what happened. The command doesn't mutate state directly;
+        # it emits an event, which apply() then processes. This separation is key
+        # to maintaining an immutable event log that can be replayed later.
+        # ──────────────────────────────────────────────────────────────────────
 
         TODO(human): Implement this method.
 
@@ -107,6 +123,14 @@ class BankAccount:
     def withdraw(self, amount: float, description: str = "") -> None:
         """Command: withdraw money from the account.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches invariant enforcement in Event Sourcing. The withdraw
+        # command validates against current state (self.balance, derived from replayed
+        # events). If validation passes, it emits a MoneyWithdrawn event. This pattern—
+        # validate against replayed state, emit event if valid—is how event-sourced
+        # aggregates enforce business rules without locking the entire event stream.
+        # ──────────────────────────────────────────────────────────────────────
+
         TODO(human): Implement this method.
 
         Steps:
@@ -133,6 +157,14 @@ class BankAccount:
     @classmethod
     def load(cls, account_id: str, event_store: EventStore) -> BankAccount:
         """Rehydrate a BankAccount aggregate from its event history.
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches aggregate rehydration (event replay). Loading an
+        # aggregate means replaying all its events through apply() to rebuild state.
+        # This is "sourcing" in Event Sourcing: the event log is the source of truth,
+        # not a database row. Production systems optimize with snapshots (replay from
+        # snapshot + recent events), but the principle is the same.
+        # ──────────────────────────────────────────────────────────────────────
 
         TODO(human): Implement this class method.
 

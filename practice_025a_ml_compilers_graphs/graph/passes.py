@@ -52,6 +52,11 @@ from graph.ir import Graph, Node, Op
 def constant_fold(graph: Graph) -> Graph:
     """Evaluate operations on known constants at compile time.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches compiler optimization passes — transforming IR to equivalent
+    # but faster form. Constant folding is used in EVERY compiler (LLVM, GCC, XLA, TVM).
+    # It reduces runtime computation by doing work at compile time.
+
     TODO(human): Implement constant folding.
 
     This pass scans the graph for nodes where ALL inputs are CONST nodes.
@@ -151,6 +156,11 @@ def constant_fold(graph: Graph) -> Graph:
 
 def dead_code_elimination(graph: Graph, outputs: list[Node]) -> Graph:
     """Remove nodes whose outputs are never used by any output node.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches reachability analysis — identifying live code via graph
+    # traversal. DCE is fundamental to garbage collection, linker optimization, and
+    # ML compiler pruning (removing unused model branches after quantization).
 
     TODO(human): Implement dead code elimination.
 

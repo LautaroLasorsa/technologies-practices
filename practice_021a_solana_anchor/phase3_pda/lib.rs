@@ -82,6 +82,11 @@ pub mod solana_practice {
     pub fn initialize_pda_counter(ctx: Context<InitializePdaCounter>) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
 
+        // ── Exercise Context ──────────────────────────────────────────────────
+        // This exercise teaches PDA (Program Derived Address) creation—the key mechanism
+        // for deterministic account addressing in Solana. PDAs are like a HashMap where keys
+        // (seeds) deterministically map to addresses, eliminating the need to store addresses.
+        //
         // TODO(human): Set counter.authority to the user's public key
         //   Hint: ctx.accounts.user.key()
         //

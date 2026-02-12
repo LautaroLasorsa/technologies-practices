@@ -1,6 +1,11 @@
 # =============================================================================
 # Outputs -- Full Stack
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates advanced output patterns: splat expressions and for loops.
+# Understanding these techniques is essential for working with counted/for_each resources
+# and building user-friendly module interfaces.
+#
 # These outputs combine resource attributes, variables, locals, and
 # expressions to produce useful information about the deployed stack.
 # =============================================================================

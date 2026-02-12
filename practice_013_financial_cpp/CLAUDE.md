@@ -14,6 +14,38 @@
 - vcpkg (dependency management)
 - Windows (MSVC)
 
+## Theoretical Context
+
+### FIX Protocol: The Language of Electronic Trading
+
+The Financial Information eXchange (FIX) protocol is the de facto standard for real-time communication between trading systems. Introduced in 1992 to replace phone-based trading, FIX is a tag-value messaging protocol (e.g., `55=AAPL|54=1|38=100` means Symbol=AAPL, Side=Buy, Quantity=100) used by exchanges, broker-dealers, and institutional investors worldwide. Every major electronic trading venue (NYSE, CME, NASDAQ, ICE) speaks FIX. The protocol handles order submission, execution reports, market data feeds, and pre/post-trade communication.
+
+FIX operates over TCP sessions with strict sequencing (MsgSeqNum) and recovery semantics. A **FIX session** is identified by three components: BeginString (protocol version, e.g., FIX.4.4), SenderCompID, and TargetCompID. Sessions undergo a lifecycle: logon (credential exchange + sequence synchronization), message flow (application messages like NewOrderSingle, ExecutionReport), heartbeats (keepalive), and logout. If sequence gaps occur, resend requests recover missing messages. This session-layer reliability distinguishes FIX from stateless protocols like HTTP.
+
+QuickFIX, the open-source C++ implementation, provides two key abstractions: **Application** (lifecycle callbacks: onCreate, onLogon, fromApp) and **MessageCracker** (type-safe dispatch from generic FIX::Message to specific types like FIX44::NewOrderSingle). The Application interface separates session management (admin messages) from business logic (app messages). MessageCracker uses the Visitor pattern: fromApp() calls crack(), which inspects MsgType and dispatches to the appropriate onMessage() overload. This design avoids manual tag inspection and enforces compile-time type safety.
+
+**Ecosystem context**: Alternatives include QuickFIX/J (Java), QuickFIX/n (.NET), and proprietary engines from vendors like LMAX, Trading Technologies, and Bloomberg (EMSX). Custom implementations exist at HFT firms (lower latency), but QuickFIX dominates for its robustness, FIX certification, and broad version support. Trade-offs: QuickFIX prioritizes correctness and compliance over microsecond latency; for ultra-low-latency trading (sub-100µs), firms build custom FIX parsers with kernel bypass (DPDK, Solarflare) and lock-free queues.
+
+### QuantLib: Quantitative Finance as a C++ Framework
+
+QuantLib is a comprehensive library for modeling, pricing, and risk-managing financial instruments. It provides an **instrument-engine architecture** where instruments (bonds, options, swaps) delegate pricing to engines (Black-Scholes, finite differences, Monte Carlo), which consume market data via term structures (yield curves, volatility surfaces). This separation of concerns (what to price vs. how to price) enables flexibility: swap a Monte Carlo engine for an analytic one without changing the instrument.
+
+The framework models time (calendars, day counters), cash flows (fixed, floating, amortizing), term structures (curves from bootstrapping quotes), and stochastic processes (geometric Brownian motion, Heston, SABR). For example, pricing a European call requires: (1) Quote (spot price observable), (2) YieldTermStructure (risk-free rate curve), (3) BlackVolTermStructure (volatility surface), (4) BlackScholesProcess (combines them into GBM), (5) AnalyticEuropeanEngine (closed-form Black-Scholes formula), and (6) VanillaOption (the instrument). Changing market data (e.g., spot price) auto-updates dependent instruments via the Observer pattern.
+
+**Key concepts**:
+
+| Concept | Description |
+|---------|-------------|
+| **Term Structure** | A curve mapping time to rates/vols (e.g., yield curve: tenor → discount factor) |
+| **Process** | Stochastic dynamics (e.g., BlackScholesProcess: dS = µS dt + σS dW) |
+| **Engine** | Pricing algorithm (e.g., AnalyticEuropeanEngine: Black-Scholes closed form) |
+| **Greeks** | Sensitivities: delta (dV/dS), gamma (d²V/dS²), vega (dV/dσ), theta (dV/dt), rho (dV/dr) |
+| **Clean Price** | Bond price excluding accrued interest (quoted in markets) |
+| **Dirty Price** | Bond price including accrued interest (actual payment) |
+| **Yield to Maturity** | Internal rate of return that equates PV(cash flows) to current price |
+
+**Ecosystem context**: Alternatives include FinancePy (Python, fast NumPy-based), QuantConnect/Lean (C#, algo trading), and Bloomberg/Reuters libraries (proprietary, integrated with data feeds). QuantLib's strength is breadth (vanilla options, exotics, interest rate derivatives, credit) and academic rigor (extensively validated against textbooks like Hull, Shreve). Trade-offs: it's not designed for real-time pricing in production (performance overhead from observers, shared pointers); banks often extract QuantLib formulas into optimized production code. For Greeks computation, QuantLib's analytic engines (when available) outperform finite-difference bumping.
+
 ## Description
 
 Build two focused mini-projects that exercise the two pillars of financial C++ infrastructure:

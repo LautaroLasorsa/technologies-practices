@@ -9,6 +9,47 @@
 
 - Python 3.12+ (uv)
 
+## Theoretical Context
+
+### What are Computation Graphs?
+
+A **computation graph** is a directed acyclic graph (DAG) representation of mathematical operations. Each node represents either an operation (addition, multiplication, ReLU activation) or a data value (input, constant). Edges represent data dependencies — if node B uses the output of node A, there's an edge A → B. This explicit DAG structure makes mathematical expressions manipulable as data: you can traverse, transform, and optimize them programmatically.
+
+Computation graphs solve the **dual challenges** of modern deep learning: (1) automatic differentiation (computing gradients for backpropagation) and (2) optimization (transforming the computation to run faster). By representing models as graphs rather than imperative code, frameworks like PyTorch and TensorFlow can automatically compute derivatives via the chain rule, and compilers like XLA and TVM can apply algebraic simplifications, operator fusion, and device-specific code generation.
+
+### How Computation Graphs Work Internally
+
+The graph is built in **forward order** (inputs → outputs) but can be traversed in any valid **topological order** — any ordering where each node appears after all nodes it depends on. During the **forward pass**, nodes are evaluated in topological order: leaf nodes (inputs, constants) have their values set, then operation nodes compute their outputs based on their already-evaluated inputs. This produces the model's output.
+
+During the **backward pass** (reverse-mode automatic differentiation), gradients flow in the **opposite direction** — from outputs back to inputs. Starting with the gradient of the loss (dL/dL = 1), we walk the graph in reverse topological order. For each node, we apply the **chain rule**: multiply the node's accumulated gradient by the local derivative of its operation (e.g., for z = x * y, dL/dx = dL/dz * y), then add this contribution to each input's gradient. The += (accumulate) is critical — a node used by multiple consumers receives gradients from all of them (multivariate chain rule).
+
+Computation graphs use **Static Single Assignment (SSA) form**: each node has exactly one definition (no reassignment). This immutability enables aggressive optimization passes. Two fundamental passes are:
+
+1. **Constant Folding**: If all inputs to an operation are constants, evaluate it at compile time and replace with a CONST node. This reduces runtime computation.
+2. **Dead Code Elimination (DCE)**: Starting from output nodes, mark all nodes reachable via backward traversal as "live." Remove unmarked nodes — their results are never used.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **DAG (Directed Acyclic Graph)** | Graph structure with directed edges and no cycles. Topological ordering exists. |
+| **Topological Sort** | Ordering nodes so each node appears after its dependencies. Enables forward evaluation. |
+| **Forward Pass** | Evaluate nodes in topo order to compute outputs from inputs. |
+| **Backward Pass** | Reverse-mode autodiff: propagate gradients output → inputs via chain rule. |
+| **Reverse-Mode Autodiff** | Compute gradients of one output w.r.t. many inputs efficiently (O(edges)). |
+| **SSA Form (Static Single Assignment)** | Each node defined once, never reassigned. Enables optimization passes. |
+| **Constant Folding** | Evaluate operations on constants at compile time, replace with CONST nodes. |
+| **Dead Code Elimination** | Remove nodes whose outputs are never used (not reachable from outputs). |
+| **Intermediate Representation (IR)** | The graph format used by compilers. Our Node/Graph classes are a minimal IR. |
+
+### Ecosystem Context
+
+In the ML ecosystem, **dynamic graphs** (PyTorch eager mode, TensorFlow 1.x) build the graph implicitly during execution via operator overloading, while **static graphs** (TensorFlow graph mode, JAX, torch.compile) trace or compile the graph ahead of time. Static graphs enable aggressive optimization but sacrifice Python flexibility (data-dependent control flow is limited).
+
+**torch.fx** bridges both worlds: it captures PyTorch code as a traceable static graph while preserving Python semantics where possible. This is the IR that torch.compile uses. Alternatives include **ONNX** (an interchange format for models, used by TensorRT and ONNX Runtime), **TorchScript** (PyTorch's older static graph format, now deprecated in favor of torch.compile), and **XLA's HLO** (JAX's IR, covered in Practice 025c).
+
+The trade-off: dynamic graphs are easier to debug and support arbitrary Python, but static graphs can be optimized more aggressively. Modern frameworks converge on **lazy tracing** (torch.compile, JAX's jit) — execute eagerly by default, trace and compile on-demand for hot paths.
+
 ## Description
 
 Build a minimal computation graph framework from scratch — nodes representing operations, edges representing data flow, forward evaluation, and backward (gradient) propagation. Then implement two classic compiler passes: constant folding (evaluate operations on known constants at compile time) and dead code elimination (remove nodes whose outputs are never used). Finally, compare your hand-built IR with `torch.fx.symbolic_trace` output on the same model.

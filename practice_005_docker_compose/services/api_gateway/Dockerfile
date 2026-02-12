@@ -4,6 +4,11 @@
 # TODO(human): Fill in each step below. Hints are provided as comments.
 # =============================================================================
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches the multi-stage pattern of Dockerfile construction:
+# base image selection, dependency layer caching, and CMD vs ENTRYPOINT.
+# Mastering this pattern is critical for building production-ready container images.
+
 # TODO(human) [1/4]: Choose a base image.
 # Hint: Use python:3.12-slim for a small image with Python pre-installed.
 # Syntax: FROM <image>:<tag>

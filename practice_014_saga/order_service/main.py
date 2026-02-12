@@ -74,6 +74,13 @@ async def status_consumer() -> None:
     """
     Background consumer that listens for saga completion/failure.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches event-driven status updates. The order service
+    # doesn't poll the orchestrator; it reacts to saga lifecycle events. This
+    # asynchronous, event-driven pattern is foundational for scalable microservices:
+    # services are decoupled and can scale independently.
+    # ──────────────────────────────────────────────────────────────────────
+
     TODO(human): Implement the handler that updates order status.
 
     When a SAGA_COMPLETED message arrives:
@@ -137,6 +144,13 @@ app = FastAPI(title="Order Service", lifespan=lifespan)
 async def create_order(request: CreateOrderRequest) -> OrderResponse:
     """
     Create a new order and start a saga.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches saga initiation from a synchronous HTTP request.
+    # The HTTP call returns immediately (201 Created) without waiting for saga
+    # completion. This fire-and-forget pattern is critical for avoiding long-lived
+    # HTTP connections and ensuring the API remains responsive under load.
+    # ──────────────────────────────────────────────────────────────────────
 
     TODO(human): Implement the order creation and saga initiation.
 

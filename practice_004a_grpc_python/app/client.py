@@ -51,6 +51,11 @@ def print_task(label: str, task: pb2.Task) -> None:
 def demo_create(stub: pb2_grpc.TaskManagerStub) -> str:
     """Create a task and return its ID."""
     print("\n--- CreateTask ---")
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches making unary RPC calls from the client: building
+    # protobuf request messages, calling stub methods, and accessing response fields.
+    # It's the client-side counterpart to the server's CreateTask implementation.
+
     # TODO(human): Call stub.CreateTask() with a CreateTaskRequest.
     #
     # Steps:
@@ -106,6 +111,11 @@ def demo_delete(stub: pb2_grpc.TaskManagerStub, task_id: str) -> None:
 def demo_get_not_found(stub: pb2_grpc.TaskManagerStub) -> None:
     """Try to fetch a non-existent task — exercise error handling."""
     print("\n--- GetTask (NOT_FOUND) ---")
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches client-side error handling: catching grpc.RpcError,
+    # inspecting status codes, and extracting error details. This is critical for
+    # building resilient clients that handle network failures, invalid requests, etc.
+
     # TODO(human): Handle the gRPC error.
     #
     # Steps:
@@ -140,6 +150,11 @@ def demo_watch(stub: pb2_grpc.TaskManagerStub) -> None:
     stop_event = threading.Event()
 
     def watch_loop() -> None:
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches consuming server-streaming RPCs: iterating over an
+        # iterator of responses from the server. This is the client-side pattern for
+        # real-time feeds, progress updates, or any scenario where the server streams events.
+
         # TODO(human): Implement the streaming consumer.
         #
         # Steps:

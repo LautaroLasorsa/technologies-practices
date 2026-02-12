@@ -193,6 +193,11 @@ def verify_outputs_match(
 def run_backend_comparison() -> None:
     """Compile a model with different backends, compare outputs and timing.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches torch.compile's compilation pipeline (Dynamo → backend).
+    # Understanding backend differences (eager, aot_eager, inductor) and first-call
+    # overhead is essential for using torch.compile effectively in production.
+
     TODO(human): Implement this function.
 
     This is the core exercise of Phase 1. You will:

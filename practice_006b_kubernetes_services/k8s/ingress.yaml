@@ -1,5 +1,10 @@
 # Ingress (NGINX)
 # ---------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches Layer 7 HTTP routing, essential for exposing multiple
+# services under a single domain with path-based rules. Understanding Ingress vs
+# LoadBalancer trade-offs is critical for production architecture decisions.
+#
 # Layer 7 (HTTP) routing rules that map URL paths to backend Services.
 # The NGINX Ingress Controller (enabled via `minikube addons enable ingress`)
 # watches Ingress resources and configures its internal NGINX accordingly.

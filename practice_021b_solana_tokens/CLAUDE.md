@@ -15,6 +15,75 @@
 - Solana CLI, Anchor CLI, LiteSVM (all inside Docker)
 - Docker (dev container -- replaces WSL requirement)
 
+## Theoretical Context
+
+### What SPL Token and Token-2022 Are
+
+The **SPL Token Program** is Solana's standard token interface—a single on-chain program that manages ALL fungible and non-fungible tokens (including USDC, wrapped SOL, NFTs, stablecoins, memecoins). Unlike Ethereum where each ERC-20 is a separate deployed contract, Solana has ONE canonical program (address `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`) that every token uses.
+
+This architecture has profound implications. Token creation is cheap (no contract deployment gas). Token operations (mint, transfer, burn) have uniform cost. Wallets and explorers know exactly how to parse any token—there's no "non-standard ERC-20" problem. But it also means less flexibility: custom token logic requires wrapping the SPL program in a higher-level program.
+
+**Token-2022 (Token Extensions)** is the next-generation token program that adds built-in features previously requiring custom programs: transfer fees, non-transferable (soulbound) tokens, confidential transfers (ZK proofs), interest-bearing tokens, and more. It's backward-compatible with SPL Token but provides opt-in extensions.
+
+### How SPL Token Works Internally
+
+**Core concepts:**
+1. **Mint Account**: Defines a token type. Stores supply, decimals, and mint/freeze authority. ONE mint = ONE token (like USDC has one mint).
+2. **Token Account / ATA**: Holds a balance of a specific token for a specific wallet. Structure: `{mint, owner, amount, delegate, state}`.
+3. **Associated Token Account (ATA)**: Deterministic PDA derived from `(owner, mint)`. Every wallet has exactly one ATA per token. Simplifies UX—you don't need to track multiple accounts per token.
+
+**Key operations (CPIs to the Token Program):**
+- `mint_to(mint_authority, destination, amount)`: Create new tokens. Requires mint authority signature.
+- `transfer / transfer_checked`: Move tokens between accounts. `transfer_checked` validates decimals to prevent mint confusion attacks.
+- `burn(owner, source, amount)`: Destroy tokens. Reduces supply.
+- `approve(owner, delegate, amount)`: Delegate spending authority (like ERC-20 approve). Used by DeFi programs.
+
+**Authority model:**
+- **Mint authority**: Can mint new tokens. Often a PDA controlled by a program (program = "central bank"). Can be set to None (fixed supply).
+- **Freeze authority**: Can freeze token accounts (prevent transfers). Used by regulated stablecoins and securities.
+- **Close authority**: Can close empty token accounts to reclaim rent.
+
+**Escrow pattern:** The canonical Solana DeFi primitive. Two parties want to atomically swap token A for token B:
+1. Maker deposits token A into a **vault PDA** (program-controlled account).
+2. Maker creates an **Escrow Account** (state PDA) recording terms: `{maker, taker, vault, mint_a, mint_b, amount_a, amount_b}`.
+3. Taker sends token B to maker via CPI.
+4. Program uses vault PDA's signature (via `invoke_signed`) to send token A to taker.
+5. Escrow account closed, maker reclaims rent.
+
+This pattern underpins DEX limit orders, OTC swaps, and vesting contracts.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Mint Account** | Defines a token: supply, decimals, authorities. One mint per token type (like USDC has one global mint). |
+| **Token Account (ATA)** | Holds a balance of a specific token for a specific owner. PDA derived from `(owner, mint)`. |
+| **Mint Authority** | Pubkey (often a PDA) that can mint new tokens. If None, supply is fixed. |
+| **Transfer Fee** | Token-2022 extension: automatic fee deducted on every transfer, collected into a designated account. |
+| **Non-Transferable (Soulbound)** | Token-2022 extension: tokens bound to one account, cannot be transferred. Used for credentials, reputation. |
+| **Confidential Transfers** | Token-2022 extension: encrypt balances and amounts using ZK proofs. Preserves privacy on public blockchain. |
+| **Escrow Pattern** | Atomic swap primitive: deposit token A into vault PDA, taker provides token B, vault releases A. |
+| **CPI (Cross-Program Invocation)** | Calling another program (e.g., Token Program) from your program. PDAs can sign CPIs to act as authorities. |
+| **PDA as Mint Authority** | Mint owned by a program-derived address. Program logic controls when tokens can be minted. |
+| **AMM (Automated Market Maker)** | Constant product formula (x * y = k). Users trade against a liquidity pool instead of an orderbook. |
+
+### Ecosystem Context and Trade-offs
+
+The single Token Program architecture enables **composability**: every DeFi protocol (Raydium, Orca, Marinade, Jupiter) uses the same transfer/mint/burn CPIs. No need for per-token integration—if it's SPL, it works.
+
+**Trade-offs:**
+- **Uniform cost** → No per-token gas optimization. Ethereum allows custom ERC-20 implementations to optimize gas.
+- **Less flexibility** → Custom token logic (vesting, rebasing, fee-on-transfer before Token-2022) requires wrapping programs. ERC-20 is just code—do anything.
+- **Account proliferation** → Every (wallet, token) pair needs an ATA. Creates ~1M accounts for popular tokens like USDC. Ethereum ERC-20 is a single mapping.
+- **Rent burden** → Each ATA requires ~0.002 SOL rent deposit. Closing accounts reclaims rent. Ethereum storage is "pay once, store forever."
+
+**Alternatives:**
+- **Ethereum ERC-20**: Custom contracts per token, flexible but less composable
+- **Cosmos IBC**: Native token transfers across chains, but less programmability
+- **Sui Coin Standard**: Similar single-program model, typed in Move
+
+Solana's model optimizes for **speed** (parallel execution), **composability** (one standard), and **low fees** (predictable costs). Token-2022 bridges the flexibility gap by moving common patterns (transfer fees, non-transferability) into the core program, avoiding the "every feature needs a wrapper program" problem.
+
 ## Prerequisites
 
 - **Practice 021a completed** — you should already understand:

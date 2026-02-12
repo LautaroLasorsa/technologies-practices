@@ -28,6 +28,11 @@ constexpr int N = 1 << 20;  // ~1M elements — big enough to see GPU benefit
 // Vector addition kernel
 // --------------------------------------------------------------------------- //
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches explicit memory management (cudaMalloc/cudaMemcpy/cudaFree).
+// Understanding the host-device memory split is crucial—GPUs don't share CPU RAM.
+// This pattern (allocate → transfer → compute → transfer back → free) is foundational.
+
 // TODO(human): Implement the vector addition kernel.
 //   - Compute global thread index
 //   - Guard against out-of-bounds access (idx < n)

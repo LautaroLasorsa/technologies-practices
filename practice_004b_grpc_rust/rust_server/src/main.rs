@@ -51,6 +51,11 @@ impl InventoryService {
 impl Inventory for InventoryService {
     /// Unary RPC: Add a new item to the inventory.
     ///
+    /// # Exercise Context
+    /// This exercise teaches implementing unary RPCs in Rust: locking shared state,
+    /// validating requests, and returning typed responses or Status errors. It's the
+    /// Rust equivalent of the Python server's CreateTask, but with compile-time safety.
+    ///
     /// TODO(human): Implement this method.
     ///
     /// Steps:
@@ -69,6 +74,11 @@ impl Inventory for InventoryService {
     }
 
     /// Unary RPC: Look up a single item by name.
+    ///
+    /// # Exercise Context
+    /// This exercise teaches Rust error handling in gRPC: returning Status::not_found()
+    /// when data is missing. This is the pattern for all "lookup by ID" RPCs and demonstrates
+    /// how Rust's Result type maps cleanly to gRPC's status code model.
     ///
     /// TODO(human): Implement this method.
     ///
@@ -90,6 +100,11 @@ impl Inventory for InventoryService {
     type ListItemsStream = ReceiverStream<Result<ListItemsResponse, Status>>;
 
     /// Server-streaming RPC: Stream all items in the inventory.
+    ///
+    /// # Exercise Context
+    /// This exercise teaches server-streaming in Rust: spawning a tokio task that iterates
+    /// data and sends messages through an mpsc channel, wrapped as a ReceiverStream. This is
+    /// the pattern for pagination, live feeds, and bulk exports from Rust services.
     ///
     /// TODO(human): Implement this method.
     ///

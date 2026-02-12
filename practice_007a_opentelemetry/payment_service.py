@@ -36,6 +36,10 @@ app = FastAPI(title="Payment Service")
 
 # ── Payment endpoint (Phase 5) ───────────────────────────────────────
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches context extraction on the receiving end of distributed tracing.
+# Implementing SERVER span creation with extracted context completes the distributed tracing loop,
+# allowing this service's spans to appear as children in the same trace initiated by the caller.
 
 @app.post("/pay")
 async def process_payment(payment: PaymentRequest, request: Request) -> PaymentResponse:

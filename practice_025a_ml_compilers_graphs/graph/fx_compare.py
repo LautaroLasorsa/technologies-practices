@@ -97,6 +97,11 @@ def trace_and_print_fx_graph() -> None:
 def build_mlp_with_our_ir() -> None:
     """Build the same MLP using our graph/ir.py framework.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches IR comparison — understanding how high-level frameworks
+    # (torch.fx) map to low-level operations. This is the "lowering" step in compilers.
+    # Bridging abstraction levels is key to optimizing ML models.
+
     TODO(human): Build an equivalent computation graph using our IR.
 
     The SimpleMLP does: output = Linear2(ReLU(Linear1(x)))

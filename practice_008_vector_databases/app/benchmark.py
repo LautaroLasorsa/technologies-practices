@@ -107,6 +107,11 @@ def measure_search_latency(
     return sum(latencies) / len(latencies)
 
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how distance metric choice affects search performance.
+# Understanding the computational cost differences between Cosine, Dot Product, and Euclidean
+# is essential for designing systems where latency matters—milliseconds add up at scale.
+
 def benchmark_distance_metrics(client: QdrantClient, articles: list[dict]) -> None:
     """Compare search latency across Cosine, Dot Product, and Euclidean.
 
@@ -136,6 +141,11 @@ def benchmark_distance_metrics(client: QdrantClient, articles: list[dict]) -> No
     # TODO(human): implement distance metric benchmark
     raise NotImplementedError("Implement benchmark_distance_metrics()")
 
+
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches HNSW parameter tuning, a critical production skill for vector databases.
+# Understanding the recall/latency/memory tradeoffs controlled by m and ef_construct enables
+# you to optimize vector search for your specific requirements (speed vs accuracy).
 
 def benchmark_hnsw_params(client: QdrantClient, articles: list[dict]) -> None:
     """Compare build time and search latency across HNSW configurations.

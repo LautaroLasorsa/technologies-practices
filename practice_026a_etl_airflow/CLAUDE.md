@@ -13,6 +13,80 @@
 - **Python 3.12+** (uv for local helper scripts)
 - **Docker** (Airflow runs entirely in containers)
 
+## Theoretical Context
+
+### What is Apache Airflow and what problem does it solve?
+
+**Apache Airflow** is a **workflow orchestration platform** that solves the problem of **scheduling and monitoring complex data pipelines**. Before orchestrators like Airflow, data engineers wrote cron jobs chained with shell scripts, which led to unmaintainable code (no dependency tracking, manual failure handling, zero observability). Airflow provides **DAGs (Directed Acyclic Graphs)** to declaratively define task dependencies, a scheduler to execute them, and a web UI to monitor/debug pipeline runs.
+
+The core value proposition: **declarative workflows as Python code** (`tasks/dependencies = nodes/edges in a DAG`) + **centralized scheduling** + **automatic retry/alerting** + **first-class observability** (logs, task status, execution history).
+
+### How Airflow works internally
+
+**Architecture components:**
+
+1. **Webserver**: Flask app serving the Airflow UI. Users trigger DAGs, inspect logs, view task status, and browse metadata.
+2. **Scheduler**: The brain. Continuously reads DAG files from `dags/`, parses them into the **metadata database** (PostgreSQL/MySQL), and enqueues tasks whose dependencies are met + scheduled time has arrived.
+3. **Metadata database**: Stores DAG definitions, task instances, run history, logs, and state. The scheduler and webserver both read/write this DB.
+4. **Executor**: Determines HOW tasks run. `LocalExecutor` (one process per task, parallel via `multiprocessing`), `CeleryExecutor` (distributed task queue via Celery workers), `KubernetesExecutor` (spawns a pod per task).
+5. **Workers** (in distributed setups): Processes that pull tasks from the queue and execute them. In `LocalExecutor`, workers are subprocesses of the scheduler.
+
+**DAG execution flow:**
+
+1. **DAG parsing**: Scheduler scans `dags/` folder every ~30 seconds (configurable), imports Python files, instantiates DAG objects, and serializes them into the metadata DB.
+2. **Scheduling**: Scheduler queries the DB for DAGs with `schedule_interval` (cron expression or timedelta). For each scheduled run (identified by `execution_date`), it creates **DagRun** and **TaskInstance** records.
+3. **Dependency resolution**: For each TaskInstance, the scheduler checks if upstream tasks are `success` (or other `trigger_rule` like `all_done`, `one_failed`). If dependencies satisfied, the task is enqueued.
+4. **Task execution**: The executor picks up the task, runs the operator's `execute()` method (e.g., `PythonOperator` calls a Python callable, `BashOperator` spawns a subprocess), captures logs, and updates the TaskInstance state (`running → success/failed`).
+5. **XCom** (cross-communication): Tasks can `xcom_push(key, value)` to store small data in the metadata DB. Downstream tasks `xcom_pull(task_ids, key)` to retrieve it. Used for passing small metadata (file paths, record counts), NOT large datasets (use external storage like S3).
+
+**Scheduling semantics:**
+
+- **`execution_date`**: A misnomer — it's the **start** of the data interval, not when the DAG runs. For `schedule_interval='@daily'` on 2024-01-01, `execution_date` = 2024-01-01 00:00, but the DAG runs on 2024-01-02 00:00 (after the interval closes).
+- **`catchup`**: If `True`, Airflow backfills all missed intervals when a DAG is unpaused. If `False`, only the latest interval runs.
+
+### Key concepts
+
+| Concept | Description |
+|---------|-------------|
+| **DAG** | Directed Acyclic Graph: a collection of tasks with dependency edges, representing a workflow |
+| **Operator** | A task template (e.g., `PythonOperator`, `BashOperator`, `EmailOperator`). Defines WHAT to do when executed. |
+| **Task** | An instantiated operator with a unique `task_id`, part of a DAG |
+| **TaskInstance** | A specific execution of a task for a DagRun (identified by `(dag_id, task_id, execution_date, try_number)`) |
+| **DagRun** | A single execution of a DAG for a specific `execution_date` (can be scheduled or manually triggered) |
+| **execution_date** | The start of the data interval this DagRun processes (NOT the actual run time) |
+| **XCom** | Cross-communication: a key-value store in the metadata DB for passing small data between tasks |
+| **Trigger rule** | Determines when a task runs based on upstream task states (`all_success`, `all_done`, `one_failed`, etc.) |
+| **Sensor** | A special operator that waits for an external condition (file exists, API responds, time elapsed) before succeeding |
+| **TaskFlow API** | Modern Airflow 2.0+ API using `@task` decorators, auto-managing XComs via function returns |
+| **catchup** | Whether Airflow backfills missed DAG runs when unpaused (default `True`) |
+
+### Ecosystem context
+
+**Why Airflow became the standard:**
+
+- **Python-native**: Data engineers already know Python. DAGs are just Python files (unlike XML configs in older tools like Oozie).
+- **Extensibility**: 1000+ community providers for AWS, GCP, Databricks, Snowflake, dbt, Kubernetes, etc.
+- **Observability**: Rich UI with task logs, Gantt charts, dependency graphs, and execution history.
+- **Open-source**: Apache Foundation project with a massive community (Airbnb, Uber, Lyft, Spotify all contribute).
+
+**Alternatives and trade-offs:**
+
+| Tool | Paradigm | Strengths | Weaknesses |
+|------|----------|-----------|------------|
+| **Airflow** | Task-centric (imperative) | Python-native, huge ecosystem, mature | Task-centric model, XCom limitations, DAG parsing overhead |
+| **Dagster** | Asset-centric (declarative) | Asset lineage, better testing, incremental processing | Smaller community, fewer integrations |
+| **Prefect** | Task-centric + dynamic | Simpler setup, hybrid execution (local + cloud) | Less enterprise adoption, fewer integrations |
+| **dbt** | SQL-only, DAG-free | Best for SQL transformations, declarative | Limited to SQL, requires orchestrator for scheduling |
+| **Luigi** (Spotify) | Task-centric | Simple, Pythonic | No UI, limited community, dead project |
+
+**Airflow's pain points (motivate 026b - Dagster):**
+
+1. **Task-centric, not data-centric**: You define "run this Python function at 2am", not "this dataset should be fresh". Hard to reason about data lineage.
+2. **XCom is a hack**: Passing large DataFrames via XCom is an anti-pattern (bloats metadata DB). Requires external storage + manual key management.
+3. **Testing is hard**: Airflow DAGs are hard to unit-test (need a running Airflow instance or complex mocking).
+4. **DAG parsing overhead**: Scheduler imports every DAG file every 30s, even if nothing changed. Scales poorly with 1000+ DAGs.
+5. **No native incremental processing**: Airflow doesn't natively understand "only process new data since last run". Requires manual bookkeeping.
+
 ## Description
 
 Learn Apache Airflow's core concepts by building DAGs that orchestrate a simple ETL pipeline. Start with basic task dependencies, progress to the modern TaskFlow API with decorators, handle data passing with XComs, implement sensors and scheduling, and finally see where Airflow's task-centric model hits its limits.

@@ -1,5 +1,10 @@
 # deployment.yaml — Declares the desired state for task-tracker pods.
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches Kubernetes' core declarative control loop: Deployments manage
+# ReplicaSets, which manage Pods. Understanding the Deployment -> ReplicaSet -> Pod
+# hierarchy is fundamental to debugging rollouts, scaling, and understanding self-healing.
+#
 # Concepts to learn:
 #   - A Deployment manages a ReplicaSet, which manages Pods
 #   - Hierarchy: Deployment -> ReplicaSet -> Pod(s)

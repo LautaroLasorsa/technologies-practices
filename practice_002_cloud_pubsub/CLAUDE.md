@@ -11,6 +11,48 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+Google Cloud Pub/Sub is a fully-managed asynchronous messaging service designed for building event-driven systems and decoupling microservices. It provides a serverless, horizontally scalable message queue with guaranteed **at-least-once delivery** semantics and global replication across Google's infrastructure. Unlike self-hosted systems (Kafka, RabbitMQ), Pub/Sub handles all infrastructure concerns — you pay per message without managing brokers, partitions, or rebalancing.
+
+### Architecture
+
+Pub/Sub follows a **topic-subscription model**:
+1. **Publishers** send messages to a **topic** (a named resource)
+2. Each **subscription** to that topic receives a copy of every message (fan-out)
+3. **Subscribers** pull messages from their subscription and explicitly acknowledge them
+
+Messages are stored redundantly across multiple zones. When a subscriber acknowledges a message, it's marked as processed for that subscription only — other subscriptions still see it. If a message isn't acknowledged within the **ack deadline** (default 10s, configurable up to 600s), Pub/Sub automatically redelivers it.
+
+### Delivery Semantics
+
+Pub/Sub guarantees **at-least-once delivery**: a message will be delivered at least once, but may be delivered multiple times (e.g., if ack is lost in transit). This requires subscribers to be **idempotent** — processing the same message twice must produce the same result. Pub/Sub does not guarantee exactly-once delivery or ordering by default, but provides **ordering keys** to enable per-key ordering within a subscription.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Topic** | Named resource where publishers send messages. Decouples producers from consumers. |
+| **Subscription** | Represents a stream of messages from a topic. Multiple subscriptions = fan-out. |
+| **Message** | Data payload + optional attributes (metadata key-value pairs). |
+| **Acknowledgment (ACK)** | Subscriber confirms successful processing. Removes message from subscription queue. |
+| **NACK** | Negative acknowledgment. Redelivers message immediately (or after backoff). |
+| **Ack Deadline** | Time window for ack/nack. After expiration, message is redelivered. |
+| **Ordering Key** | Optional string to ensure messages with the same key are delivered in order. |
+| **Dead-Letter Topic** | Destination for messages that fail repeatedly (after max retries). |
+
+### Push vs Pull Subscriptions
+
+Pub/Sub supports two subscription modes:
+- **Pull**: Subscriber calls `pull()` to fetch messages (synchronous or streaming). Gives subscriber control over flow.
+- **Push**: Pub/Sub posts messages to a subscriber's HTTP endpoint. Simpler but requires a public webhook.
+
+This practice uses **pull** (both synchronous and streaming) since it works locally without exposing endpoints.
+
+### Ecosystem Context
+
+Pub/Sub competes with AWS SNS/SQS (similar managed model, AWS-only), Apache Kafka (self-hosted, higher throughput, replay capability, more operational overhead), and RabbitMQ (self-hosted, AMQP protocol, lower latency for small messages). Choose Pub/Sub when you need **zero operational overhead**, **global scale**, and **serverless billing**. Choose Kafka when you need **replay semantics**, **total ordering**, or **higher throughput** (Kafka can handle millions of messages/sec per broker). Pub/Sub's managed nature makes it ideal for cloud-native applications on GCP, while Kafka dominates data-intensive pipelines and on-prem deployments.
+
 ## Description
 
 Build an **Order Processing System** that demonstrates core Pub/Sub patterns: publish/subscribe, fan-out, message ordering, acknowledgment semantics, and dead-letter queues — all running locally against the Pub/Sub emulator in Docker.
@@ -121,6 +163,10 @@ All commands run from `practice_002_cloud_pubsub/`.
 | Command | Description |
 |---------|-------------|
 | `cd app && uv run python subscriber_deadletter.py` | Listen on `ordered-sub`, NACK "Monitor" orders (poison), then check `dead-letter-sub` for routed messages |
+
+## Notes
+
+- **User observation:** Pub/Sub's ordered publish returns independent futures per ordering key — handling failures as values (`str | Exception`) instead of raising preserves the batch length invariant, mirroring Rust's `Result<T, E>` / monadic error handling pattern. This is preferable in batch/pipeline scenarios where you want to resolve all futures before propagating errors.
 
 ## State
 

@@ -78,6 +78,11 @@ window_agg_table = app.Table(
 async def aggregate_windows(stream):
     """Update tumbling-window aggregates for each enriched reading.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches tumbling-window aggregation: partitioning time into
+    # fixed buckets and computing running statistics per window. This is the foundation
+    # of time-series analytics in stream processing (metrics, dashboards, anomaly detection).
+
     TODO(human): Implement the body of this agent.
 
     Steps:
@@ -130,6 +135,11 @@ async def aggregate_windows(stream):
 @app.timer(interval=float(config.WINDOW_SIZE_SECONDS))
 async def emit_window_snapshots():
     """Periodically emit window aggregate summaries to the output topic.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches how to emit windowed aggregates: combining timers
+    # with windowed table accessors to produce summary events when windows close.
+    # This pattern bridges stateful processing and downstream consumers (dashboards, alerting).
 
     TODO(human): Implement this timer function.
 

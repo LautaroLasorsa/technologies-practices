@@ -55,6 +55,11 @@ void print_device_info() {
 // __global__ means: this function runs on the GPU, called from the CPU.
 // Every thread executes this function independently.
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches the fundamental CUDA pattern: global index computation.
+// Every parallel GPU algorithm starts here—map thread IDs to data indices.
+// This is the "embarrassingly parallel" pattern: no communication between threads.
+
 // TODO(human): Fill in the kernel body.
 //   - Compute a unique global index: idx = blockIdx.x * blockDim.x + threadIdx.x
 //   - If idx < n, write idx * 2 into output[idx]

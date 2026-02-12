@@ -12,6 +12,28 @@
 - Terraform CLI 1.5+
 - Docker Desktop (local)
 
+## Theoretical Context
+
+Terraform modules are reusable packages of Terraform configuration that encapsulate multiple resources into a single logical unit. They solve the problem of code duplication and configuration drift across environments -- instead of copy-pasting resource blocks for each deployment, you define a module once (e.g., "app_container" that creates an image + container + health check) and call it multiple times with different inputs. Modules enable DRY (Don't Repeat Yourself) principles, enforce standardization, and allow teams to share infrastructure patterns via module registries (Terraform Registry, private Git repos).
+
+Internally, a module is just a directory containing `.tf` files with a clear interface: **inputs** (declared via `variable` blocks), **outputs** (declared via `output` blocks), and **resources/data sources** (the actual infrastructure logic). When you call a module with `module "name" { source = "./path"; var1 = val1; ... }`, Terraform treats it as a black box: it passes the input variables, executes the module's configuration, and exposes outputs for the caller to reference. Modules can nest: a root module (your main project) can call child modules, which themselves call other modules. Terraform resolves this into a single dependency graph, ensuring resources are created in the correct order across module boundaries. **`for_each`** is a meta-argument that creates multiple resource instances from a map or set, unlike `count` (which uses integer indices). With `for_each`, each instance has a stable string key (e.g., `module.extra["app1"]`), making it safer for production: adding/removing elements doesn't shift indices and accidentally destroy unrelated resources.
+
+**Terraform workspaces** provide isolated state files within the same configuration directory. When you run `terraform workspace new dev`, Terraform creates a separate `terraform.tfstate.d/dev/terraform.tfstate` file -- subsequent applies in the "dev" workspace only modify that state. The built-in variable `terraform.workspace` exposes the current workspace name, enabling conditional logic (e.g., `replicas = terraform.workspace == "prod" ? 5 : 2`). However, **workspaces are NOT recommended for managing separate environments** (dev/staging/prod) in production -- they share the same backend and configurations, making it easy to accidentally destroy prod by forgetting to switch workspaces. Best practice is **folder-based environments**: separate directories (`envs/dev/`, `envs/prod/`) with distinct backends, even if they call the same modules. Workspaces are best for temporary testing/experimentation or short-lived feature branches.
+
+| Concept | Description |
+|---------|-------------|
+| **Module** | Reusable package of Terraform config. Has inputs (variables), outputs, and resources. Called via `module "name" {...}`. |
+| **Root Module** | The top-level directory where you run `terraform apply`. Calls child modules. |
+| **Module Source** | Path or URL to the module (local: `"./modules/foo"`, Git: `"git::https://..."`, registry: `"hashicorp/consul/aws"`). |
+| **`for_each`** | Meta-argument that creates multiple resource instances from a map/set. Each instance has a stable string key. |
+| **`count`** | Meta-argument that creates N identical resources. Accessed by index (`resource.foo[0]`). Less stable than `for_each`. |
+| **Workspace** | Isolated state file within the same configuration. Access with `terraform.workspace`. Use `terraform workspace new/select`. |
+| **`depends_on`** | Explicit dependency when implicit references (via attributes) don't capture the relationship. Use sparingly. |
+| **Provisioner** | Runs scripts/commands after resource creation. Use as a last resort -- prefer native resource attributes. |
+| **Backend** | Where state is stored (local, S3, Azure Blob, Terraform Cloud). Configured in `terraform { backend "..." {...} }`. |
+
+**Modules** are essential for any non-trivial Terraform project -- they enable code reuse, enforce standards, and simplify multi-environment deployments. **`for_each` vs `count`**: prefer `for_each` for production (stable keys, safer updates), use `count` for simple N-replica scenarios where order doesn't matter. **Workspaces**: useful for temporary environments (PR previews, feature branches) but avoid for long-lived prod/staging separation -- use folder-based layouts instead. **Provisioners**: HashiCorp explicitly discourages them (they break Terraform's declarative model and don't handle failures well) -- prefer `user_data`, `cloud-init`, or configuration management tools like Ansible. **`depends_on`**: only use when Terraform can't infer the dependency (e.g., API-level constraints not visible in the resource graph) -- overuse hides implicit dependencies and makes code brittle.
+
 ## Description
 
 Build a **multi-container web stack** (Nginx reverse proxy + Redis cache + app network + persistent volume) entirely with Terraform and the Docker provider. This practice focuses on **intermediate-to-advanced Terraform features** that go beyond single-resource declarations:

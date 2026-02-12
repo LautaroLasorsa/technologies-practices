@@ -13,6 +13,29 @@
 - Docker (container image)
 - minikube + kubectl (local Kubernetes cluster)
 
+## Theoretical Context
+
+Kubernetes is a container orchestration platform that automates deployment, scaling, and management of containerized applications. It solves the problem of manually coordinating hundreds or thousands of containers across multiple machines -- instead of SSH-ing into servers to run Docker commands, you declare your desired state in YAML manifests, and Kubernetes continuously reconciles reality to match that state. This declarative model enables self-healing: if a pod crashes, Kubernetes automatically restarts it; if a node fails, Kubernetes reschedules the pods elsewhere.
+
+Internally, a Kubernetes cluster consists of two planes: the **control plane** (master nodes) and the **data plane** (worker nodes). The control plane hosts four core components: (1) **etcd** -- a distributed key-value store that holds the entire cluster state (pods, services, configs) and serves as the single source of truth; (2) **kube-apiserver** -- the only component that talks directly to etcd, exposing the Kubernetes REST API and handling authentication, authorization (RBAC), and admission control; (3) **kube-scheduler** -- assigns newly created pods to worker nodes based on resource requests, affinity rules, and taints/tolerations; (4) **kube-controller-manager** -- runs control loops (e.g., ReplicaSet controller, Deployment controller) that watch etcd for changes and take corrective actions to reach the desired state. On each worker node runs a **kubelet** -- an agent that pulls pod specs from the apiserver, instructs the container runtime (Docker, containerd) to start containers, and reports pod/node health back to the apiserver.
+
+When you `kubectl apply` a manifest, the workflow is: (1) kubectl sends the YAML to the apiserver over HTTPS; (2) apiserver validates, authenticates, and persists it to etcd; (3) the relevant controller (e.g., Deployment controller) watches etcd via the apiserver, sees the new Deployment, and creates a ReplicaSet; (4) the ReplicaSet controller creates Pod objects in etcd; (5) the scheduler watches for unscheduled Pods, assigns them to nodes, and updates etcd; (6) kubelets on assigned nodes see the new Pod specs, pull the container images, and start the containers; (7) kubelets continuously report pod status back to the apiserver, which updates etcd. This watch-reconcile loop is the heart of Kubernetes -- every component watches etcd (via apiserver) for changes and takes action to align reality with the desired state.
+
+| Concept | Description |
+|---------|-------------|
+| **Pod** | Smallest deployable unit; wraps one or more containers with shared network/storage. Ephemeral -- not self-healing. |
+| **ReplicaSet** | Ensures a specified number of pod replicas are running. Typically managed by a Deployment, not used directly. |
+| **Deployment** | Declarative API for Pods + ReplicaSets. Provides rollout/rollback, rolling updates, and desired replica count. |
+| **Namespace** | Logical isolation boundary. Resources in different namespaces can have identical names without conflict. |
+| **Label** | Key-value tags on objects (e.g., `app: nginx`). Used by selectors to group and filter resources. |
+| **Selector** | Label query (e.g., `matchLabels: {app: nginx}`). Controllers use selectors to find the Pods they manage. |
+| **ConfigMap** | Stores non-sensitive config as key-value pairs. Injected into Pods as env vars or mounted files. |
+| **Secret** | Like ConfigMap but for sensitive data. Values are base64-encoded (not encrypted!) unless etcd encryption is enabled. |
+| **etcd** | Distributed key-value store. The single source of truth for all cluster state. Uses Raft for leader election. |
+| **kubelet** | Node agent. Watches apiserver for Pod assignments, starts containers, and reports health back. |
+
+Kubernetes is the **industry standard** for production container orchestration, dominating cloud-native infrastructure (AWS EKS, GCP GKE, Azure AKS all run Kubernetes under the hood). Alternatives include **Docker Swarm** (simpler but far less adopted -- effectively deprecated in favor of Kubernetes), **HashiCorp Nomad** (lighter weight, multi-workload support beyond containers, but smaller ecosystem), and **Apache Mesos** (older, more complex, largely replaced by Kubernetes). Kubernetes' strengths are its **massive ecosystem** (Helm charts, operators, service meshes, observability tools) and **declarative API** (GitOps-friendly). Its weaknesses are **steep learning curve** (many moving parts) and **operational complexity** (maintaining etcd, managing certificates, upgrading control plane components). For local development, minikube and kind (Kubernetes in Docker) provide single-node clusters; for production, managed services (EKS, GKE, AKS) abstract away control plane management.
+
 ## Description
 
 Deploy a **Task Tracker API** (a simple Flask app) to a local Kubernetes cluster, learning core K8s primitives hands-on: Pods, Deployments, ReplicaSets, Namespaces, ConfigMaps, Secrets, labels, and selectors.

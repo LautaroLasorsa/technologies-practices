@@ -12,6 +12,42 @@
 - Python 3.12+ (uv)
 - Rust (cargo)
 
+## Theoretical Context
+
+LMDB (Lightning Memory-Mapped Database) is an embedded key-value store originally developed for OpenLDAP. Unlike client-server databases (PostgreSQL, Redis), LMDB runs in-process — your application directly reads/writes the database through memory-mapped files, with no network overhead or separate daemon. LMDB excels at read-heavy workloads with its zero-copy architecture and deterministic latency profile.
+
+### Architecture
+
+LMDB maps the entire database file into virtual memory using the OS `mmap()` syscall. Reads are zero-copy — your application's pointer literally points into the kernel's page cache. The underlying data structure is a **B+ tree** (not LSM-tree like RocksDB/LevelDB), which means:
+- **Reads are O(log n)** with excellent cache locality
+- **No write amplification** from compaction (unlike LSM)
+- **No background threads** — deterministic latency, no surprise pauses
+
+Writes use **copy-on-write (CoW)**: modified pages are written to new locations, and the root pointer is atomically swapped on commit. This gives ACID transactions without write-ahead logs or complex recovery procedures.
+
+### Concurrency Model
+
+LMDB uses **MVCC (Multi-Version Concurrency Control)** with a single-writer/multi-reader design:
+- **One write transaction at a time** (serialized via mutex)
+- **Unlimited concurrent read transactions** (each sees a consistent snapshot)
+- Readers never block writers, writers never block readers
+
+This is ideal for read-heavy workloads (embedding lookups, config stores, caches) but limits write throughput to single-threaded performance.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Environment** | A directory containing the database files (`data.mdb` + `lock.mdb`). One environment per directory. |
+| **Named Database** | A logical partition within an environment (like tables). Requires `max_dbs` at env creation. |
+| **Transaction** | Read-only or read-write. Read txns see a snapshot; write txns are serialized. |
+| **Cursor** | Iterator for navigating keys in order. Supports seek, prefix scan, range queries. |
+| **map_size** | Maximum database size. Must be set at env open time. Can be grown but not shrunk. |
+
+### Ecosystem Context
+
+LMDB competes with SQLite (relational, more features, slower reads), RocksDB/LevelDB (LSM-tree, better write throughput, worse read latency), and Redis (in-memory, network overhead, volatility risk). LMDB excels when you need **fast reads with persistence**, **zero configuration**, and **cross-process/cross-language sharing** (the file format is portable). It's the standard storage backend for ML embedding caches (Caffe, NVIDIA DALI) and is used by Meilisearch, Monero, and many embedded systems.
+
 ## Description
 
 Build a **cross-language embedding cache**: a Python service writes word embeddings into LMDB, and a Rust CLI reads and queries them. This teaches LMDB's core mechanics — transactions, cursors, named databases, zero-copy reads — while demonstrating cross-language data sharing via a common binary format.

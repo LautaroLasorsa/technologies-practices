@@ -13,6 +13,29 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+### SAGA Pattern: Distributed Transactions Without Locks
+
+The SAGA pattern solves the distributed transaction problem without distributed locks or two-phase commit (2PC). In a microservices architecture where each service owns its database, traditional ACID transactions spanning multiple services are infeasible. A SAGA breaks a long-running business transaction into a sequence of local transactions, each published as an event. If any step fails, compensating transactions undo the effects of previous steps in reverse order. This achieves eventual consistency instead of strong consistency.
+
+SAGAs emerged from Hector Garcia-Molina's 1987 paper "Sagas" and became mainstream with microservices adoption. The pattern trades immediate consistency for availability and partition tolerance (CAP theorem). Unlike 2PC—which requires all participants to lock resources during a voting phase, causing high latency and blocking under failures—SAGAs use **compensating transactions** (semantic undo) that execute asynchronously. For example, if an order saga reserves inventory, processes payment, and ships the product, but payment fails, the saga runs compensations: cancel shipment (if started) and release inventory reservation. These compensations are business-logic rollbacks, not database rollbacks.
+
+Two coordination strategies exist: **orchestration** and **choreography**. In **orchestration** (used in this practice), a central coordinator (the orchestrator) sends commands to services and listens for replies, explicitly managing the state machine. In **choreography**, services listen for events and autonomously decide their actions, with no central coordinator. Orchestration provides centralized observability and easier debugging (saga state is tracked in one place), but introduces a single point of failure. Choreography is more decentralized and resilient but harder to reason about (saga logic is implicit across services) and prone to cyclic dependencies if not carefully designed.
+
+**Key concepts**:
+
+| Concept | Description |
+|---------|-------------|
+| **Compensating Transaction** | A semantic undo operation that reverses a committed local transaction (e.g., release reserved inventory) |
+| **Forward Recovery** | Retry failed steps until they succeed (assumes transient failures) |
+| **Backward Recovery** | Execute compensating transactions to undo completed steps (used when forward recovery is not possible) |
+| **Idempotency** | Handlers must produce the same result when called multiple times (critical for at-least-once event delivery) |
+| **Saga State** | Tracks progress through the transaction sequence (STARTED → RESERVING_INVENTORY → PROCESSING_PAYMENT → COMPLETED) |
+| **Pivot Transaction** | The point of no return; after this step, the saga must complete forward (no compensations can run) |
+
+**Ecosystem context**: SAGA implementations exist in frameworks like Temporal (workflow-as-code, supports both orchestration and choreography), Camunda (BPMN-based orchestration), Eventuate Tram (Java event-driven sagas), and NServiceBus (.NET message-based sagas). Cloud-native solutions include AWS Step Functions (state machine orchestration), Azure Durable Functions (orchestrator functions), and Google Cloud Workflows. Trade-offs: dedicated workflow engines (Temporal, Camunda) provide rich features (timers, versioning, retries) but add operational complexity. Lightweight patterns (like this practice) using Kafka/Redpanda are simpler but require manual state management. SAGAs shine when failures are rare and compensations are well-defined; for high contention or complex rollback logic, consider re-modeling bounded contexts to avoid distributed transactions altogether.
+
 ## Description
 
 Build an **Order Processing System** with three microservices (Order, Payment, Inventory) coordinated by a central **Saga Orchestrator** via Redpanda events. The system demonstrates:

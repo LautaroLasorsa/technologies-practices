@@ -47,6 +47,11 @@ constexpr int BLOCK_SIZE = 256;   // threads per block (must be power of 2)
 // After this kernel, you have gridDim.x partial sums. Run the kernel again
 // on those partial sums (or finish on CPU if few enough).
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches parallel reduction—a fundamental primitive for aggregation.
+// Used in: sum, min/max, histogram, parallel sort (merge steps). HFT: portfolio P&L aggregation.
+// Tree reduction achieves O(log N) steps via parallel halving—contrast with CPU's O(N) serial loop.
+
 // TODO(human): Implement the tree reduction.
 //   - Load input[global_idx] into shared memory (0 if out of bounds)
 //   - Implement the tree reduction loop with __syncthreads()
@@ -89,6 +94,11 @@ __global__ void reduce_sum(const float* input, float* output, int n) {
 // This eliminates shared memory bank conflicts and sync overhead for the
 // last 5 reduction steps (32 -> 16 -> 8 -> 4 -> 2 -> 1).
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches warp primitives—communication within a warp without shared memory.
+// __shfl_down_sync is faster than shared memory for small reductions (no memory access, pure register).
+// Modern CUDA code uses warp primitives heavily; they're the lowest-latency communication mechanism.
+
 // TODO(human): Implement warp-level reduction using __shfl_down_sync.
 //   The function takes a value and returns the reduced sum across the warp.
 //

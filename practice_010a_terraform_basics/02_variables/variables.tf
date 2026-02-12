@@ -1,6 +1,11 @@
 # =============================================================================
 # Input Variables
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches input parameterization and validation rules. Understanding
+# variable types, defaults, and validation is critical for building reusable Terraform
+# modules that prevent invalid configurations at plan time rather than failing at apply.
+#
 # Variables are declared with `variable` blocks. Each has:
 #   - type        : string, number, bool, list(...), map(...), object({...})
 #   - default     : optional default value (omit to make it required)

@@ -118,6 +118,11 @@ def benchmark_model(
 ) -> dict[str, object]:
     """Benchmark a single model's forward pass and return timing results.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches using torch.utils.benchmark.Timer for measuring GPU/CPU
+    # performance. Understanding microbenchmarking is essential for validating that
+    # compiler optimizations actually improve real-world performance.
+
     TODO(human): Implement this function.
 
     Use torch.utils.benchmark.Timer to measure the median latency of model(input_tensor).
@@ -217,6 +222,11 @@ def run_benchmark_suite(
     out_features: int = 10,
 ) -> list[dict[str, object]]:
     """Run the full benchmark suite: unfused vs fused across batch sizes.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches systematic performance comparison — running benchmarks
+    # across different workload sizes to quantify optimization impact. Real compiler
+    # teams use this methodology to validate every optimization pass.
 
     TODO(human): Implement this function.
 

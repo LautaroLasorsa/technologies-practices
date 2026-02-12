@@ -143,6 +143,11 @@ class FunctionalLinearReLUModel(nn.Module):
 def linear_relu_pattern(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
     """Define the PATTERN to search for: F.linear followed by F.relu.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches declarative pattern matching — defining what to find
+    # as a function that gets traced into a pattern graph. This is how production
+    # compilers (Inductor, XLA) define fusion rules at scale.
+
     TODO(human): Implement this function.
 
     This function will be symbolically traced by replace_pattern to produce the
@@ -190,6 +195,11 @@ def linear_relu_pattern(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tenso
 
 def linear_relu_replacement(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
     """Define the REPLACEMENT: a fused linear+relu operation.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches defining optimized replacements for matched patterns.
+    # The replacement graph becomes the fused operation in the final IR. Backend
+    # code generators use these fused nodes to emit optimized kernels.
 
     TODO(human): Implement this function.
 
@@ -242,6 +252,11 @@ def linear_relu_replacement(x: torch.Tensor, weight: torch.Tensor, bias: torch.T
 
 def apply_pattern_rewrite(graph_module: GraphModule) -> tuple[GraphModule, int]:
     """Apply pattern-based rewriting to fuse Linear+ReLU in the graph.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches using torch.fx.subgraph_rewriter — the declarative API
+    # for pattern matching and replacement. This approach scales to hundreds of
+    # fusion rules without manual graph traversal code.
 
     TODO(human): Implement this function.
 

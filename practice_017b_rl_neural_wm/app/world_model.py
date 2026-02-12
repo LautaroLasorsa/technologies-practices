@@ -52,6 +52,11 @@ class WorldModel(nn.Module):
 
         input_dim = state_dim + action_dim  # state concatenated with one-hot action
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This teaches how to design a multi-task neural network architecture.
+        # The shared encoder extracts features used by all three prediction heads,
+        # enabling the model to learn useful representations of (state, action) pairs.
+
         # TODO(human): Build the shared encoder.
         #
         # Create a nn.Sequential called self.encoder with:
@@ -65,6 +70,10 @@ class WorldModel(nn.Module):
         #
         # self.encoder = nn.Sequential(...)
         raise NotImplementedError("TODO(human): Build the shared encoder trunk")
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This demonstrates multi-task learning: one model predicting three related outputs.
+        # Separate heads let each output specialize while sharing learned features from the encoder.
 
         # TODO(human): Build the three prediction heads.
         #
@@ -92,6 +101,10 @@ class WorldModel(nn.Module):
             pred_reward: Shape (batch, 1).
             pred_done: Shape (batch, 1), values in [0, 1] (probability).
         """
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This ties together the encoder and heads into a full forward pass.
+        # It teaches how data flows through a neural network from input to predictions.
+
         # TODO(human): Implement the forward pass.
         #
         # Steps:

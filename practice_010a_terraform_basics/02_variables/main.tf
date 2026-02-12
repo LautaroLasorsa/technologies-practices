@@ -1,6 +1,11 @@
 # =============================================================================
 # Exercise 2: Variables & Outputs
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates Terraform's input/output mechanism, essential for
+# reusable modules and environment-specific configurations (dev/staging/prod).
+# Understanding variable precedence prevents production misconfigurations.
+#
 # Goal: Same nginx container as Exercise 1, but fully parameterized.
 #
 # Variables make configs reusable. Instead of hardcoding "nginx:alpine" and

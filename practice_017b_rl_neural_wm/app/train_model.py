@@ -96,6 +96,10 @@ def train_world_model(
         model.train()
         epoch_losses: list[float] = []
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This teaches supervised learning for dynamics models: treat (s, a) → (s', r, done)
+        # as a regression/classification problem. Mini-batch training and backprop refine predictions.
+
         # TODO(human): Implement the training loop for one epoch.
         #
         # Steps:

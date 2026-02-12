@@ -97,6 +97,11 @@ TransferResult benchmark_transfer(const char* label, void* h_ptr, void* d_ptr,
 }
 
 // --------------------------------------------------------------------------- //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches pinned memory—essential for high-throughput data ingestion.
+// Pinned memory eliminates OS paging overhead, achieving 2-3x faster PCIe transfers.
+// For HFT: pinned buffers for market data (NIC → CPU → GPU) enable sub-millisecond latency.
+
 // TODO(human): Implement the pinned memory benchmark.
 //
 // Steps:

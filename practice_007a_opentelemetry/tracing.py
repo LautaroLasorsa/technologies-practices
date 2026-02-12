@@ -28,6 +28,10 @@ JAEGER_OTLP_ENDPOINT = "http://localhost:4317"
 
 # ── TODO(human): Implement these two functions ───────────────────────
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how to set up the OpenTelemetry tracing pipeline from scratch.
+# Understanding TracerProvider configuration is essential for all OpenTelemetry instrumentation—
+# it's the foundation that determines where traces go and how they're identified.
 
 def init_tracer(service_name: str, service_version: str = "0.1.0") -> None:
     """Initialize the global TracerProvider and attach an OTLP exporter.
@@ -68,6 +72,9 @@ def init_tracer(service_name: str, service_version: str = "0.1.0") -> None:
     """
     raise NotImplementedError("TODO(human): implement init_tracer")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how to obtain a named Tracer from the global provider.
+# Named tracers help identify which library/module produced each span in multi-module apps.
 
 def get_tracer(name: str) -> trace.Tracer:
     """Return a named Tracer from the global TracerProvider.

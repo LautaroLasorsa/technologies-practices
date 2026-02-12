@@ -13,6 +13,41 @@
 - CMake 3.16+ (bundled with VS 2022)
 - nlohmann/json + fmt (fetched via FetchContent)
 
+## Theoretical Context
+
+### What CMake Is and What Problem It Solves
+
+CMake is a cross-platform build system generator. Unlike traditional build systems (Make, Ninja, MSBuild), CMake doesn't build your project directly—it generates build files for other build systems. You write platform-agnostic `CMakeLists.txt` files describing your targets and dependencies, and CMake generates Visual Studio solutions on Windows, Makefiles on Linux, or Xcode projects on macOS. This solves the "works on my machine" problem: one set of build instructions that works across all platforms and toolchains.
+
+Modern CMake (3.0+) introduced the **target-based paradigm**, a fundamental shift from variable-based configuration. Pre-3.0 CMake relied on global variables (`include_directories()`, `link_directories()`, `add_definitions()`) that polluted the entire project. Modern CMake attaches properties (includes, flags, definitions) directly to targets via `target_*` commands, enabling precise dependency propagation and avoiding mysterious "why is this flag set?" questions.
+
+### How CMake Works Internally
+
+CMake operates in two phases: **configuration** and **generation**. During configuration (`cmake -S . -B build`), CMake executes your `CMakeLists.txt` scripts top-to-bottom, resolving variables, downloading FetchContent dependencies, running find_package searches, and building an internal representation of all targets and their properties. During generation, it translates this representation into native build files (`.vcxproj`, `Makefile`, `build.ninja`). This two-phase model is why FetchContent happens at configure time (dependencies must be known before generation) while ExternalProject_Add happens at build time (for non-CMake projects that don't participate in the dependency graph).
+
+The target-based model relies on **transitive property propagation**. When you write `target_link_libraries(app PRIVATE lib)` where `lib` has `PUBLIC` include directories, CMake automatically propagates lib's includes to app. This is implemented via generator expressions (`$<BUILD_INTERFACE:...>`, `$<TARGET_PROPERTY:...>`) that are evaluated during generation, not configuration—allowing context-sensitive properties (e.g., different includes for build vs install).
+
+CMake's **export system** enables libraries to be consumable by other CMake projects. `install(EXPORT ...)` generates `*-targets.cmake` files describing imported targets with all their usage requirements (includes, flags, dependencies). When another project calls `find_package(YourLib)`, CMake loads these files and reconstructs the targets as `IMPORTED` targets, making the library look like a built-in CMake target.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Target** | A buildable entity (executable, library, custom target). The fundamental unit in modern CMake—all properties attach to targets. |
+| **Generator** | Backend build system (Visual Studio, Ninja, Unix Makefiles). CMake generates files for the selected generator. |
+| **Generator Expression** | `$<...>` syntax evaluated at generation time (not configuration). Enables conditional properties (e.g., `$<CONFIG:Debug>`, `$<BUILD_INTERFACE:include>`). |
+| **FetchContent** | Configure-time dependency fetching from Git/URL. Downloads and adds external CMake projects to your build tree via `add_subdirectory`. |
+| **PUBLIC/PRIVATE/INTERFACE** | Scope keywords for `target_link_libraries` and `target_*` commands. PUBLIC = target + consumers, PRIVATE = target only, INTERFACE = consumers only. |
+| **Install/Export** | Mechanism to make your library consumable by others. Install copies artifacts; export generates `find_package`-compatible config files. |
+| **configure_file** | Template substitution at configure time. Replaces `@VAR@` placeholders with CMake variables, typically for version headers. |
+| **compile_commands.json** | JSON database of all compilation commands (file → compiler flags). Used by clangd, LSP servers, and static analyzers. |
+
+### Ecosystem Context
+
+**CMake vs alternatives**: CMake dominates C++ (90%+ of open-source projects), but alternatives exist. **Meson** offers faster configuration and simpler syntax but has a smaller ecosystem. **Bazel** excels at monorepo builds with hermetic caching but has steep learning curves. **xmake** is Lua-based and modern but lacks CMake's maturity. For production C++, CMake is the de facto standard—understanding it is non-negotiable.
+
+**Dependency management**: CMake's built-in FetchContent works for CMake projects but lacks version resolution (no semver, no lockfiles). **vcpkg** (Microsoft's package manager) integrates via `CMAKE_TOOLCHAIN_FILE` and provides binary caching + thousands of pre-built packages, making it ideal for large projects. **Conan** is Python-based with better version resolution but requires separate configuration. For this practice, FetchContent teaches the core concepts without external tooling.
+
 ## Description
 
 Build a **multi-target CMake project from scratch** that demonstrates every core Modern CMake concept: target-based dependency management, FetchContent for pulling GitHub libraries, library targets with proper visibility scopes, configure_file for version injection, install/export rules, and compile_commands.json generation for editor tooling.

@@ -93,6 +93,11 @@ public:
     // try_push: Attempt to enqueue an element. Returns false if full.
     // Called ONLY by the producer thread.
     // -------------------------------------------------------------------------
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches lock-free push using acquire/release memory ordering.
+    // Understanding when relaxed vs acquire/release suffices is critical for writing
+    // correct concurrent code without unnecessary synchronization overhead.
+    //
     // TODO(human): Implement try_push.
     //
     // STEPS:

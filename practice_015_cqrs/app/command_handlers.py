@@ -35,6 +35,14 @@ class CommandHandlers:
     ) -> str:
         """Handle the OpenAccount command.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches the command handler pattern: orchestrating aggregate,
+        # event store, and event publisher. The handler contains NO business logic—
+        # it just coordinates. Persisting to the event store BEFORE publishing ensures
+        # the event store remains the source of truth. If publishing fails, a separate
+        # outbox processor can retry, but events are never lost.
+        # ──────────────────────────────────────────────────────────────────────
+
         TODO(human): Implement this method.
 
         Steps:
@@ -64,6 +72,14 @@ class CommandHandlers:
         description: str = "",
     ) -> None:
         """Handle the Deposit command.
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches optimistic concurrency control in Event Sourcing.
+        # The expected_version check prevents lost updates: if two commands try to
+        # modify the same aggregate concurrently, one will fail with a version mismatch.
+        # This is how event-sourced systems enforce consistency without pessimistic
+        # locking (no row locks, no distributed transactions).
+        # ──────────────────────────────────────────────────────────────────────
 
         TODO(human): Implement this method.
 

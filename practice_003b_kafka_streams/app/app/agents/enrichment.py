@@ -52,6 +52,11 @@ def validate_reading(reading: SensorReading) -> str | None:
 def classify_status(reading: SensorReading) -> tuple[str, str]:
     """Classify a sensor reading as "normal", "warning", or "critical".
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches threshold-based classification and priority-based
+    # decision logic. It's a common pattern in streaming pipelines: incoming
+    # data gets enriched with computed fields based on business rules.
+
     TODO(human): Implement this function.
 
     Steps:
@@ -85,6 +90,12 @@ def classify_status(reading: SensorReading) -> tuple[str, str]:
 @app.agent(raw_readings_topic, sink=[enriched_readings_topic])
 async def enrich_readings(stream):
     """Consume raw readings, validate, classify, and produce enriched readings.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches the consume-transform-produce pattern, the foundation
+    # of stateless stream processing. You'll learn how Faust agents consume typed
+    # events, route bad data to a dead-letter queue, and yield enriched events to
+    # a sink topic — all using async/await for backpressure-aware processing.
 
     TODO(human): Implement the body of this agent.
 

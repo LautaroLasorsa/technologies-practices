@@ -1,9 +1,7 @@
 """
 Phase 1: Create the Qdrant collection and payload indices.
 
-This file is FULLY IMPLEMENTED -- run it to set up the collection before
-ingesting data. Read through it to understand how collections, distance
-metrics, HNSW configuration, and payload indexing work in Qdrant.
+This file creates the collection and indices needed before ingesting data.
 
 Key concepts:
   - A **collection** is a named container for vectors + payloads (like a table).
@@ -20,64 +18,84 @@ from client import create_client
 from config import COLLECTION_NAME, VECTOR_DIMENSION
 
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how vector database collections and indices are configured.
+# Understanding distance metrics, HNSW parameters, and payload indexing is crucial for
+# designing vector search systems that balance speed, recall, and filtering capabilities.
+
 def create_collection(client) -> None:
-    """Create the articles collection with Cosine distance and tuned HNSW."""
-    # Delete if it already exists (idempotent setup)
-    if client.collection_exists(COLLECTION_NAME):
-        client.delete_collection(COLLECTION_NAME)
-        print(f"  Deleted existing collection '{COLLECTION_NAME}'")
+    """Create the articles collection with Cosine distance and tuned HNSW.
 
-    client.create_collection(
-        collection_name=COLLECTION_NAME,
-        vectors_config=models.VectorParams(
-            size=VECTOR_DIMENSION,
-            distance=models.Distance.COSINE,
-        ),
-        # HNSW tuning:
-        #   m=16         -> each node connects to up to 16 neighbors (default 16)
-        #   ef_construct=100 -> candidates evaluated during graph build (default 100)
-        # Higher values = better recall but slower indexing and more memory.
-        hnsw_config=models.HnswConfigDiff(
-            m=16,
-            ef_construct=100,
-        ),
-    )
-    print(f"  Created collection '{COLLECTION_NAME}' (dim={VECTOR_DIMENSION}, Cosine, HNSW m=16)")
+    TODO(human): Implement this function.
 
+    Steps:
+      1. Check if the collection already exists and delete it if so (idempotent setup):
+         if client.collection_exists(COLLECTION_NAME):
+             client.delete_collection(COLLECTION_NAME)
+             print(f"  Deleted existing collection '{COLLECTION_NAME}'")
+
+      2. Create the collection using client.create_collection() with:
+         - collection_name=COLLECTION_NAME
+         - vectors_config=models.VectorParams(
+               size=VECTOR_DIMENSION,
+               distance=models.Distance.COSINE,
+           )
+         - hnsw_config=models.HnswConfigDiff(
+               m=16,              # Each node connects to up to 16 neighbors
+               ef_construct=100,  # Candidates evaluated during graph build
+           )
+
+      Higher m/ef_construct values give better recall but use more memory and slower indexing.
+      Cosine distance is ideal for normalized embeddings (most neural network outputs).
+
+      3. Print a confirmation message.
+
+    Docs: https://qdrant.tech/documentation/concepts/collections/
+    """
+    raise NotImplementedError("Implement create_collection — see TODO above")
+
+
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches payload indexing, which enables fast filtered vector search.
+# Without indices, filtered search must scan all payloads; with indices, Qdrant extends
+# the HNSW graph to make filtered search nearly as fast as unfiltered search.
 
 def create_payload_indices(client) -> None:
     """Create payload indices on fields used in filtered search.
 
-    Without payload indices, Qdrant must scan all payloads during filtered
-    search. With indices, it extends the HNSW graph with extra edges for
-    the indexed fields, making filtered search nearly as fast as unfiltered.
+    TODO(human): Implement this function.
 
-    Best practice: create indices right after collection creation, before
-    ingesting data. Creating them after ingestion blocks updates temporarily.
+    Steps:
+      1. Create a KEYWORD index on 'category' field for exact match filters:
+         client.create_payload_index(
+             collection_name=COLLECTION_NAME,
+             field_name="category",
+             field_schema=models.PayloadSchemaType.KEYWORD,
+         )
+         print("  Created KEYWORD index on 'category'")
+
+      2. Create an INTEGER index on 'year' field for range filters (year >= 2023):
+         client.create_payload_index(
+             collection_name=COLLECTION_NAME,
+             field_name="year",
+             field_schema=models.PayloadSchemaType.INTEGER,
+         )
+         print("  Created INTEGER index on 'year'")
+
+      3. Create an INTEGER index on 'word_count' field for range filters:
+         client.create_payload_index(
+             collection_name=COLLECTION_NAME,
+             field_name="word_count",
+             field_schema=models.PayloadSchemaType.INTEGER,
+         )
+         print("  Created INTEGER index on 'word_count'")
+
+    Best practice: create indices right after collection creation, before ingesting data.
+    Creating them after ingestion blocks updates temporarily while building the index.
+
+    Docs: https://qdrant.tech/documentation/concepts/indexing/#payload-index
     """
-    # Keyword index on 'category' -- for exact match filters
-    client.create_payload_index(
-        collection_name=COLLECTION_NAME,
-        field_name="category",
-        field_schema=models.PayloadSchemaType.KEYWORD,
-    )
-    print("  Created KEYWORD index on 'category'")
-
-    # Integer index on 'year' -- for range filters (year >= 2023)
-    client.create_payload_index(
-        collection_name=COLLECTION_NAME,
-        field_name="year",
-        field_schema=models.PayloadSchemaType.INTEGER,
-    )
-    print("  Created INTEGER index on 'year'")
-
-    # Integer index on 'word_count' -- for range filters
-    client.create_payload_index(
-        collection_name=COLLECTION_NAME,
-        field_name="word_count",
-        field_schema=models.PayloadSchemaType.INTEGER,
-    )
-    print("  Created INTEGER index on 'word_count'")
+    raise NotImplementedError("Implement create_payload_indices — see TODO above")
 
 
 def verify_collection(client) -> None:
