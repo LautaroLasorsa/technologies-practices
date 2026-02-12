@@ -100,6 +100,11 @@ def init_mlp_params(key: jax.Array, input_dim: int, hidden_dim: int, output_dim:
 def mlp_forward(params: dict, x: jax.Array) -> jax.Array:
     """Forward pass of a 2-layer MLP.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches JAX's functional programming style for neural networks.
+    # Unlike PyTorch's nn.Module classes, JAX models are pure functions with explicit
+    # parameters. This purity enables jit, grad, and vmap transformations.
+
     TODO(human): Implement the forward pass as a pure function.
 
     This is the core JAX pattern: models are just functions that take params
@@ -143,6 +148,11 @@ def mlp_forward(params: dict, x: jax.Array) -> jax.Array:
 
 def mlp_loss(params: dict, x: jax.Array, y: jax.Array) -> jax.Array:
     """Mean squared error loss for the MLP.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches composing JAX functions. Loss functions are pure functions
+    # that compose with model functions. This composability enables jax.grad to compute
+    # gradients through the entire computation automatically.
 
     TODO(human): Implement the MSE loss using mlp_forward.
 

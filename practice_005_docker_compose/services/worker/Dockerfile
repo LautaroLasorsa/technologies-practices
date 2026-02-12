@@ -4,6 +4,11 @@
 # TODO(human): Fill in each step below. Hints are provided as comments.
 # =============================================================================
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise reinforces Dockerfile best practices for non-web workloads.
+# Unlike web services, workers don't expose ports -- understanding when to use EXPOSE
+# (and when not to) clarifies Docker's networking model.
+
 # TODO(human) [1/4]: Choose a base image.
 # Hint: Same as API Gateway -- python:3.12-slim.
 

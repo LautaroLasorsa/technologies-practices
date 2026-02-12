@@ -1,5 +1,10 @@
 # Horizontal Pod Autoscaler (HPA) — Backend
 # -------------------------------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates Kubernetes' automatic scaling mechanism based on metrics.
+# Understanding HPA's dependency on resource requests and its scaling formula is essential
+# for building elastic systems that handle traffic spikes without manual intervention.
+#
 # Automatically scales backend pods based on CPU utilization.
 #
 # How it works:

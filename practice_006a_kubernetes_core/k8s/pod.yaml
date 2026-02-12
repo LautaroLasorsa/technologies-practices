@@ -1,5 +1,10 @@
 # pod.yaml — A bare Pod running the task-tracker container.
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches the foundational structure of Kubernetes manifests:
+# apiVersion, kind, metadata, and spec. Understanding bare Pods clarifies why
+# higher-level controllers (Deployments) are necessary for production workloads.
+#
 # Concepts to learn:
 #   - apiVersion, kind, metadata, spec — the four top-level fields of every K8s object
 #   - containerPort is informational (documentation), not a firewall rule

@@ -52,6 +52,11 @@ class EnvironmentModel:
     def update(self, state: int, action: int, reward: float, next_state: int, done: bool) -> None:
         """Record an observed transition.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This teaches model-based RL's first component: learning a model of the environment.
+        # By memorizing transitions, the agent can later "replay" them mentally (planning)
+        # without needing real environment interaction — the key to sample efficiency.
+
         TODO(human): Implement model update.
 
         Steps:
@@ -69,6 +74,11 @@ class EnvironmentModel:
 
     def sample(self) -> tuple[int, int, float, int, bool]:
         """Sample a random previously-observed (s, a) and return (s, a, r, s', done).
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This teaches planning via mental simulation. By sampling past transitions,
+        # the agent "dreams" about what could happen and updates Q-values on imagined
+        # experience — extracting more learning from each real interaction.
 
         TODO(human): Implement random sampling from the model.
 

@@ -12,6 +12,42 @@
 - Python 3.11+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+Apache Spark is a distributed data processing engine designed for batch and streaming analytics at scale. Spark's core innovation is **lazy evaluation combined with the Catalyst query optimizer**, which transforms user code into an optimized execution plan before running any computation.
+
+**How Lazy Evaluation Works:**
+
+In Spark, operations are divided into **transformations** (lazy operations that build a computation graph) and **actions** (eager operations that trigger execution). When you call `.filter()`, `.select()`, or `.join()`, Spark doesn't execute anything—it records the operation in a logical plan (a directed acyclic graph, or DAG). Only when you call an action like `.count()`, `.show()`, or `.write()` does Spark compile the entire chain of transformations into an optimized physical plan and execute it. This deferred execution enables powerful optimizations: Spark can reorder operations, combine stages, prune unnecessary columns, and push predicates down to data sources—optimizations impossible if each transformation executed immediately.
+
+**The Catalyst Optimizer:**
+
+Catalyst is Spark's extensible query optimizer, operating in four phases: (1) **Analysis** — resolve column references and table names against the catalog, (2) **Logical Optimization** — apply rule-based transformations like predicate pushdown (filter before join), constant folding (evaluate literals at compile-time), and projection pruning (read only needed columns), (3) **Physical Planning** — generate multiple physical plans (different join algorithms, partition strategies) and choose the best based on cost estimation, (4) **Code Generation** — compile the plan to JVM bytecode using Janino for runtime efficiency (whole-stage code generation).
+
+**Narrow vs Wide Transformations:**
+
+Transformations are classified by data movement. **Narrow transformations** (like `map`, `filter`, `withColumn`) operate on individual partitions independently—no data shuffles across the network. **Wide transformations** (like `groupBy`, `join`, `orderBy`) require redistributing data across executors (a **shuffle**), triggering stage boundaries. Shuffles are expensive (disk I/O, network transfer, serialization), so minimizing them is a key optimization strategy. The Catalyst optimizer tries to push narrow operations before wide ones (e.g., filter before join) to reduce shuffle volume.
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **DataFrame** | Distributed collection of rows with a schema (like a SQL table), the primary abstraction in Spark SQL |
+| **Transformation** | Lazy operation that defines a new DataFrame from an existing one (e.g., `select`, `filter`, `join`) |
+| **Action** | Eager operation that triggers computation and returns a result (e.g., `count`, `show`, `write`) |
+| **DAG (Directed Acyclic Graph)** | Logical execution plan representing the sequence of transformations |
+| **Catalyst Optimizer** | Rule-based + cost-based query optimizer that rewrites logical plans for efficiency |
+| **Narrow Transformation** | No shuffle required (e.g., `map`, `filter`) — can pipeline within a single stage |
+| **Wide Transformation** | Requires shuffle (e.g., `groupBy`, `join`) — triggers a new stage boundary |
+| **Shuffle** | Redistributing data across partitions/executors over the network |
+| **Partition** | A chunk of data processed by a single executor core (parallelism unit) |
+
+**Ecosystem Context:**
+
+Spark dominates large-scale batch processing in industry—used by virtually every data-intensive company (Uber, Netflix, Airbnb, etc.) for ETL, analytics, and ML pipelines. Databricks (founded by Spark's creators) offers managed Spark; AWS EMR, Google Dataproc, and Azure Synapse all run Spark. Alternatives exist: DuckDB and Polars for single-machine analytics, Trino/Presto for interactive SQL, Flink for low-latency streaming. But for "big data" batch workloads (100GB-100TB datasets), Spark remains the industry standard due to its mature ecosystem, unified API (SQL + DataFrame + RDD), and broad format support (Parquet, ORC, Delta Lake).
+
+Sources: [Databricks: Catalyst Optimizer](https://www.databricks.com/glossary/catalyst-optimizer), [Deep Dive into Catalyst](https://www.databricks.com/blog/2015/04/13/deep-dive-into-spark-sqls-catalyst-optimizer.html), [Lazy Evaluation in Spark](https://medium.com/@john_tringham/spark-concepts-simplified-lazy-evaluation-d398891e0568)
+
 ## Description
 
 Work through Spark's DataFrame API on a local single-worker cluster: loading CSV/JSON data, applying transformations (select, filter, withColumn, groupBy, agg, join), registering and querying SQL views, writing UDFs, and understanding lazy evaluation + the Catalyst optimizer. All exercises run against Docker-hosted Spark, so nothing external is required.

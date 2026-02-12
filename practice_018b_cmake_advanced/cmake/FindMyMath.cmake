@@ -35,6 +35,10 @@
 # PATHS: fallback search paths
 # PATH_SUFFIXES: subdirectories to check within each search path
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how to write find modules for libraries without CMake config.
+# find_path is how CMake locates headers when the library doesn't ship FindXxx.cmake.
+
 # TODO(human): Use find_path to locate "mymath.h"
 #
 # The installed header will be at: <install_prefix>/include/mymath/mymath.h
@@ -64,6 +68,10 @@
 # Searches for a library file (mymath.lib on Windows, libmymath.a on Linux).
 # CMake automatically adds platform-specific prefixes (lib) and suffixes (.lib/.a/.so).
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise shows how to locate compiled libraries across platforms.
+# CMake abstracts platform differences (lib prefix, .a vs .lib) for portability.
+
 # TODO(human): Use find_library to locate the mymath library.
 #
 # The installed library will be at: <install_prefix>/lib/mymath.lib (or libmymath.a)
@@ -109,6 +117,10 @@ find_package_handle_standard_args(MyMath
 # consumers can use with target_link_libraries(). Without this, users would
 # have to manually set include directories and link paths.
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches how to create IMPORTED targets from found artifacts.
+# This is the bridge between raw library paths and Modern CMake's target-based model.
+
 # TODO(human): Create an IMPORTED target MyMath::MyMath
 #
 # Pattern:

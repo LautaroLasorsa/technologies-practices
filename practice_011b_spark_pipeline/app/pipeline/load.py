@@ -17,6 +17,10 @@ from pyspark.sql import functions as F
 
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches writing optimized Parquet output with partitioning.
+# Understanding partition pruning and columnar storage is critical for building data lakes
+# where query performance depends on minimizing data scanned—partitioning can reduce reads by 100x.
 
 def write_partitioned_parquet(enriched: DataFrame) -> Path:
     """Write enriched sales to Parquet, partitioned by year and month.

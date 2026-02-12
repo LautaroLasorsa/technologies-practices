@@ -29,6 +29,16 @@ WINDOW_SECONDS = 60      # window duration in seconds
 # TODO(human): Implement RateLimitMiddleware
 # ---------------------------------------------------------------------------
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches rate limiting via middleware. Rate limiting protects
+# APIs from abuse (DDoS, scraping) and ensures fair resource allocation. The
+# fixed-window strategy is simple but allows bursts at window boundaries; token
+# bucket or sliding window algorithms are more sophisticated. Standard headers
+# (X-RateLimit-*) and 429 status code enable clients to back off gracefully.
+# Production systems use Redis (distributed rate limiting) and differentiate
+# limits by API key/tier (free vs paid).
+# ──────────────────────────────────────────────────────────────────────
+#
 # Create a class that extends BaseHTTPMiddleware and overrides:
 #
 #   async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -74,10 +84,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app):
         super().__init__(app)
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # Initialize per-IP tracking data structure here. Store count and window
+        # start time for each client IP. This in-memory approach works for learning
+        # but production systems use Redis with TTL keys for distributed rate limiting.
+        # ──────────────────────────────────────────────────────────────────────
         # TODO(human): initialize the per-IP tracking dict here
         pass
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # Implement the fixed-window rate limiting algorithm here. On every request,
+        # check the client's count against the limit, update window if expired, and
+        # return 429 if exceeded. Add rate limit headers to ALL responses (even
+        # successful ones) so clients can proactively adjust their request rate.
+        # ──────────────────────────────────────────────────────────────────────
         # TODO(human): implement the rate limiting logic described above
         response = await call_next(request)
         return response

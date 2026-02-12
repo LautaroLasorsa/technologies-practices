@@ -68,6 +68,11 @@ if TRITON_AVAILABLE:
     ):
         """Fused tiled matmul + ReLU: C = max(A @ B, 0).
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches tiled matrix multiplication with kernel fusion — the most
+        # important pattern in ML compilers. This is what TorchInductor generates for linear
+        # layers. Understanding K-loop accumulation and fusion is essential for ML systems work.
+
         TODO(human): Replace the stub body below with the actual kernel logic.
 
         This kernel computes one BLOCK_M x BLOCK_N tile of the output matrix C.

@@ -1,6 +1,11 @@
 # =============================================================================
 # Phase 5: for_each -- create multiple containers from a map
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches the for_each meta-argument for creating multiple module
+# instances with stable string keys. Understanding for_each vs count is critical
+# for production infrastructure that evolves over time without accidental deletions.
+#
 # This demonstrates how for_each creates indexed resources whose addresses
 # include the map key, e.g., module.extra["busybox1"].
 #

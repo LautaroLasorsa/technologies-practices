@@ -1,6 +1,11 @@
 # =============================================================================
 # Outputs
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates how outputs expose computed values from resources.
+# Understanding outputs is essential for module composition (passing values between
+# modules) and integrating Terraform with CI/CD pipelines.
+#
 # Outputs expose values after `terraform apply`. They appear in the terminal
 # and can be queried later with `terraform output`.
 #

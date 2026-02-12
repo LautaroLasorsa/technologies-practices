@@ -27,6 +27,11 @@ SERVER_ADDRESS = "localhost:50051"
 def run_add_items(stub: inventory_pb2_grpc.InventoryStub) -> None:
     """Add several items to the inventory via unary RPCs.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches calling Rust gRPC services from Python: building protobuf
+    # requests, invoking stubs, and handling cross-language errors. It demonstrates that
+    # gRPC is truly language-agnostic — the contract (proto) is the interface.
+
     TODO(human): Implement this function.
 
     Steps:
@@ -55,6 +60,11 @@ def run_add_items(stub: inventory_pb2_grpc.InventoryStub) -> None:
 def run_get_item(stub: inventory_pb2_grpc.InventoryStub) -> None:
     """Query a single item by name -- test both found and not-found cases.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches verifying cross-language error handling: the Rust server
+    # returns Status::NOT_FOUND, which Python clients catch as grpc.RpcError with
+    # matching status codes. Error semantics cross language boundaries seamlessly.
+
     TODO(human): Implement this function.
 
     Steps:
@@ -73,6 +83,11 @@ def run_get_item(stub: inventory_pb2_grpc.InventoryStub) -> None:
 
 def run_list_items(stub: inventory_pb2_grpc.InventoryStub) -> None:
     """List all items using server-side streaming.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches consuming Rust server-streams from Python: iterating over
+    # a gRPC response iterator that yields messages as they're produced by the Rust
+    # tokio task. This is streaming across languages, leveraging HTTP/2 multiplexing.
 
     TODO(human): Implement this function.
 

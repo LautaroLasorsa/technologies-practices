@@ -135,6 +135,11 @@ def fuse_conv_bn_weights(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Compute the fused Conv2d weight and bias from Conv + BatchNorm parameters.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches algebraic fusion — the mathematical transformation that
+    # folds BatchNorm into Conv weights. This is the #1 inference optimization in
+    # CNNs, used by every framework (TensorRT, ONNX, TorchScript).
+
     TODO(human): Implement this function.
 
     Given a Conv2d followed by a BatchNorm2d, compute the weight and bias of a

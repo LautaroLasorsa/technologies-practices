@@ -237,6 +237,11 @@ def demo_simple_comparison() -> None:
 def demo_mlp_comparison() -> None:
     """Compare pre/post optimization HLO for the MLP forward pass.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches identifying XLA optimizations by comparing pre/post HLO.
+    # Learning to spot fusion, algebraic simplification, and dead code elimination
+    # is essential for understanding why XLA makes models faster.
+
     TODO(human): Extract both stages of the MLP compilation and analyze
     what XLA's optimization passes changed.
 
@@ -321,6 +326,11 @@ def demo_mlp_comparison() -> None:
 
 def demo_grad_comparison() -> None:
     """Compare pre/post optimization HLO for the MLP gradient computation.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches analyzing backward pass optimizations. Gradients generate
+    # larger, more complex HLO graphs. Understanding XLA's optimization of backprop
+    # reveals why JAX/XLA training is efficient.
 
     TODO(human): Repeat the optimization comparison for the gradient of
     mlp_loss. The gradient computation is larger and more complex — XLA

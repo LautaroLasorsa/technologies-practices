@@ -59,6 +59,14 @@ def reserve_inventory(saga_id: str, payload: dict) -> SagaMessage:
     """
     Reserve inventory for an order.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches idempotent command handlers. Idempotency is critical
+    # for distributed systems with at-least-once message delivery: if Kafka/Redpanda
+    # redelivers a message (due to network retry), the handler must not double-reserve
+    # inventory. Production systems use unique request IDs and a deduplication table
+    # to enforce idempotency.
+    # ──────────────────────────────────────────────────────────────────────
+
     TODO(human): Implement the reservation logic.
 
     Steps:
@@ -90,6 +98,14 @@ def reserve_inventory(saga_id: str, payload: dict) -> SagaMessage:
 def release_inventory(saga_id: str, payload: dict) -> SagaMessage:
     """
     Release previously reserved inventory (compensating transaction).
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches compensating transaction design. Compensations must be
+    # idempotent (safe to retry) and semantically undo a previous step. Unlike
+    # database rollbacks (which restore exact previous state), compensations are
+    # business-logic operations (e.g., releasing inventory may trigger a restock
+    # notification). Understanding this distinction is key to SAGA correctness.
+    # ──────────────────────────────────────────────────────────────────────
 
     TODO(human): Implement the release logic.
 

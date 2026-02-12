@@ -12,6 +12,63 @@
 
 Python 3.12+ (uv), Docker (TVM container)
 
+## Theoretical Context
+
+### What is TVM?
+
+**Apache TVM** is an open-source compiler that transforms deep learning models into optimized code for diverse hardware (CPUs, GPUs, FPGAs, ASICs). TVM's core innovation is **separating computation declaration from execution strategy**: you describe *what* to compute (tensor expressions), then specify *how* to execute it (schedules). This separation enables hardware-agnostic model authoring — the same computation can be scheduled differently for ARM CPUs, NVIDIA GPUs, or custom accelerators.
+
+TVM solves the **performance portability problem** in ML deployment. PyTorch and TensorFlow achieve high performance via cuDNN/cuBLAS on NVIDIA GPUs, but these libraries don't exist for ARM, RISC-V, or custom AI chips. Writing hand-optimized kernels for each backend is prohibitively expensive. TVM generates optimized code automatically via **auto-scheduling** (exploring tiling, vectorization, parallelism with learned cost models) or allows manual schedule tuning when experts want control.
+
+### How TVM Works Internally
+
+TVM's compilation pipeline has five stages:
+
+1. **Frontend Import** (Relay): Models from PyTorch/TensorFlow/ONNX are imported into **Relay IR**, TVM's high-level graph representation. Relay is similar to XLA's HLO or torch.fx's IR — a dataflow graph of tensor operations.
+
+2. **Graph-Level Optimization** (Relay Passes): Apply graph transformations: operator fusion (merge element-wise ops), constant folding, dead code elimination, layout optimization. These passes mirror XLA's optimizations (025c) but are hardware-independent.
+
+3. **Tensor Expression (TE)**: Each Relay operator is lowered to a **Tensor Expression** — a mathematical specification of what to compute. `C[i,j] = sum_k A[i,k] * B[k,j]` for matmul. This is *declarative* — no loops, no execution order.
+
+4. **Scheduling**: A **schedule** transforms the TE's default loop nest (naive nested loops) into an optimized version. Schedule primitives:
+   - **split**: Tile a loop into inner/outer loops (for cache blocking)
+   - **reorder**: Change loop nesting order (outer product → inner product)
+   - **vectorize**: Map inner loop to SIMD/vector instructions
+   - **parallel**: Distribute outer loop across CPU cores or GPU blocks
+   - **unroll**: Unroll inner loop (reduce branch overhead)
+
+5. **Code Generation** (TIR → LLVM/CUDA): The scheduled TE is lowered to **TIR (Tensor IR)**, TVM's low-level loop IR (similar to LLVM IR but tensor-aware). TIR is then compiled to machine code via LLVM (CPU) or CUDA/PTX (GPU).
+
+**Auto-Scheduling (Ansor)**: Instead of manually writing schedules, TVM's AutoScheduler explores the space of possible schedules (millions of combinations) using a **learned cost model**. It generates random schedules, measures their performance, trains a neural net to predict performance from schedule features, then uses the model to guide search toward fast schedules. Production deployments use Ansor; manual scheduling is educational but doesn't scale.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Tensor Expression (TE)** | Declarative math spec (what to compute). No loops, no execution order. |
+| **Schedule** | Transformation of loop nest (how to compute). Maps TE to optimized code. |
+| **Schedule Primitives** | split, reorder, vectorize, parallel, unroll — transformations on loop nests. |
+| **Compute/Schedule Separation** | Decouple algorithm (TE) from optimization (schedule). Enables portability. |
+| **TIR (Tensor IR)** | TVM's low-level loop IR. Explicit loops, memory allocations, synchronization. |
+| **Relay IR** | High-level graph IR for imported models. Enables graph-level optimization. |
+| **AutoScheduler (Ansor)** | Learned cost model + search algorithm for finding optimal schedules automatically. |
+| **Tiling (split)** | Break loops into tiles (cache blocks) for locality. Key to matmul performance. |
+| **Vectorization** | Map inner loop to SIMD (AVX, NEON). 4-16x speedup for element-wise ops. |
+| **Parallelization** | Distribute outer loop across threads/cores. Scales to multi-core CPUs/GPUs. |
+
+### Ecosystem Context
+
+TVM competes with and complements other ML compilers:
+
+- **XLA**: Google's compiler (025c). Similar graph optimization, but less flexible scheduling. XLA targets Google hardware (TPU). TVM is hardware-agnostic.
+- **TorchInductor** (torch.compile): PyTorch's compiler. Uses Triton for GPU code generation (025d). TVM predates Inductor and is more mature for edge devices.
+- **TensorRT**: NVIDIA's inference optimizer. Proprietary, GPU-only. Faster than TVM on NVIDIA GPUs, but not portable.
+- **MLIR**: Compiler infrastructure for building domain-specific compilers. TVM is adopting MLIR (TVM Unity refactor). Future TVM versions use MLIR dialects.
+
+**Trade-offs**: TVM's manual scheduling provides full control but requires expertise. Auto-scheduling (Ansor) is easier but requires tuning time (hours of measurement for production models). XLA and TorchInductor optimize automatically without user intervention but are less portable. TVM excels at **edge deployment** (mobile, IoT, custom hardware) where portability matters more than peak performance on one device.
+
+**Adoption**: AWS (SageMaker Neo uses TVM), Alibaba (PAI), OctoML (TVM-as-a-service), Qualcomm (Hexagon DSP compiler uses TVM), many academic research groups. TVM is the de facto standard for researching ML compiler techniques.
+
 > **Platform note:** TVM requires LLVM and is complex to install natively on Windows. All code in this practice runs inside a Docker container. You edit files on your host machine; Docker mounts them and executes inside the container.
 
 ## Description

@@ -50,6 +50,11 @@ if TRITON_AVAILABLE:
     ):
         """Element-wise vector addition: C[i] = A[i] + B[i].
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches Triton's block-level programming model. Unlike CUDA's
+        # thread-level programming, Triton operates on tiles. Understanding tl.program_id,
+        # tl.arange, tl.load/store, and masking is foundational for all Triton kernels.
+
         TODO(human): Replace the stub body below with the actual kernel logic.
 
         This kernel is called once per "program instance". Each instance handles

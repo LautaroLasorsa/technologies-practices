@@ -17,6 +17,10 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches window functions for running totals, a fundamental time-series pattern.
+# Understanding how to define window specs with rowsBetween for cumulative calculations is
+# essential for financial reporting, inventory tracking, and any analysis requiring cumulative metrics.
 
 def daily_revenue_with_running_total(enriched: DataFrame) -> DataFrame:
     """Compute daily revenue per category with a cumulative running total.
@@ -46,6 +50,10 @@ def daily_revenue_with_running_total(enriched: DataFrame) -> DataFrame:
     """
     raise NotImplementedError("Implement daily_revenue_with_running_total")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches ranking within partitions using row_number(), a common analytics pattern.
+# Understanding how to compute top-N per group is critical for dashboards, reports, and
+# recommendation systems where you need "best products per category" or "top customers per region".
 
 def top_products_per_category(enriched: DataFrame, top_n: int = 3) -> DataFrame:
     """Rank products by total revenue within each category, keep top N.
@@ -74,6 +82,10 @@ def top_products_per_category(enriched: DataFrame, top_n: int = 3) -> DataFrame:
     """
     raise NotImplementedError("Implement top_products_per_category")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches period-over-period comparison using lag() window function.
+# Understanding how to access previous/next rows within a window is essential for growth metrics,
+# trend analysis, and any calculation that compares current values to historical baselines.
 
 def day_over_day_change(enriched: DataFrame) -> DataFrame:
     """Compute day-over-day revenue change per category using lag().
@@ -102,6 +114,10 @@ def day_over_day_change(enriched: DataFrame) -> DataFrame:
     """
     raise NotImplementedError("Implement day_over_day_change")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches global ranking across the entire dataset using rank() without partitioning.
+# Understanding rank() vs dense_rank() vs row_number() is important for leaderboards, customer
+# segmentation, and any scenario where tie-handling behavior matters (do ties get gaps or not?).
 
 def customer_lifetime_value_ranking(enriched: DataFrame) -> DataFrame:
     """Rank customers by total spend across all purchases.

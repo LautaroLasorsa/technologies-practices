@@ -1,6 +1,11 @@
 # -----------------------------------------------------------------------------
 # Module outputs -- expose container details to the root module
 # -----------------------------------------------------------------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates module outputs, which form the interface for accessing
+# module-created resources. Understanding how to expose the right attributes from
+# modules is essential for composing modules into larger infrastructures.
+#
 # Phase 3: Implement these outputs after creating the resources in main.tf.
 # Each output references an attribute from the resources you created.
 # -----------------------------------------------------------------------------

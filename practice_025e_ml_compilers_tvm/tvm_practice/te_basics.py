@@ -124,6 +124,11 @@ def demo_vector_add() -> None:
 def declare_matmul(M: int, K: int, N: int) -> tuple:
     """Declare a matrix multiply: C[i,j] = sum_k A[i,k] * B[k,j].
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches TVM's tensor expression abstraction — declarative math
+    # specification without execution order. Understanding te.compute and te.reduce_axis
+    # is foundational for all TVM scheduling work.
+
     TODO(human): Implement the matrix multiply tensor expression.
 
     This is the most fundamental computation in deep learning: every linear

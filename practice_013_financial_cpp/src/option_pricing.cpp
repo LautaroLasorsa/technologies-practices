@@ -100,6 +100,15 @@ void price_european_option()
     // --- Market data setup (boilerplate) ---
     auto market = setup_market_data(eval_date, spot_price, risk_free_rate, volatility);
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches QuantLib's process abstraction and the separation
+    // between market data (quotes, curves) and pricing logic (engines). The
+    // BlackScholesProcess encapsulates geometric Brownian motion (GBM), the
+    // foundation of the Black-Scholes model. Understanding this separation is
+    // critical for swapping models (e.g., from Black-Scholes to Heston) without
+    // changing instrument definitions.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Create the Black-Scholes process.
     //
     // A BlackScholesProcess models geometric Brownian motion (GBM):
@@ -117,6 +126,14 @@ void price_european_option()
     // Reference: https://www.quantlib.org/reference/class_quant_lib_1_1_black_scholes_process.html
 
     // --- Your code here (create bs_process) ---
+
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches the VanillaOption structure: separating payoff
+    // (what you receive at expiry) from exercise style (when you can exercise).
+    // This design enables code reuse: the same pricing engines work for calls
+    // and puts, American and European styles, just with different payoff and
+    // exercise objects. This is a practical application of the Strategy pattern.
+    // ──────────────────────────────────────────────────────────────────────
 
     // TODO(human): Create the European option instrument.
     //
@@ -136,6 +153,14 @@ void price_european_option()
 
     // --- Your code here (create option) ---
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches the instrument-engine pattern: instruments delegate
+    // pricing to engines. AnalyticEuropeanEngine uses closed-form Black-Scholes,
+    // which is exact and fast. For American options, you'd swap to a numerical
+    // engine (binomial tree, finite differences). This flexibility is why QuantLib
+    // separates "what" (instrument) from "how" (engine).
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Set the pricing engine and compute the price.
     //
     // The AnalyticEuropeanEngine uses the closed-form Black-Scholes formula.
@@ -151,6 +176,13 @@ void price_european_option()
     //   std::cout << "Option price (NPV): " << npv << "\n";
 
     // --- Your code here (set engine, compute NPV) ---
+
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches Greeks computation and interpretation. Greeks are
+    // the foundation of risk management: delta for hedging spot exposure, gamma
+    // for hedging delta risk, vega for volatility risk. Production trading systems
+    // aggregate Greeks across portfolios to compute net exposure and hedge ratios.
+    // ──────────────────────────────────────────────────────────────────────
 
     // TODO(human): Compute and print the Greeks.
     //

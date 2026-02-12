@@ -297,6 +297,11 @@ def run_analyze_breaks() -> None:
 def run_fix_graph_breaks() -> None:
     """Fix graph breaks in the broken models.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches identifying and fixing graph breaks — the #1 issue when
+    # adopting torch.compile. Understanding common break causes (print, .item(), control
+    # flow) and their fixes is essential for production torch.compile usage.
+
     TODO(human): Implement fixed versions of each broken model.
 
     For EACH broken model, you need to create a fixed version that:

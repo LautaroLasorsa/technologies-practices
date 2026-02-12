@@ -11,6 +11,62 @@
 - C++17 (MSVC via VS 2022)
 - No external dependencies -- pure standard library + OS APIs
 
+## Theoretical Context
+
+### What HFT Low-Latency Patterns Are
+
+High-frequency trading (HFT) operates on a simple principle: the fastest system wins. When a market opportunity lasts only microseconds, the firm that can observe, decide, and act first captures the profit. This creates a regime where **systems-level optimization** (memory layout, cache behavior, lock-free concurrency) matters more than algorithmic complexity. A O(n) sequential scan through cache-resident data can outperform a O(log n) tree traversal that causes cache misses.
+
+These patterns—cache-line alignment, lock-free queues, memory pools, compile-time dispatch, and cycle-accurate timing—are the result of decades of engineering in the world's most latency-sensitive systems. They're not specific to finance; they apply to any domain where nanoseconds matter: game engines, real-time audio, kernel networking stacks, embedded systems.
+
+### How the Memory Hierarchy Shapes Design
+
+Modern CPUs execute instructions in under a nanosecond, but memory access determines actual throughput. The memory hierarchy creates a 100-300× latency gap between L1 cache hits (~1 ns) and DRAM accesses (~60-100 ns). This gap is the optimization target.
+
+**Cache-line-aligned structs** ensure that accessing one field of your data structure loads exactly the cache lines you need—no more, no less. A 65-byte struct wastes half a cache line on every access. **Hot/cold splitting** separates frequently-accessed fields from rarely-used ones, packing hot data densely so more entries fit in L1.
+
+**Sequential access patterns** enable the CPU's hardware prefetcher to speculatively load the next cache line before you ask for it, achieving near-zero-latency memory access. Random access defeats the prefetcher, causing every access to stall on a cache miss. This is why HFT order books use arrays, not trees.
+
+**Lock-free data structures** eliminate contention on shared state. A mutex-protected queue forces every operation through a serialization point; a lock-free SPSC ring buffer uses acquire/release memory ordering to coordinate exactly the needed synchronization (head and tail indices) without locking the entire structure. Under multi-core contention, this translates to 3-10× throughput gains.
+
+**Memory pools and arena allocators** replace `new`/`delete` with pre-allocated slabs. General-purpose allocators (`malloc`/`new`) must search free lists and synchronize across threads, introducing both latency (~50-100 ns) and jitter (P99 can be 10× worse than P50). Fixed-size pools give O(1) deterministic allocation—critical for meeting latency SLAs.
+
+**Compile-time dispatch via CRTP** replaces virtual function calls (indirect branch through vtable, ~2-5 ns + possible instruction cache miss) with direct inlined calls (zero overhead). The trade-off is code size (monomorphization) vs runtime flexibility, same as Rust's trait approach.
+
+**TSC-based timing** uses the CPU's cycle counter (`__rdtsc()`) for sub-nanosecond precision with ~5-10 ns overhead, compared to ~20 ns for `std::chrono::steady_clock` and ~30 ns for Windows `QueryPerformanceCounter`. When your entire budget is 500 ns, timing overhead matters.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Cache line** | 64-byte unit of transfer between memory and cache. Structs should fit exactly in 1, 2, 4... cache lines. |
+| **False sharing** | Two threads writing to different variables in the same cache line cause cache invalidation ping-pong. Pad to separate cache lines. |
+| **Memory ordering** | `memory_order_acquire` (load), `memory_order_release` (store), `memory_order_seq_cst` (full fence). Acquire/release suffice for SPSC. |
+| **Lock-free** | Concurrent data structure where at least one thread always makes progress (no locks/mutexes). Uses CAS (compare-and-swap) atomics. |
+| **CRTP** | Curiously Recurring Template Pattern: `class Derived : Base<Derived>`. Enables static polymorphism (compile-time dispatch, inlinable). |
+| **Hot/cold split** | Separate frequently-accessed fields (hot) from rarely-used ones (cold) into different structs to improve cache density. |
+| **TSC (Time Stamp Counter)** | CPU cycle counter read via `__rdtsc()`. Invariant TSC on modern CPUs runs at constant rate regardless of frequency scaling. |
+| **Memory pool** | Pre-allocated fixed-size object cache. O(1) allocate/deallocate with no inter-thread synchronization or free-list searching. |
+| **Arena allocator** | Bump-pointer allocator: increment a pointer on alloc, bulk-free everything at scope exit. Zero per-allocation overhead. |
+
+### Ecosystem Context and Trade-offs
+
+These patterns represent a specific optimization regime: **predictable low latency under sustained load**. The trade-offs:
+
+- **Cache-friendly layouts** → Less flexible data structures (fixed sizes, intrusive links)
+- **Lock-free queues** → Complex implementation, bounded capacity, ABA problem considerations
+- **Memory pools** → Memory waste (pre-allocated but unused capacity), fragmentation over time
+- **Compile-time dispatch** → Code bloat (monomorphization), longer compile times, no runtime polymorphism
+- **TSC timing** → Platform-specific, requires calibration, breaks on CPU migration (need CPU pinning)
+
+**Alternatives:**
+- General-purpose allocators (e.g., jemalloc, tcmalloc) for most workloads
+- Mutex-based queues for low-contention scenarios
+- Virtual functions for runtime polymorphism needs
+- `std::chrono` for portable timing without platform tuning
+
+HFT chooses these patterns because the domain constraints (sub-microsecond tick-to-trade, million-message-per-second throughput, P99.9 latency SLAs) make the trade-offs worthwhile. Other domains (web servers, batch processing, ML training) rarely need this level of optimization and pay unnecessary complexity costs if they adopt these patterns prematurely.
+
 ## Description
 
 Build the **core data structures and patterns** used in real high-frequency trading systems. No finance domain knowledge required -- this is about **systems programming**: memory layout, lock-free concurrency, allocation-free hot paths, compile-time dispatch, and nanosecond-precision timing.

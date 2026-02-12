@@ -21,6 +21,10 @@ public:
     /// Construct a greeter with a given name.
     explicit Greeter(std::string name);
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise demonstrates how library code accesses CMake options.
+    // The ENABLE_GREETING_EMOJI flag is set via option() in CMakeLists.txt.
+
     // TODO(human): Implement these methods in greeter.cpp
     //
     // greet() should return a greeting string like "Hello, <name>!"
@@ -28,6 +32,10 @@ public:
     //
     // Hint: You'll need to #include "config.h" in greeter.cpp to check the option.
     [[nodiscard]] std::string greet() const;
+
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise practices C++17 STL usage within a library target.
+    // Real libraries separate interface (public headers) from implementation.
 
     // TODO(human): Implement greet_many()
     //

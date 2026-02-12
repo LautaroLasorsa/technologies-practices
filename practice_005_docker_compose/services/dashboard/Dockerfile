@@ -4,6 +4,11 @@
 # TODO(human): Fill in each step below. Hints are provided as comments.
 # =============================================================================
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise consolidates your Dockerfile skills by implementing a third
+# service with slight variations (different port). Repetition with minor changes
+# builds muscle memory for real-world multi-service projects.
+
 # TODO(human) [1/4]: Choose a base image.
 # Hint: Same as the other services -- python:3.12-slim.
 

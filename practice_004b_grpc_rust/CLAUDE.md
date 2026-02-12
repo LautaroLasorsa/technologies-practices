@@ -14,6 +14,49 @@
 - Rust (cargo, edition 2024)
 - Python 3.12+ (uv)
 
+## Theoretical Context
+
+### What is Tonic and What Problem Does It Solve?
+
+[Tonic](https://github.com/hyperium/tonic) is a native Rust gRPC client and server implementation built on async/await, designed for production systems that demand high performance, type safety, and interoperability. Unlike Python's grpcio (which wraps a C++ core), tonic is **pure Rust** — no FFI overhead, full control over memory, and seamless integration with Rust's ownership model. This makes it ideal for low-latency services, high-throughput data pipelines, and infrastructure components where memory safety and performance are non-negotiable.
+
+The problem tonic solves is **efficient cross-language microservice communication**. In polyglot architectures (e.g., Rust backend serving Python ML pipelines or JavaScript frontends), you need a shared RPC protocol that's fast, type-safe, and language-agnostic. Protocol Buffers provide the contract (schema-first development), and tonic/gRPC provide the runtime. Rust's performance (zero-cost abstractions, no GC) combined with gRPC's HTTP/2 multiplexing makes tonic a compelling choice for performance-critical services that other languages consume.
+
+### How Tonic Works: Prost, Build.rs, and Async Traits
+
+Tonic is composed of three layers: **prost** (protobuf code generation), **tonic-build** (service code generation via `build.rs`), and **tonic** (async gRPC runtime).
+
+[**Prost**](https://docs.rs/prost) is a pure-Rust protobuf compiler and runtime. It generates Rust structs from `.proto` message definitions, with derived `Serialize`/`Deserialize` traits for binary encoding. Unlike Python's dynamic message classes, prost's structs are **statically typed** — field access is checked at compile time, eliminating an entire class of runtime errors. Prost's binary encoding is optimized (zero-copy where possible), making serialization/deserialization faster than Python's protobuf implementation.
+
+[**tonic-build**](https://crates.io/crates/tonic-prost-build) hooks into [Cargo's build script system](https://www.thorsten-hans.com/grpc-services-in-rust-with-tonic/) (`build.rs`). When you run `cargo build`, Cargo executes `build.rs` **before** compiling your crate. Inside `build.rs`, you call `tonic_build::compile_protos("inventory.proto")`, which: (1) invokes prost to generate message structs, (2) generates a `InventoryServer` trait (server interface) and `InventoryClient` (client stub), and (3) places the generated code in `OUT_DIR` (accessed via `include_proto!("inventory")`). This is declarative code generation — no manual protoc invocations, no stale generated files. Every build regenerates code from the proto, ensuring sync between schema and implementation.
+
+**Async traits** (`#[tonic::async_trait]`) are how tonic exposes service methods. In Rust, traits can't natively have async methods (they involve opaque `impl Future` return types that confuse the trait object system). The `async_trait` macro desugars `async fn add_item(...)` into `fn add_item(...) -> Box<dyn Future<Output=...> + Send>`, making it trait-compatible. You implement the generated `Inventory` trait for your service struct, and tonic's runtime calls your methods when RPCs arrive. All I/O (network reads, serialization) is async, leveraging [tokio](https://docs.rs/tokio) for efficient concurrency.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Prost** | Pure-Rust protobuf compiler and serialization runtime. Generates strongly-typed structs from `.proto` message definitions. |
+| **tonic-build** | Build-time codegen that turns `.proto` files into Rust traits (server) and clients (stubs) via `build.rs`. |
+| **build.rs** | Cargo's pre-compile hook. Runs arbitrary code before main compilation — tonic uses it to generate gRPC code from protos. |
+| **#[tonic::async_trait]** | Macro that enables async methods in traits. Required because Rust's trait system doesn't natively support async fn in traits (pre-Rust 1.75). |
+| **Request\<T\>** | Wrapper around incoming protobuf messages. Contains the message plus metadata (headers, deadlines). |
+| **Response\<T\>** | Wrapper around outgoing protobuf messages. You return `Result<Response<T>, Status>` from service methods. |
+| **Status** | gRPC error type. Returned when RPCs fail — includes a status code (`NOT_FOUND`, `INVALID_ARGUMENT`) and optional details string. |
+| **ReceiverStream** | Adapts `tokio::sync::mpsc::Receiver` into a `Stream`. Used for server-streaming: you push messages into a channel, tonic reads from the stream. |
+| **tokio::spawn** | Spawns an async task on the tokio runtime. Used to produce streaming responses concurrently (e.g., iterating items and sending them). |
+| **Arc\<Mutex\<T\>\>** | Thread-safe shared state. `Arc` enables multiple tasks to own the same data; `Mutex` ensures synchronized access. Required because tonic spawns a task per RPC. |
+
+### Ecosystem Context: Tonic vs Python grpcio
+
+**Performance**: [Tonic outperforms Python grpcio](https://markaicode.com/building-microservices-with-rust-tonic-grpc-best-practices/) by 2-5x in throughput and tail latency due to Rust's zero-cost abstractions, lack of GC pauses, and efficient async I/O (tokio's epoll-based reactor). For services handling 100K+ RPS or strict latency SLAs (<10ms p99), Rust is the better choice.
+
+**Type Safety**: Rust's ownership model prevents null pointer bugs, use-after-free, and data races at compile time. Python's dynamic typing defers these errors to runtime. For production services, Rust's "if it compiles, it probably works" philosophy reduces operational risk.
+
+**Developer Experience**: Python's ecosystem (debugging, profiling, rapid iteration) is more mature. Rust's compile times are slower, error messages are dense for beginners, and the borrow checker adds friction. For rapid prototyping or teams without Rust expertise, Python is easier. For performance-critical services or systems programming, Rust's upfront cost pays dividends.
+
+**Cross-Language Interop**: This practice demonstrates the core value proposition of gRPC — a Rust server and Python client share a `.proto` contract and communicate seamlessly. This is how polyglot teams scale: performance-critical services in Rust, business logic in Python, frontend in TypeScript, all speaking gRPC.
+
 ## Description
 
 Build a **cross-language gRPC service**: a Rust server exposes an `Inventory` service (add items, query stock, list items) via gRPC, and a Python client consumes it. Both sides share a single `.proto` contract in `proto/inventory.proto`.

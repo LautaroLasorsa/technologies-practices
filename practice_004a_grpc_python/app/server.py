@@ -63,6 +63,11 @@ class TaskManagerServicer(pb2_grpc.TaskManagerServicer):
         request: pb2.CreateTaskRequest,
         context: grpc.ServicerContext,
     ) -> pb2.CreateTaskResponse:
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches unary RPC implementation: extracting protobuf messages,
+        # validating input, calling domain logic, and returning typed responses. It's
+        # the fundamental pattern for request-response APIs in gRPC.
+
         # TODO(human): Implement CreateTask.
         #
         # Steps:
@@ -82,6 +87,11 @@ class TaskManagerServicer(pb2_grpc.TaskManagerServicer):
         request: pb2.GetTaskRequest,
         context: grpc.ServicerContext,
     ) -> pb2.GetTaskResponse:
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches gRPC error handling: using context.abort() to return
+        # status codes (like NOT_FOUND) with descriptive messages. This is gRPC's equivalent
+        # of HTTP 404, but with richer semantics (15 standard status codes vs HTTP's limited set).
+
         # TODO(human): Implement GetTask.
         #
         # Steps:
@@ -129,6 +139,11 @@ class TaskManagerServicer(pb2_grpc.TaskManagerServicer):
         request: pb2.WatchTasksRequest,
         context: grpc.ServicerContext,
     ):
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches server-streaming RPCs: yielding multiple responses over
+        # a single connection. This is the pattern for real-time feeds, progress updates,
+        # or any scenario where the server pushes events to the client as they occur.
+
         # TODO(human): Implement WatchTasks (server streaming).
         #
         # This is a *generator* — you `yield` TaskEvent messages one at a time.

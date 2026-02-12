@@ -52,6 +52,11 @@ constexpr int BLOCK_SIZE = 256;
 // Instead of raw __shfl_down_sync, use thread_block_tile<32> which
 // provides .shfl_down() and .sync() methods — type-safe and composable.
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches cooperative groups—modern CUDA's flexible synchronization API.
+// Cooperative groups enable composable parallelism (tiles, partitions, grid-wide sync).
+// This is how production CUDA code structures complex algorithms (multi-pass, hierarchical reduction).
+
 // TODO(human): Implement a tiled warp reduction.
 //
 //   1. Get the thread_block: auto tb = cg::this_thread_block();

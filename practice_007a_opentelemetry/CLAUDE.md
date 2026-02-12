@@ -14,6 +14,38 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+OpenTelemetry is a vendor-neutral observability framework that provides APIs, SDKs, and tools to instrument applications and collect telemetry data (traces, metrics, and logs). A distributed trace records the path taken by a single request as it propagates through multiple services, improving visibility into complex distributed systems.
+
+**How Distributed Tracing Works:**
+
+At its core, distributed tracing connects causally-related operations across service boundaries. A **trace** is made of one or more **spans**, with the first span representing the root span. Each span represents a single unit of work or operation within a trace, containing a unique SpanID and linking to its parent span to form a hierarchical view of the request lifecycle. Spans carry **attributes** (indexed metadata), **events** (timestamped annotations), and **status** (success/error markers).
+
+**Context Propagation Mechanism:**
+
+When Service A calls Service B, Service A includes a trace ID and span ID as part of the context in HTTP headers (using W3C Trace Context standard via the `traceparent` header). Service B extracts these values to create a new span that belongs to the same trace, setting the span from Service A as its parent. The OpenTelemetry SDK handles this serialization/deserialization automatically through inject/extract APIs, making it possible to track the full flow of a request across service boundaries.
+
+The `traceparent` header format is: `00-<trace-id>-<span-id>-<flags>` where the trace-id is a 32-hex-digit identifier linking all spans in one request, and span-id identifies the current operation. When a service receives a request with this header, it extracts the context and creates a child span, forming a parent-child relationship visible as a waterfall diagram in tracing UIs like Jaeger.
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **Trace** | End-to-end journey of a request across all services, identified by a unique trace_id |
+| **Span** | Single operation within a trace (function call, DB query, HTTP request) with start/end timestamps |
+| **Trace Context** | Metadata (trace_id, span_id, flags) passed between services to link spans into a single trace |
+| **Attributes** | Indexed key-value pairs attached to spans (e.g., `http.method=POST`) — searchable and filterable |
+| **Events** | Timestamped log-like annotations within a span (e.g., "cache-hit", "retry-attempt") |
+| **Status** | Span outcome indicator (OK, ERROR, UNSET) — sets visual markers in tracing UIs |
+| **TracerProvider** | Global factory for creating Tracers; configured once at application startup |
+| **SpanProcessor** | Component that batches and exports spans to a backend (BatchSpanProcessor vs SimpleSpanProcessor) |
+| **Propagators** | Serialize/deserialize context into headers (W3C Trace Context is the default standard) |
+
+**Ecosystem Context:**
+
+OpenTelemetry is a CNCF graduated project and the industry standard for observability instrumentation. Unlike proprietary solutions (Datadog, New Relic), OpenTelemetry is vendor-neutral—instrumentation code remains the same regardless of backend (Jaeger, Zipkin, Tempo, AWS X-Ray, Google Cloud Trace). This practice uses Jaeger as the backend, but the instrumentation transfers to any OTLP-compatible system. The OTLP (OpenTelemetry Protocol) is a gRPC/HTTP protocol that all major observability vendors now support, ensuring future portability.
+
 ## Description
 
 Build a **two-service order system** (Order API + Payment Service) that demonstrates distributed tracing with OpenTelemetry. Traces flow from the API through an inter-service HTTP call, showing how a single user request produces a multi-span trace visible in Jaeger.

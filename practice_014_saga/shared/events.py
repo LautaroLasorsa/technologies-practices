@@ -52,6 +52,14 @@ class SagaState(str, Enum):
     """
     Lifecycle states of a saga instance.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches saga state machine design. Each state represents
+    # what the orchestrator is currently doing or waiting for. The state machine
+    # must model both forward progress (happy path) and backward compensation
+    # (failure path). Understanding state transitions is essential for debugging
+    # and ensuring saga correctness in production distributed systems.
+    # ──────────────────────────────────────────────────────────────────────
+
     TODO(human): Define ALL states the saga passes through.
 
     Happy path:  STARTED -> ??? -> ??? -> COMPLETED
@@ -78,6 +86,13 @@ class SagaState(str, Enum):
 class OrderSaga:
     """
     Tracks the state of a single saga instance.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches saga instance tracking. In production, saga state
+    # is persisted to a database (for crash recovery), but in-memory storage
+    # suffices for learning. The history field provides an audit trail, critical
+    # for debugging why a saga failed or compensated.
+    # ──────────────────────────────────────────────────────────────────────
 
     TODO(human): Add the fields this dataclass needs to track a saga.
 

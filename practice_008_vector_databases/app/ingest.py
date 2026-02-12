@@ -58,6 +58,11 @@ def article_to_point(article: dict) -> models.PointStruct:
     )
 
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches efficient batch ingestion into a vector database.
+# Understanding batching is essential for production vector DB usage—it dramatically reduces
+# network overhead and enables transactional-like bulk operations at the database level.
+
 def upsert_batch(client, articles: list[dict], batch_size: int = DEFAULT_BATCH_SIZE) -> int:
     """Upload articles to Qdrant in batches.
 
@@ -82,6 +87,11 @@ def upsert_batch(client, articles: list[dict], batch_size: int = DEFAULT_BATCH_S
     raise NotImplementedError("Implement upsert_batch()")
     return total_upserted
 
+
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches single-point upsert for real-time updates.
+# While batch upsert is used for bulk loading, single upsert is critical for streaming
+# pipelines where new documents must be searchable immediately upon arrival.
 
 def upsert_single(client, article: dict) -> None:
     """Upload a single article to Qdrant.

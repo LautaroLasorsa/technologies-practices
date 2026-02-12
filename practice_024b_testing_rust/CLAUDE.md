@@ -12,6 +12,95 @@
 
 - Rust 1.77+ (cargo)
 
+## Theoretical Context
+
+### What are Rust's testing patterns and what problems do they solve?
+
+Rust's testing ecosystem solves the **type-safe testing** problem: how do you test code in a language with strict compile-time guarantees (ownership, lifetimes) where traditional mocking techniques (monkey-patching, runtime reflection) don't work? The answer: **trait-based dependency injection**, **property-based testing** with compile-time guarantees, and **integration tests** that verify the public API without accessing internals.
+
+**Built-in testing** (`#[test]`, `#[cfg(test)]`) is zero-dependency and fast — no setup, just `cargo test`. Tests live alongside code in `src/` (unit tests) or in `tests/` (integration tests).
+
+**mockall** solves the **trait mocking** problem. Since Rust has no runtime type introspection, you can't replace methods at runtime like Python's `unittest.mock`. Instead, mockall generates mock implementations of traits via `#[automock]`, letting you set expectations (`expect_method().times(1).return_const(42)`) at compile time.
+
+**proptest** brings property-based testing to Rust with **strategies**, **shrinking**, and **regression testing** (caches failing cases in `proptest-regressions/` to prevent regressions).
+
+### How they work internally
+
+**Rust's built-in test framework:**
+
+1. **Test discovery**: `cargo test` compiles your code with `--test`, which enables `#[cfg(test)]` modules and marks `#[test]` functions as test entry points.
+2. **Execution**: Each test runs in its own thread (parallel by default; use `--test-threads=1` for serial). The test harness captures stdout/stderr unless `--nocapture` is passed.
+3. **Assertions**: `assert!`, `assert_eq!`, `assert_ne!` panic on failure. The test harness catches panics and reports them as test failures.
+4. **Doc tests**: Code in `///` doc comments is extracted and compiled as separate tests, ensuring examples stay correct.
+
+**Co-location vs separation:**
+
+- **Unit tests** (`#[cfg(test)] mod tests` in `src/`): Have access to private items, test internal implementation. Co-located for convenience.
+- **Integration tests** (`tests/*.rs`): Compiled as separate binaries, only see the crate's public API. Black-box testing.
+
+**mockall: trait mocking via code generation:**
+
+1. **`#[automock]` attribute**: Applied to a trait definition. mockall generates a `MockTraitName` struct with:
+   - Mock methods that store expectations (call count, arguments, return values).
+   - An expectation API (`.returning(|x| ...)`, `.times(1)`, `.with(predicate)`).
+2. **Expectation checking**: When the mock method is called, it checks if the call matches stored expectations (arguments, call count). If not, it panics (test failure).
+3. **Ownership and lifetimes**: mockall respects Rust's type system — you can mock traits with lifetimes, generic parameters, and `&mut` receivers. This is impossible in runtime-reflection-based mocking (Python, Java).
+
+**proptest: property-based testing with strategies:**
+
+1. **Strategy**: A type implementing the `Strategy` trait, describing how to generate random values. Examples: `any::<u32>()`, `prop::collection::vec(any::<String>(), 0..10)`, `prop::string::string_regex("[a-z]{1,20}")`.
+2. **Execution**: proptest runs your test function 256 times (default) with generated inputs. If a test fails, it triggers **shrinking**.
+3. **Shrinking**: proptest binary-searches the input space, trying simpler values (smaller numbers, shorter strings, fewer elements) that still fail. Stops at the minimal failing example.
+4. **Regression file**: Failing cases are saved to `proptest-regressions/<test_name>.txt` and re-run on subsequent `cargo test` to prevent regressions.
+
+**TDD in Rust (red-green-refactor):**
+
+- **Red**: In Rust, "red" includes **compile errors** (a failed test might not compile yet because the function signature doesn't exist). This is a feature — the compiler guides implementation.
+- **Green**: Implement the minimal code to make the test pass.
+- **Refactor**: Extract functions, apply SOLID principles, run tests to ensure behavior unchanged.
+
+### Key concepts
+
+| Concept | Description |
+|---------|-------------|
+| **`#[test]`** | Attribute marking a function as a test; `cargo test` runs all such functions |
+| **`#[cfg(test)]`** | Conditional compilation — code inside is only compiled during `cargo test` |
+| **Unit tests** | Co-located in `src/` files, have access to private items via `#[cfg(test)] mod tests` |
+| **Integration tests** | Separate files in `tests/`, compiled as independent binaries, only see public API |
+| **`assert!` / `assert_eq!` / `assert_ne!`** | Panic on failure; test harness catches panic and reports failure |
+| **Doc tests** | Code in `///` doc comments, extracted and compiled as tests |
+| **Trait-based mocking** | Using trait abstractions + dependency injection to enable test doubles (mockall automates this) |
+| **`#[automock]`** | mockall attribute generating a mock implementation of a trait with expectation API |
+| **`#[tokio::test]`** | Async test macro setting up a Tokio runtime for testing async functions |
+| **proptest strategy** | A type describing how to generate random test data (e.g., `any::<u32>()`, `vec(0..10, any::<String>())`) |
+| **Shrinking** | proptest's algorithm for minimizing a failing input to the simplest counterexample |
+| **Regression file** | proptest saves failing cases to `proptest-regressions/` to prevent regressions in future runs |
+
+### Ecosystem context
+
+**Alternatives and trade-offs:**
+
+| Approach | Strengths | Weaknesses |
+|----------|-----------|------------|
+| **Built-in `#[test]`** | Zero dependencies, fast, parallel by default | No fixtures, parametrization requires macros/loops |
+| **mockall** | Type-safe trait mocking, compile-time checks | Requires trait abstraction upfront (can't mock free functions or structs) |
+| **proptest** | Finds edge cases automatically, shrinks to minimal failing input | Slower (256 runs/test), requires thinking in invariants |
+| **rstest** (not used here) | Parametrization and fixtures like pytest | Extra dependency, less idiomatic than built-in tests |
+| **mockers / mockito** | Alternative mocking libraries | Less mature than mockall, different API styles |
+
+**When to use each:**
+
+- **Built-in tests**: Default choice for unit tests and simple integration tests.
+- **mockall**: When testing code with external dependencies (network, filesystem, time) via trait abstraction.
+- **proptest**: Testing invariants on data structures, parsers, encoders, math functions — anywhere properties hold universally.
+- **Async tests (`#[tokio::test]`)**: Testing async functions that return `Future` (common in web servers, async I/O).
+
+**Limitations:**
+
+- **mockall**: Requires designing for testability upfront (trait abstractions). Can't mock a concrete `struct` or free function without wrapping it in a trait.
+- **proptest**: Not suitable for tests requiring specific inputs (e.g., "user 123 exists in DB"). Use for algorithmic correctness, not business logic with fixtures.
+- **Compile-time testing**: Rust's type system catches many bugs at compile time, but tests still verify **business logic** that types can't express (e.g., "expired entries are never returned").
+
 ## Description
 
 Build a Cache service and its comprehensive test suite, practicing every major Rust testing pattern. The domain is a key-value cache with TTL expiration: get/set operations, key validation, time-based expiry, and async HTTP fetching for cache-aside pattern. This domain naturally demonstrates trait-based mocking (TimeProvider, HttpClient), property-based invariants (keys valid, expired entries never returned), error handling (Result + custom errors), and async testing.

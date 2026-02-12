@@ -50,6 +50,11 @@ from graph.ir import Graph, Node, Op
 def backward(graph: Graph, loss_node: Node) -> dict[str, float]:
     """Compute gradients via reverse-mode autodiff.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches backpropagation — the algorithm that makes deep learning
+    # training possible. This is PyTorch autograd's core. Understanding reverse-mode
+    # autodiff is essential for ML systems work and autodiff-based optimization (JAX).
+
     TODO(human): Implement the backward pass.
 
     This is backpropagation — the algorithm that makes deep learning training

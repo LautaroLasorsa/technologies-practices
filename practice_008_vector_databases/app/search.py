@@ -50,6 +50,11 @@ def print_results(results: list, label: str) -> None:
               f"words={payload['word_count']:>5}  {payload['title'][:60]}")
 
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches fundamental vector similarity search—the core operation of vector databases.
+# Understanding how to query for nearest neighbors is the foundation for all RAG pipelines and
+# semantic search applications where you find documents similar to a user's query embedding.
+
 def basic_search(client, query_vector: list[float], top_k: int = 5) -> list:
     """Find the top-k most similar articles to the query vector.
 
@@ -74,6 +79,11 @@ def basic_search(client, query_vector: list[float], top_k: int = 5) -> list:
     # TODO(human): implement basic similarity search
     raise NotImplementedError("Implement basic_search()")
 
+
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches filtered vector search, which combines semantic similarity with structured filters.
+# This is critical for production RAG where you need "find similar documents, but only from category X
+# published after date Y"—pure vector search alone cannot handle these business requirements.
 
 def filtered_search(
     client,
@@ -107,6 +117,11 @@ def filtered_search(
     raise NotImplementedError("Implement filtered_search()")
 
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches paginated retrieval without vector search—essential for bulk operations.
+# Understanding scroll vs search is important: scroll is for iterating/exporting data, while search
+# is for finding similar items. Many production systems need both operations.
+
 def scroll_all(client, category: str, page_size: int = 20) -> list:
     """Scroll through all articles in a given category (no vector search).
 
@@ -139,6 +154,11 @@ def scroll_all(client, category: str, page_size: int = 20) -> list:
     # TODO(human): implement paginated scroll
     raise NotImplementedError("Implement scroll_all()")
 
+
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches quality-gated retrieval using score thresholds.
+# In production RAG systems, returning low-similarity results pollutes LLM context with irrelevant
+# information. Score thresholds ensure you only retrieve results above a minimum quality bar.
 
 def search_with_score_threshold(
     client,

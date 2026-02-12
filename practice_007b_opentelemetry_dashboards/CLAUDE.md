@@ -13,6 +13,43 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+Prometheus is a time-series database and monitoring system built around a pull-based metrics collection model. Unlike push-based systems (where applications send metrics to a central server), Prometheus periodically scrapes metrics endpoints exposed by applications, storing timestamped samples that can be queried using PromQL (Prometheus Query Language).
+
+**How Prometheus Works:**
+
+Applications expose a `/metrics` endpoint in a standardized text format. Prometheus scrapes this endpoint at regular intervals (typically 15-60 seconds), pulling all metric values and storing them as time-series data. Each metric consists of a name, labels (key-value pairs for dimensionality), a timestamp, and a value. The pull model has key advantages: service discovery is centralized in Prometheus, scraping failures are visible, and applications don't need to know where metrics go.
+
+**OpenTelemetry Metrics Model:**
+
+OpenTelemetry defines three core metric instruments: **Counter** (monotonically increasing values like request counts), **Histogram** (distributions of values like latencies, stored as bucketed data), and **Gauge/UpDownCounter** (current values that go up and down like queue depth). When you record metrics using the OTel SDK, they're aggregated in-process and then exposed via an exporter. The Prometheus exporter translates OTel metrics into Prometheus's text format automatically.
+
+**PromQL and Aggregation:**
+
+PromQL is Prometheus's functional query language. Key functions include `rate()` (per-second rate of increase for counters over a time window), `histogram_quantile()` (computes percentiles from histogram buckets), and aggregation operators like `sum`, `avg`, `max`. Unlike raw averages, histograms preserve distribution shape—`histogram_quantile(0.95, ...)` tells you the 95th percentile latency, which is far more useful than an average that hides outliers.
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **Counter** | Monotonically increasing metric (resets on restart) — use for counts like requests processed |
+| **Histogram** | Bucketed distribution of observed values — use for latencies, sizes, durations |
+| **Gauge** | Current value that can increase or decrease — use for queue depth, memory usage, concurrent requests |
+| **Scrape** | Prometheus pulling metrics from a target's `/metrics` endpoint |
+| **Label** | Key-value pair adding dimensionality to metrics (e.g., `status="success"`) |
+| **Cardinality** | Number of unique time-series (metric name + label combinations) — high cardinality kills performance |
+| **PromQL** | Prometheus Query Language for selecting, aggregating, and computing metrics |
+| **Alerting Rule** | PromQL expression that fires when a condition is met for a duration (e.g., error rate > 10% for 2 minutes) |
+
+**Grafana Integration:**
+
+Grafana is a visualization platform that queries Prometheus as a data source. Dashboards are JSON-defined collections of panels, each running a PromQL query to display time-series graphs, gauges, or tables. Grafana provisioning allows dashboards and data sources to be defined as code (YAML/JSON files), loaded automatically at startup—crucial for reproducible infrastructure. Alerting can be configured in Prometheus (alert rules) or Grafana (alert queries), with Alertmanager handling routing to notification channels.
+
+**Ecosystem Context:**
+
+Prometheus + Grafana is the dominant open-source monitoring stack for cloud-native applications. OpenTelemetry standardizes the instrumentation layer, making it easy to switch between Prometheus, Datadog, New Relic, or other backends without changing application code. The CNCF ecosystem assumes Prometheus-style pull-based metrics by default. For very high scale (millions of time-series), managed solutions like Grafana Cloud, Cortex, or Thanos extend Prometheus's capabilities.
+
 ## Description
 
 Build a **simulated order-processing service** that emits custom OpenTelemetry metrics (request count, latency histograms, queue depth gauge), then visualize them in Grafana dashboards backed by Prometheus and configure alerting rules -- all running locally in Docker.

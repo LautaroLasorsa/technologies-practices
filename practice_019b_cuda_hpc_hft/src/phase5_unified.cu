@@ -120,6 +120,11 @@ float run_managed_naive(const float* h_source, float* h_verify, int n) {
 // --------------------------------------------------------------------------- //
 // Approach 3: Managed memory with prefetch
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches unified memory with manual prefetching for performance.
+// Unified memory simplifies development but requires prefetch to avoid page faults.
+// Real HFT avoids unified memory (latency unpredictable); HPC uses it for rapid prototyping.
+
 // TODO(human): Implement prefetch-based managed memory.
 //
 // Steps:

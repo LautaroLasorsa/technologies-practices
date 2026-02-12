@@ -69,6 +69,11 @@ pub mod solana_practice {
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
 
+        // ── Exercise Context ──────────────────────────────────────────────────
+        // This exercise teaches account initialization with Anchor's `init` constraint.
+        // Understanding how accounts are created (space calculation, rent-exemption, owner
+        // assignment) is fundamental to all Solana programming.
+        //
         // TODO(human): Set counter.authority to the user's public key
         //   Hint: ctx.accounts.user.key()
         //
@@ -93,6 +98,11 @@ pub mod solana_practice {
     pub fn increment(ctx: Context<Increment>) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
 
+        // ── Exercise Context ──────────────────────────────────────────────────
+        // This exercise teaches account mutation and the `mut` constraint. Anchor validates
+        // writable accounts at runtime—without `#[account(mut)]`, writes would fail. This is
+        // Solana's version of Rust's borrow checker, enforced by the runtime not rustc.
+        //
         // TODO(human): Increment counter.count by 1
         //   Hint: counter.count += 1;  (yes, it's that simple)
         //   But think about: what happens at u64::MAX? (see Phase 6 for overflow handling)

@@ -17,6 +17,10 @@ from pipeline.schemas import PRODUCTS_SCHEMA, SALES_SCHEMA
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches multi-source data ingestion with explicit schemas in Spark.
+# Defining schemas upfront (instead of inferring) catches data quality issues early and
+# avoids the performance overhead of schema inference, which is critical for large datasets.
 
 def read_sales(spark: SparkSession) -> DataFrame:
     """Read sales transactions from CSV with explicit schema.
@@ -32,6 +36,10 @@ def read_sales(spark: SparkSession) -> DataFrame:
     """
     raise NotImplementedError("Implement read_sales — see TODO above")
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches reading JSON data with explicit schemas in Spark.
+# Understanding JSON ingestion (including multiLine mode) is essential for modern data pipelines
+# where JSON is a common format for APIs, logs, and semi-structured data.
 
 def read_products(spark: SparkSession) -> DataFrame:
     """Read product catalog from JSON with explicit schema.

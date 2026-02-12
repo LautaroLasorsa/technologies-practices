@@ -12,6 +12,53 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+### What is Faust and Why Stream Processing?
+
+[Faust](https://faust.readthedocs.io/en/latest/) is a stream processing library that ports the ideas from Kafka Streams to Python. Originally developed at Robinhood to build high-performance distributed systems and real-time data pipelines that process billions of events every day, [Faust Streaming](https://github.com/faust-streaming/faust) (the actively maintained fork) provides both stream processing and event processing without a DSL — it's just Python with async/await. Unlike Kafka Streams (JVM-based), Faust lets Python teams apply the same stream processing patterns (agents, tables, windowing, changelogs) without leaving their language ecosystem.
+
+Stream processing solves the problem of **continuous computation over unbounded data**. Traditional batch systems (like daily ETL jobs) introduce latency — you wait hours for results. Stream processing reacts to events as they arrive, enabling real-time analytics, monitoring, and decision-making. Systems like [Apache Flink](https://nightlies.apache.org/flink/flink-docs-master/docs/concepts/stateful-stream-processing/), Kafka Streams, and Faust are purpose-built for this: they maintain state, handle failures, and guarantee correctness (exactly-once semantics) while processing millions of events per second.
+
+### How Faust Works: Agents, Tables, and Changelogs
+
+Faust's core abstraction is the **agent** (borrowed from the actor model): a long-running async coroutine that consumes events from a Kafka topic, transforms them, and optionally produces to another topic. Agents run concurrently across CPU cores and machines, leveraging Python's async/await for cooperative multitasking and backpressure management. This is fundamentally different from callback-based systems (like traditional Kafka consumers) — `async for event in stream` gives you natural flow control and readable code.
+
+**Stateful processing** is where Faust shines. A **Table** is a sharded, distributed key-value store backed by a Kafka **changelog topic**. When you update `table[key] = value`, Faust writes the change to the changelog, ensuring that if the worker crashes and restarts, it can replay the changelog to rebuild state. This is identical to Kafka Streams' StateStore concept. Tables enable patterns like counting, aggregation, and joins — things impossible with stateless stream transformations. The changelog is partitioned and co-located with the processing tasks, minimizing network hops (data locality principle).
+
+**Windowed tables** extend this to time-based aggregation. A [tumbling window](https://www.ververica.com/stream-processing-with-apache-flink-beginners-guide) divides time into fixed, non-overlapping buckets (e.g., 60-second intervals). Each event falls into exactly one window based on its timestamp. When the window "closes" (stream time advances past it), you can emit a summary (min/max/avg). Faust tracks window state in the table, and the changelog ensures windowed state survives restarts. This is the foundation of time-series analytics in stream processing.
+
+### Exactly-Once Semantics: What It Means and How It Works
+
+By default, stream processors offer **at-least-once** delivery: if a worker crashes mid-processing, it replays from the last committed offset, potentially re-processing some events. For idempotent operations (like max/min), this is fine. But for non-idempotent operations (like counting or updating a database), you get duplicates.
+
+**Exactly-once semantics** (EOS) ensures each event is processed exactly once, even across failures. [Faust's `processing_guarantee="exactly_once"`](https://faust.readthedocs.io/en/latest/userguide/tables.html) uses Kafka's transactional API: it batches table changelog writes and output topic produces into a single atomic transaction, and only commits the consumer offset if the transaction succeeds. If the worker crashes, Kafka aborts the transaction, and the next worker replays from the uncommitted offset — no duplicates escape. The tradeoff is latency (transactions add ~10-100ms per batch) and complexity. EOS is critical for financial systems, billing, and any domain where "approximately correct" isn't acceptable.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Agent** | Async coroutine that consumes from a topic, transforms events, and optionally produces to a sink. The core unit of stream processing in Faust. |
+| **Topic** | Kafka topic abstracted as a typed stream. Faust auto-serializes/deserializes Records (typed message schemas). |
+| **Record** | Faust's typed message schema (like Pydantic or dataclasses). Fields are validated, and Records serialize to JSON by default. |
+| **Table** | Distributed key-value store backed by a Kafka changelog topic. Survives worker restarts via replay. Used for stateful processing (counting, aggregation). |
+| **Changelog Topic** | Kafka topic that logs every change to a Table. Enables fault tolerance — if a worker crashes, the next one replays the changelog to rebuild state. |
+| **Tumbling Window** | Fixed-size, non-overlapping time buckets (e.g., 60s). Events are assigned to one window based on timestamp. Used for time-bucketed aggregates (e.g., avg temperature per minute). |
+| **Sink** | A topic that an agent produces to. If `@app.agent(topic, sink=[output_topic])`, everything the agent `yield`s is sent to the sink. |
+| **Exactly-Once** | Processing guarantee where each event affects state/output exactly once, even across failures. Requires Kafka transactions (higher latency, stronger consistency). |
+| **Dead-Letter Queue** | A separate topic for malformed/poison events that fail validation. Prevents bad data from blocking the pipeline. |
+| **Processing Guarantee** | Either `"at_least_once"` (default, fast, duplicates possible) or `"exactly_once"` (slower, no duplicates, transactional). |
+
+### Ecosystem Context: Faust vs Alternatives
+
+**Faust vs Kafka Streams**: Kafka Streams is the JVM reference implementation — mature, battle-tested, rich ecosystem (KSQL, Spring Cloud Stream). Faust brings the same concepts to Python, trading JVM performance for Python's ecosystem (NumPy, TensorFlow, scikit-learn). Faust is ideal for ML pipelines, data science workflows, and teams already invested in Python.
+
+**Faust vs Spark Structured Streaming**: Spark requires a cluster (YARN/Kubernetes) and uses micro-batch processing (latency in seconds). Faust is lightweight (just a Python process + Kafka), true streaming (sub-second latency), and easier to operationalize for small-to-medium workloads. Spark wins for petabyte-scale batch+streaming hybrid systems.
+
+**Faust vs Flink**: [Flink](https://nightlies.apache.org/flink/flink-docs-master/docs/concepts/stateful-stream-processing/) is the gold standard for stateful stream processing — advanced windowing, event-time watermarks, savepoints. But it's JVM-based, operationally complex (clusters, JobManager, TaskManager), and has a steeper learning curve. Faust is simpler and Python-native, but lacks Flink's sophistication (no hopping windows, no session windows, no CEP). Trade-off: ease-of-use vs feature richness.
+
+**Trade-offs**: Faust's biggest limitation is Python's GIL — CPU-bound transformations don't scale well. For I/O-bound workloads (network calls, database lookups, ML inference via external services), async/await shines. For CPU-heavy transformations, Kafka Streams or Flink's JVM parallelism wins.
+
 ## Description
 
 Build a **Sensor Metrics Pipeline** that demonstrates real-time stream processing with Faust: agents that consume-transform-produce, stateful tables for counting, tumbling-window aggregations for time-bucketed metrics, dead-letter routing for malformed events, and exactly-once processing semantics -- all running locally against a Kafka broker in Docker.

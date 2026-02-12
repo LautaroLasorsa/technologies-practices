@@ -13,6 +13,101 @@
 - Python 3.12+ (uv for local development)
 - Docker (Dagster + PostgreSQL containers)
 
+## Theoretical Context
+
+### What is Dagster and what problem does it solve?
+
+**Dagster** is an **asset-based orchestration platform** that solves Airflow's core limitation: **task-centric thinking forces you to model workflows as "run this code at this time" instead of "this data should exist and be fresh"**. Dagster flips the paradigm: you declare **Software-Defined Assets** — data assets that know their dependencies, how to materialize themselves, and when they're stale. Dagster infers the execution DAG from asset dependencies and handles scheduling, incremental updates, and lineage automatically.
+
+The key innovation: **data as first-class citizens**. In Airflow, you write `extract_task >> transform_task >> load_task` (tasks). In Dagster, you write `@asset def transformed_data(raw_data): ...` (data dependencies). Dagster computes the task graph, tracks which assets are fresh, and exposes full data lineage in the UI.
+
+### How Dagster works internally
+
+**Architecture components:**
+
+1. **Webserver (Dagit)**: The UI for viewing assets, runs, logs, and lineage. Cleaner than Airflow's UI, with a **global asset catalog** showing all data assets and their relationships.
+2. **Daemon**: Background process handling schedules, sensors, run retries, and **auto-materialization** (decides which assets to recompute based on freshness policies).
+3. **Run coordinator**: Manages execution concurrency and queuing (similar to Airflow executor).
+4. **Dagster code locations**: Deployed Python modules containing asset definitions. Dagster loads them via gRPC to isolate user code from the orchestrator.
+5. **Storage backend**: Stores run history, logs, and asset materializations (PostgreSQL/MySQL/SQLite). Unlike Airflow, Dagster separates code from state.
+
+**Software-Defined Assets (SDA) execution model:**
+
+1. **Asset definition**: An `@asset` function declares a data asset. Its name is the asset key, its parameters are upstream dependencies (via function parameters, not explicit `>>` operators).
+   ```python
+   @asset
+   def cleaned_data(raw_data: pd.DataFrame) -> pd.DataFrame:
+       return raw_data.dropna()
+   ```
+   Dagster infers: "`cleaned_data` depends on `raw_data`. To materialize `cleaned_data`, first materialize `raw_data`, then call this function."
+
+2. **Asset graph**: Dagster builds a **dependency graph** from asset function signatures. The graph is stored in the storage backend and visualized in Dagit.
+
+3. **Materialization**: When you "materialize" an asset, Dagster:
+   - Resolves upstream dependencies (recursively materialize missing deps).
+   - Calls the asset function with upstream outputs as arguments.
+   - Stores the result via an **I/O manager** (e.g., write to S3, load into Snowflake).
+   - Records the materialization event (timestamp, metadata) in the storage backend.
+
+4. **Partitions**: Assets can be partitioned (e.g., by date). Each partition is independently materialized. Dagster tracks which partitions are fresh and which need recomputation. Backfills are first-class: "materialize asset X for 2024-01-01 to 2024-01-31" is a single UI action.
+
+5. **Auto-materialization**: Define a `FreshnessPolicy` (`maximum_lag_minutes=360`) on an asset. The daemon monitors upstream changes and triggers materialization if the asset is stale.
+
+6. **dbt integration**: dbt models are loaded as assets via `@dbt_assets`. Dagster parses `dbt_project.yml`, infers dependencies from `ref()` calls, and treats each model as an asset in the unified graph.
+
+### Key concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Software-Defined Asset (SDA)** | A Python function decorated with `@asset`, representing a data asset and how to compute it |
+| **Asset key** | Unique identifier for an asset (e.g., `cleaned_data`, `marts/daily_summary`) |
+| **Asset dependency** | Inferred from function parameters — if `def foo(bar): ...`, then `foo` depends on `bar` |
+| **Materialization** | The act of computing an asset's value and storing it (via an I/O manager) |
+| **I/O manager** | A plugin defining how assets are stored/loaded (e.g., pickle files, Parquet to S3, rows in Postgres) |
+| **Partition** | A slice of an asset (e.g., one day's data). Enables incremental processing: only recompute changed partitions |
+| **FreshnessPolicy** | A declarative rule: "this asset should be < 6 hours old". The daemon auto-materializes when stale. |
+| **Sensor** | A function that polls for external events (new files, upstream API changes) and triggers materializations |
+| **Resource** | A reusable component (DB connection, API client) injected into assets via dependency injection |
+| **Asset catalog** | The UI showing all assets, their lineage, materialization history, and partition status |
+| **Backfill** | Materializing a range of partitions (e.g., "recompute daily data for Jan 2024") |
+| **Code location** | A deployed Python module containing asset definitions; loaded via gRPC for isolation |
+
+### Ecosystem context
+
+**Why Dagster is gaining traction:**
+
+- **Asset-first thinking**: Aligns with how data teams actually think ("I need the customer_churn table to be fresh") vs. Airflow's task-first ("run churn_model.py at 3am").
+- **Better testing**: Assets are pure functions — test with `materialize([my_asset], resources={...})` in pytest. No Airflow instance needed.
+- **Native dbt integration**: dbt models appear in the same asset graph as Python assets. Full lineage across SQL + Python.
+- **Incremental by default**: Partitions + freshness policies make incremental processing first-class, not an afterthought.
+- **Better observability**: Asset catalog shows who produced each asset, when, with what code version, and metadata (row counts, schema).
+
+**Dagster vs Airflow (comparison table):**
+
+| Aspect | Airflow (026a) | Dagster (026b) |
+|--------|---------------|---------------|
+| **Core abstraction** | Task (code to run) | Asset (data to produce) |
+| **Dependency declaration** | Explicit `task1 >> task2` | Implicit from function parameters |
+| **Scheduling** | Cron-based ("run at 2am") | Freshness-based ("data should be < 6h old") |
+| **Data passing** | XCom (limited, hacky) | I/O managers (first-class, typed) |
+| **Lineage** | External tools (Atlas, DataHub) | Built-in asset catalog |
+| **Testing** | Hard (needs Airflow running) | Easy (`materialize()` in pytest) |
+| **Incremental processing** | Manual (checkpoints, lookups) | First-class (partitions, freshness policies) |
+| **dbt integration** | BashOperator or cosmos plugin | Native `@dbt_assets` with lineage |
+| **Maturity** | Mature (2015), huge ecosystem | Younger (2019), growing fast |
+
+**When to choose each:**
+
+- **Use Airflow** if: You need 1000+ integrations (AWS, GCP, Databricks, Fivetran, etc.), your team already knows Airflow, or you have complex dynamic DAGs (generate tasks programmatically).
+- **Use Dagster** if: You're starting fresh, want better testing/lineage, use dbt heavily, or need incremental/partitioned processing by default.
+- **Migration path**: Many teams run Airflow for legacy pipelines and Dagster for new data products, gradually migrating.
+
+**Limitations:**
+
+- **Smaller ecosystem**: Fewer pre-built integrations than Airflow (though growing fast with Dagster Cloud and community libraries).
+- **Steeper learning curve**: Asset-based thinking requires mental model shift. Airflow's task model is more intuitive initially.
+- **Less mature**: Dagster 1.0 released in 2022 (vs. Airflow's 2015). Fewer Stack Overflow answers, less battle-tested in edge cases.
+
 ## Description
 
 Learn Dagster's **asset-based orchestration model** -- a paradigm shift from Airflow's task-centric approach. Instead of defining "run this task at this time," you define "this data asset exists and depends on these other assets." Dagster handles materialization, incremental updates, and lineage automatically.

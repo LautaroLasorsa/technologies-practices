@@ -10,6 +10,60 @@
 
 Python 3.12+ (uv), NVIDIA GPU required, **Docker with GPU access on Windows**
 
+## Theoretical Context
+
+### What is Triton?
+
+**Triton** is a domain-specific language and compiler for writing GPU kernels at a **block level** rather than a thread level. Traditional CUDA requires programming individual threads and manually managing shared memory, memory coalescing, synchronization barriers, and bank conflicts. Triton abstracts these details: you write code that operates on **tiles (blocks) of data**, and the compiler handles thread mapping, memory optimization, and warp scheduling automatically.
+
+Triton solves the **GPU programmability problem**: writing high-performance CUDA kernels requires deep hardware expertise (SM architecture, memory hierarchy, occupancy tuning), making custom kernel development expensive and error-prone. Triton provides a Python-embedded DSL where you express algorithms in terms of blocked operations (`tl.load`, `tl.store`, `tl.dot`), and the compiler generates PTX code competitive with hand-tuned CUDA. This makes custom kernel development accessible to ML engineers without CUDA expertise.
+
+### How Triton Works Internally
+
+Triton's compilation pipeline has four stages:
+
+1. **Python AST → Triton IR**: The `@triton.jit` decorator captures the function's AST and lowers it to Triton IR, a block-based SSA representation. Control flow (if/for) is supported but must be data-independent (no divergent branches based on loaded data).
+
+2. **Triton IR → TTIR (Triton Tensor IR)**: Operations are tiled. A `tl.load(ptr + offsets)` where `offsets` is a 1D range becomes a blocked load of multiple elements. The compiler determines optimal block layouts and shared memory usage.
+
+3. **TTIR → TTGIR (Triton Tensor GPU IR)**: Hardware-specific transformations. TTGIR encodes warp-level operations, shared memory allocations, and coalescing patterns. The compiler performs **auto-tuning** here: trying different `BLOCK_SIZE`, `num_warps`, and `num_stages` configurations to maximize occupancy and throughput.
+
+4. **TTGIR → PTX/SASS**: Final code generation to NVIDIA PTX assembly (or SASS if AOT compiled). The kernel is linked with CUDA runtime and launched via `kernel[grid](args)` syntax from Python.
+
+**Key abstraction**: Triton programs operate on **tiles** (multi-element blocks). A single Triton "program" (kernel instance) processes one tile. The `tl.program_id(axis)` returns which tile this program is responsible for. You compute tile offsets (`tl.arange(0, BLOCK_SIZE) + pid * BLOCK_SIZE`), load the tile, compute, and store the result. The compiler parallelizes across tiles (GPU blocks) automatically.
+
+**Auto-tuning**: Triton's `@triton.autotune` decorator exhaustively searches `BLOCK_SIZE`, `num_warps` (warps per block), and `num_stages` (software pipelining stages) configurations. It launches the kernel with each config and measures throughput, selecting the best. This is essential because optimal parameters depend on problem size, GPU architecture, and memory access patterns.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Block-Level Programming** | Program tiles of data, not individual threads. Compiler handles thread mapping. |
+| **Tile/Block** | A contiguous chunk of data processed by one program instance (kernel block). |
+| **`tl.program_id(axis)`** | Returns block ID along axis 0, 1, or 2. Used to compute which tile to process. |
+| **`tl.arange(start, end)`** | Creates a range of offsets within a tile. Foundation for tiled memory access. |
+| **`tl.load(ptr, mask)`** | Loads a tile from memory. Mask handles out-of-bounds (when tile exceeds tensor size). |
+| **`tl.store(ptr, value, mask)`** | Stores a tile to memory. Mask prevents out-of-bounds writes. |
+| **`tl.constexpr`** | Compile-time constant (like C++ constexpr). Enables specialization and dead code elim. |
+| **Reduction Operations** | `tl.max`, `tl.sum` — tree reduction within a tile. Used for softmax, layer norm. |
+| **Occupancy** | GPU utilization: (active warps) / (max warps per SM). Tuned via `num_warps`, `BLOCK_SIZE`. |
+| **Auto-Tuning** | `@triton.autotune` exhaustively searches config space for optimal `BLOCK_SIZE`, `num_warps`. |
+| **Fusion** | Combining operations in one kernel (e.g., matmul+ReLU) to eliminate memory round-trips. |
+
+### Ecosystem Context
+
+Triton competes with and complements other GPU programming models:
+
+- **CUDA**: Low-level, full control, steep learning curve. Triton achieves 80-95% of hand-tuned CUDA performance with 10x less code.
+- **CuBLAS/CuDNN**: NVIDIA's highly optimized libraries for matmul/conv. Faster than Triton for standard ops, but inflexible. Triton wins for custom fusion patterns (e.g., matmul+bias+ReLU+quantize).
+- **TorchScript/JIT**: PyTorch's older compilation system. Replaced by torch.compile (which uses Triton via TorchInductor).
+- **JAX/XLA**: Generates CUDA via XLA backend. Less flexible than Triton for custom kernels; XLA is designed for compiler-generated code, not human-written.
+- **OpenAI Codex/Copilot**: Can generate Triton kernels from natural language. Triton's simplicity makes it LLM-friendly.
+
+**Trade-offs**: Triton sacrifices low-level control (can't directly manage L1 cache, warp divergence, register allocation) for productivity. For 95% of custom kernels, this is the right trade-off. For the last 5% (e.g., FlashAttention's ultra-optimized attention kernel), hand-tuned CUDA is still necessary.
+
+**Adoption**: Triton is the **backend for TorchInductor** (torch.compile's code generator). When `torch.compile` generates GPU code, it emits Triton kernels. OpenAI uses Triton extensively (GPT training, inference). Meta, NVIDIA, and Google have Triton kernel libraries. Understanding Triton is essential for understanding modern PyTorch compilation.
+
 **Platform requirement:** Triton requires Linux + NVIDIA GPU. On Windows, use Docker with NVIDIA Container Toolkit:
 
 1. **Install Docker Desktop for Windows** (if not already) and enable WSL2 backend in Docker settings.

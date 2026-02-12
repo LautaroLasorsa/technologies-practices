@@ -45,6 +45,11 @@ def imagine_rollout(
             "rewards": List of predicted rewards, length len(actions)
             "dones": List of predicted done flags, length len(actions)
     """
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This teaches planning via model-based rollouts: using the learned dynamics model
+    # to simulate future trajectories. It demonstrates how models enable "mental simulation"
+    # and reveals the compounding error problem (errors accumulate over time).
+
     # TODO(human): Implement the imagined rollout.
     #
     # Steps:

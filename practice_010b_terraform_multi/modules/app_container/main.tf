@@ -1,6 +1,11 @@
 # =============================================================================
 # Reusable module: app_container
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches module design: creating reusable components with clear
+# interfaces (inputs/outputs). Understanding dynamic blocks is essential for
+# building flexible modules that handle variable-length lists of ports, mounts, etc.
+#
 # Creates a Docker image + container pair, attached to a given network,
 # with optional port mappings, environment variables, and volume mounts.
 #

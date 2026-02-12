@@ -85,6 +85,11 @@ class StackedLinearReLU(nn.Module):
 def find_linear_relu_pairs(graph_module: GraphModule) -> list[tuple[Node, Node]]:
     """Find all (linear_node, relu_node) pairs that can be fused.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches pattern matching in computation graphs — identifying
+    # fusible subgraphs by walking the IR. This is the core of every compiler's
+    # fusion pass (TensorRT, XLA, TorchInductor all do this).
+
     TODO(human): Implement this function.
 
     Walk the graph nodes in topological order and find pairs where:
@@ -142,6 +147,11 @@ def find_linear_relu_pairs(graph_module: GraphModule) -> list[tuple[Node, Node]]
 
 def apply_linear_relu_fusion(graph_module: GraphModule) -> GraphModule:
     """Apply Linear+ReLU fusion to all eligible pairs in the graph.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches graph rewriting — the mechanics of modifying an IR to
+    # replace subgraphs with optimized equivalents. Understanding insert/rewire/erase
+    # is essential for implementing any compiler transformation pass.
 
     TODO(human): Implement this function.
 

@@ -1,5 +1,10 @@
 # namespace.yaml — Creates an isolated namespace for this practice.
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates Kubernetes' multi-tenancy mechanism. Namespaces enable
+# team/environment isolation within a single cluster, essential for shared dev clusters
+# and production separation (e.g., staging vs prod namespaces).
+#
 # Concepts to learn:
 #   - Namespaces provide logical isolation (like folders for K8s resources)
 #   - Resources in different namespaces can have the same name without conflict

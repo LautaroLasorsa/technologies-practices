@@ -14,6 +14,56 @@
 - CMake 3.21+ (bundled with VS 2022)
 - MSVC + MinGW GCC toolchains
 
+## Theoretical Context
+
+### What CMake Presets, Toolchains, and Advanced Features Solve
+
+CMake 3.21+ introduced **CMakePresets.json**, a standardized way to define build configurations. Before presets, teams documented long cmake commands in wikis (`cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=...`), leading to "works on my machine" issues. Presets replace these with version-controlled JSON files that define configure, build, and test workflows. This solves onboarding friction, CI/CD complexity, and cross-platform reproducibility.
+
+**Toolchain files** (`CMAKE_TOOLCHAIN_FILE`) specify the compiler, linker, sysroot, and search paths for cross-compilation. They're loaded before `project()`, allowing CMake to set up the compilation environment before detecting features or building targets. Toolchains are essential for embedded systems (ARM bare-metal), mobile (Android NDK), and multi-compiler CI matrices (MSVC + GCC + Clang).
+
+**Custom find modules** (`FindXxx.cmake`) fill the gap when third-party libraries don't ship CMake config files. While modern libraries generate `XxxConfig.cmake` via `install(EXPORT ...)`, older libraries (pre-CMake era) or system libraries (OpenSSL, Boost pre-1.70) require custom find modules. Writing these modules teaches how `find_package()` works under the hood.
+
+**CTest** (CMake's test driver) and **CPack** (CMake's packaging tool) complete the build-test-package lifecycle. CTest runs tests with labels, fixtures, and timeouts, integrating with CI dashboards. CPack generates installers (ZIP, NSIS, DEB, RPM) from install rules, ensuring what you build can be deployed.
+
+### How These Systems Work Internally
+
+**CMake Presets** use a two-layer architecture: `CMakePresets.json` (checked into version control, team-wide defaults) and `CMakeUserPresets.json` (local overrides, gitignored). Presets support **inheritance** (`"inherits": ["base"]`) to avoid duplication, and **condition expressions** to enable platform-specific configurations. When you run `cmake --preset=msvc-release`, CMake loads the preset, resolves inherited fields, evaluates conditions, and then invokes the equivalent `cmake -S ... -B ... -G ... -D...` command. Build presets (`cmake --build --preset=...`) and test presets (`ctest --preset=...`) layer on top, referencing configure presets via `configurePreset`.
+
+**Toolchain files** are executed at the start of configuration, before compiler detection. They set variables like `CMAKE_C_COMPILER`, `CMAKE_CXX_COMPILER`, `CMAKE_SYSTEM_NAME`, and `CMAKE_FIND_ROOT_PATH`. Setting `CMAKE_SYSTEM_NAME` to a value different from the host OS triggers **cross-compiling mode** (`CMAKE_CROSSCOMPILING=TRUE`), which alters how CMake searches for libraries (only in sysroot, not host paths) and how it handles try_compile tests (compiles for target, runs on host via emulator or skips).
+
+**Custom find modules** follow a four-step pattern: (1) `find_path()` locates headers, (2) `find_library()` locates compiled libraries, (3) `find_package_handle_standard_args()` validates results and sets `XXX_FOUND`, (4) `add_library(... IMPORTED)` creates a target wrapping the found artifacts. The IMPORTED target mimics a regular CMake target, allowing `target_link_libraries(app PRIVATE XXX::XXX)` to propagate includes and linkage automatically.
+
+**CTest** registers tests via `add_test(NAME ... COMMAND ...)` and stores them in `CTestTestfile.cmake`. When you run `ctest`, it parses these files, applies filters (`-L label`, `-R regex`), executes tests in parallel (with dependency ordering via fixtures), captures output, and reports pass/fail. CTest integrates with CDash (CMake's test dashboard) for tracking test history across CI runs.
+
+**CPack** reads `install(TARGETS ...)` and `install(FILES ...)` rules, along with `CPACK_*` variables, to generate platform-specific installers. The `include(CPack)` command at the end of `CMakeLists.txt` creates a `package` target. Running `cmake --build build --target package` invokes CPack, which stages installed files into a temporary directory, then compresses (ZIP), creates an installer (NSIS/WiX on Windows), or builds a package (DEB/RPM on Linux).
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **CMakePresets.json** | Version-controlled build configuration file. Defines configure/build/test presets with inheritance, conditions, and cacheVariables. |
+| **Toolchain File** | CMake script loaded before `project()` to set compiler, sysroot, and cross-compilation settings. Enables multi-compiler builds and cross-compilation. |
+| **Cross-Compiling Mode** | Activated when `CMAKE_SYSTEM_NAME` differs from host OS. Changes library search paths, disables host-executable execution in try_compile. |
+| **Find Module** | CMake script (`FindXxx.cmake`) that locates third-party libraries without CMake config. Implements `find_path`, `find_library`, creates IMPORTED target. |
+| **IMPORTED Target** | CMake target representing a pre-built library. Created by find modules or `find_package` config mode. Used with `target_link_libraries` like regular targets. |
+| **CTest** | CMake's test runner. Executes tests registered via `add_test`, supports labels, fixtures, parallel execution, and CDash integration. |
+| **Test Fixtures** | CTest feature for setup/teardown dependencies. Tests marked with `FIXTURES_SETUP` run before, `FIXTURES_CLEANUP` run after fixture-dependent tests. |
+| **CPack** | CMake's packaging tool. Generates installers (ZIP, NSIS, DEB, RPM) from install rules and `CPACK_*` variables. Invoked via `package` target. |
+| **Generator Expression** | `$<...>` syntax evaluated at generation time. Used in toolchains for conditional flags (e.g., `$<$<CONFIG:Debug>:-g>`). |
+
+### Ecosystem Context
+
+**Presets vs build scripts**: Before presets, teams wrote shell scripts (`build.sh`, `build.bat`) wrapping cmake commands. Presets embed this logic in JSON, making it cross-platform and IDE-integrated (VS Code, CLion, Visual Studio all parse `CMakePresets.json`). However, presets require CMake 3.21+, so older projects still use scripts.
+
+**Toolchains vs Docker**: Cross-compilation toolchains (e.g., Windows → Linux ARM) require target sysroots and cross-compilers. Docker simplifies this by providing pre-configured environments, but toolchains are more lightweight (no container overhead). For embedded (Yocto, Buildroot), toolchains are standard; for Linux → Windows, Wine + MinGW toolchains are common.
+
+**Find modules vs vcpkg/Conan**: Modern package managers (vcpkg, Conan) generate CMake config files, eliminating the need for custom find modules. However, system libraries (Threads, OpenGL) and legacy libraries (old Boost versions) still require find modules. Understanding them is essential for integrating non-CMake libraries.
+
+**CTest vs gtest/pytest**: CTest is a test *runner*, not a framework. You write tests using Google Test, Catch2, or plain asserts, then register them with `add_test()`. CTest handles discovery, parallel execution, and reporting, while the framework provides assertions and fixtures. For pure CMake projects (no external frameworks), CTest suffices.
+
+**CPack vs platform installers**: CPack generates installers but lacks advanced UI customization (e.g., WiX's complex dialog flows). For production Windows installers, teams often use CPack for quick internal builds and switch to WiX/InstallShield for customer-facing releases. For Linux, CPack's DEB/RPM generators are production-ready.
+
 ## Description
 
 Go beyond `add_executable` and `target_link_libraries` into the **build system configuration layer** of CMake. This session covers the tools that make C++ projects portable, reproducible, and CI/CD-ready: presets that replace long command lines, toolchain files that enable cross-compilation, custom find modules for dependency management, CTest for structured testing, custom commands for code generation, and CPack for packaging.

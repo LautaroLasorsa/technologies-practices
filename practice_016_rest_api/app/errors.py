@@ -41,6 +41,15 @@ PROBLEM_TITLES = {
 # raise_problem — starter stub (works, but not RFC 9457 yet)
 # ---------------------------------------------------------------------------
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches RFC 9457 Problem Details for structured error responses.
+# Structured errors enable clients to programmatically handle failures (e.g.,
+# detect rate limiting by checking the `type` URI). The `type` field links to
+# documentation, `instance` identifies the specific occurrence. Production APIs
+# add tracing IDs (correlation with logs) and extension fields (e.g., validation
+# errors per field). This standard replaced ad-hoc error formats across APIs.
+# ──────────────────────────────────────────────────────────────────────
+
 # TODO(human): Enhance this function to return RFC 9457 ProblemDetail bodies.
 #
 # Currently it raises a plain HTTPException with a string detail.
@@ -68,6 +77,14 @@ def raise_problem(status: int, detail: str, instance: str | None = None) -> Neve
 # ---------------------------------------------------------------------------
 # TODO(human): Implement the exception handler
 # ---------------------------------------------------------------------------
+#
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches FastAPI exception handling customization. By registering
+# an exception handler, we convert HTTPException into RFC 9457 responses with
+# the `application/problem+json` Content-Type. This ensures all errors (even
+# framework-generated ones like 422 validation errors) follow the same structured
+# format, improving client-side error handling consistency.
+# ──────────────────────────────────────────────────────────────────────
 #
 # Write an async function to register with app.exception_handler(HTTPException).
 #

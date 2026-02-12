@@ -229,6 +229,11 @@ def run_dynamo_explain(model: nn.Module, x: torch.Tensor, model_name: str) -> No
 def run_dynamo_exploration() -> None:
     """Explore TorchDynamo graph capture on multiple models.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches reading FX graphs and using torch._dynamo.explain().
+    # Understanding what Dynamo captures (and what it doesn't) is critical for
+    # debugging compilation failures and optimizing models for torch.compile.
+
     TODO(human): Implement this function.
 
     This is the core exercise of Phase 2. You will trace several models and

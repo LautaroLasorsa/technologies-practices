@@ -86,6 +86,11 @@ def benchmark_fn(
 def run_phase() -> None:
     """Run benchmarks comparing Triton kernels vs PyTorch equivalents.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches GPU benchmarking methodology. Understanding when custom
+    # kernels outperform framework operators (and when they don't) is critical for
+    # deciding where to invest optimization effort in production systems.
+
     TODO(human): Implement the benchmark runner.
 
     The framework is ready — you need to:

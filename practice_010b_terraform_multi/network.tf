@@ -1,6 +1,11 @@
 # -----------------------------------------------------------------------------
 # Docker Network -- shared bridge network for all containers
 # -----------------------------------------------------------------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches network resource provisioning with custom IPAM config.
+# Understanding how to declare infrastructure resources that other resources depend
+# on is fundamental to multi-resource orchestration.
+#
 # Phase 2: Implement this resource.
 #
 # Requirements:

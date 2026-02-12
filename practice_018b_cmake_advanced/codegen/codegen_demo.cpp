@@ -14,6 +14,11 @@
 #include <string_view>
 
 int main() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise demonstrates add_custom_command for build-time code generation.
+    // The embedded_data.h header was generated from data.txt during build.
+    // This pattern is how real projects embed assets without runtime file I/O.
+
     // TODO(human): Print the embedded data and demonstrate it works.
     //
     // The generated header defines:

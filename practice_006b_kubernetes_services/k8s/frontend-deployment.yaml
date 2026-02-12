@@ -1,5 +1,10 @@
 # Frontend Deployment
 # ------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise reinforces production patterns from backend-deployment with a frontend
+# service that depends on the backend. Understanding cross-service dependencies and
+# probe behavior is critical for avoiding cascading failures in microservice architectures.
+#
 # Deploys the frontend gateway with the same probe/resource/strategy
 # patterns as the backend. The frontend reaches the backend via
 # the BACKEND_URL env var, which points to the backend's ClusterIP service.

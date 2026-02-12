@@ -1,5 +1,10 @@
 # Backend Service (ClusterIP)
 # ---------------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates Kubernetes' internal service discovery mechanism.
+# Understanding ClusterIP and label selectors is fundamental to building microservice
+# architectures where services communicate by name, not hardcoded IPs.
+#
 # Exposes the backend pods INTERNALLY within the cluster.
 # Other pods (like the frontend) reach it via: http://backend-svc:8000
 #

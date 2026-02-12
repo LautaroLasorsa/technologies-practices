@@ -19,6 +19,26 @@
 - Nginx (official image)
 - Redis (official image)
 
+## Theoretical Context
+
+Docker Compose is a tool for defining and running multi-container applications through a single declarative YAML file. It solves the problem of manually orchestrating multiple containers with their networks, volumes, and dependencies -- instead of running separate `docker run` commands with dozens of flags, you declare the entire stack once and manage it with simple commands like `docker compose up` and `docker compose down`.
+
+Internally, Docker Compose translates the `docker-compose.yml` specification into Docker API calls. When you run `docker compose up`, Compose parses the YAML, creates the declared networks and volumes first, then starts containers in dependency order (respecting `depends_on` constraints). It monitors health checks and waits for services marked with `condition: service_healthy` before starting dependents. Each service definition maps to one or more containers (when using `deploy.replicas`), and Compose assigns unique names to each replica. Services communicate via a shared bridge network where each service name becomes a resolvable DNS entry (e.g., `redis` resolves to the Redis container's IP).
+
+Docker Compose adopts a three-layer model: **projects** (the top-level unit, typically one `docker-compose.yml` per project), **services** (logical application components like "api_gateway" or "worker"), and **containers** (runtime instances of service images). Resource constraints (`deploy.resources`) are translated into Docker's cgroup limits (CPU quotas and memory caps). Health checks run inside containers at specified intervals, and Compose tracks their exit codes -- services marked unhealthy are excluded from `depends_on` readiness gates, preventing cascading failures during startup.
+
+| Concept | Description |
+|---------|-------------|
+| **Service** | A logical component of your application (e.g., "nginx", "redis"). One service can spawn multiple container replicas. |
+| **Network** | An isolated virtual network segment. Services on the same network resolve each other by service name via built-in DNS. |
+| **Volume** | Persistent storage mounted into containers. Named volumes survive `docker compose down`; bind mounts sync host directories. |
+| **Health Check** | A command run periodically inside the container. Exit code 0 = healthy, non-zero = unhealthy. Used for startup ordering. |
+| **Dependency** | `depends_on` controls startup order. `condition: service_healthy` waits for health checks before starting dependents. |
+| **Profile** | Optional service groups (e.g., `debug`). Services with profiles only start when explicitly requested via `--profile`. |
+| **Resource Limits** | `deploy.resources.limits` caps CPU/memory; `reservations` guarantees minimum allocation. Maps to Docker's cgroup constraints. |
+
+Docker Compose is ideal for **local development** and **integration testing** but less suitable for production multi-node orchestration (where Kubernetes dominates). It lacks built-in features for automatic scaling across machines, rolling updates with health-aware traffic shifting, or distributed secret management. Alternatives include **Docker Swarm** (simpler than Kubernetes but less widely adopted), **Kubernetes** (production-grade but heavier for local dev), and cloud-native orchestrators like **AWS ECS** or **Google Cloud Run** (managed but vendor-locked). Compose's strength is developer productivity: spin up a realistic multi-service environment with one command, no cluster setup required.
+
 ## Description
 
 Build a **Task Processing Pipeline** with five services orchestrated by Docker Compose:

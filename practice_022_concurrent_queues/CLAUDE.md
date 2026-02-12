@@ -12,6 +12,82 @@
 - C++17 (MSVC via VS 2022)
 - moodycamel/concurrentqueue v1.0.4 (fetched via CMake FetchContent)
 
+## Theoretical Context
+
+### What Lock-Free MPMC Queues Are
+
+A **Multi-Producer Multi-Consumer (MPMC) queue** allows multiple threads to enqueue and dequeue concurrently without requiring a global mutex. This contrasts with Single-Producer Single-Consumer (SPSC) queues (covered in practice 020a), which are simpler and faster but only support one producer and one consumer.
+
+Lock-free data structures guarantee **system-wide progress**: at least one thread always makes progress, even if others are paused by the OS scheduler. They achieve this via **atomic Compare-And-Swap (CAS)** operations—hardware instructions that atomically read, compare, and conditionally write a memory location. On x86/x64, CAS compiles to `LOCK CMPXCHG`, which takes ~10-30 ns under low contention and ~30-100 ns under high contention.
+
+**moodycamel::ConcurrentQueue** is the most widely-used lock-free MPMC queue in production C++. It's used in game engines (Unreal Engine), databases, real-time audio, and high-performance servers. Its key innovations: (1) per-producer sub-queues reduce contention, (2) bulk operations amortize overhead, (3) explicit tokens provide thread-local fast paths.
+
+### How Lock-Free Queues Work Internally
+
+Traditional mutex-based queues serialize all operations through a single lock. Under contention (multiple threads competing), mutex overhead explodes: lock acquisition becomes a bottleneck, and every thread spins waiting its turn.
+
+**Lock-free MPMC design (simplified):**
+1. **Array of slots** (circular buffer), each with an atomic sequence number
+2. **Head and tail indices** (atomics tracking next enqueue/dequeue position)
+3. **Enqueue:**
+   - Load tail, CAS-increment it to claim a slot
+   - If another thread won the CAS, retry
+   - Write data to claimed slot, update sequence number to mark it ready
+4. **Dequeue:**
+   - Load head, CAS-increment it to claim a slot
+   - Spin-wait until sequence number shows data is ready
+   - Read data, mark slot empty
+
+Key insight: Threads compete only on the tail/head indices (two atomic variables), not on every data element. False CAS retries are cheap (~20-50 ns retry loop) compared to mutex contention (~50-200 ns blocked time).
+
+**moodycamel's sub-queue optimization:** Each producer gets a dedicated sub-queue (via `ProducerToken`). Enqueue fast-path doesn't CAS at all—it's sequential writes to the thread's private sub-queue. Consumers multiplex across all sub-queues. This reduces the MPMC problem to "multiple SPSC-like channels merged into one MPMC view," achieving near-SPSC performance.
+
+**Bulk operations:** `enqueue_bulk` and `try_dequeue_bulk` amortize per-operation overhead. Instead of N separate CAS operations, perform one CAS to reserve N slots, then write/read them sequentially. Throughput can improve 3-10× for batch workloads.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Lock-free** | Concurrent data structure where at least one thread always makes progress. No mutexes/locks. Uses atomic CAS operations. |
+| **CAS (Compare-And-Swap)** | Atomic instruction: `if (*ptr == expected) { *ptr = desired; return true; } else return false;`. Foundation of lock-free algorithms. |
+| **ABA problem** | CAS sees `*ptr == A`, assumes no change, but actually `A → B → A` occurred. Solved via tagged pointers or epoch-based reclamation. |
+| **MPMC (Multi-Producer Multi-Consumer)** | Multiple threads can enqueue and dequeue concurrently. Harder than SPSC (covered in 020a) due to contention. |
+| **ProducerToken** | Thread-local handle that provides a dedicated sub-queue, eliminating CAS contention on enqueue fast-path. |
+| **ConsumerToken** | Thread-local handle that caches consumer-side metadata (queue iteration state), reducing CAS overhead. |
+| **Bulk operations** | `enqueue_bulk(items, count)` reserves N slots with one CAS, writes sequentially. Amortizes per-item overhead. |
+| **Blocking queue** | `BlockingConcurrentQueue` variant that blocks (sleeps) waiting threads instead of spin-waiting. Trades latency for CPU efficiency. |
+| **False sharing** | Two threads writing to different variables in the same cache line cause cache invalidation. Padding to separate cache lines avoids this. |
+| **Memory ordering** | `memory_order_acquire/release/seq_cst` control visibility of writes across threads. Relaxed ordering is faster but requires careful reasoning. |
+
+### Ecosystem Context and Trade-offs
+
+Lock-free MPMC queues optimize for **high contention** and **sustained throughput**. Under low contention, a mutex-based queue can be competitive or even faster due to simpler code paths. Lock-free shines when 4+ threads are hammering the queue simultaneously.
+
+**Trade-offs:**
+- **Complexity** → Lock-free algorithms are notoriously hard to get right. ABA problems, memory ordering bugs, and race conditions are subtle. moodycamel abstracts this, but understanding it aids debugging.
+- **Bounded capacity** → Most lock-free queues (including moodycamel's default) dynamically allocate when full, which adds latency. Pre-sizing mitigates this but wastes memory.
+- **Priority inversion** → Lock-free doesn't mean "fair." A thread can starve if it repeatedly loses CAS races. Real-time systems often prefer mutexes with priority inheritance.
+- **Memory reclamation** → When a node is dequeued, when is it safe to free? Lock-free requires hazard pointers or epoch-based reclamation. moodycamel handles this internally.
+
+**Alternatives:**
+- **Mutex + std::queue** → Simple, correct, good enough for low contention (<4 threads)
+- **SPSC ring buffer (020a)** → Fastest option if topology allows single producer/consumer
+- **Disruptor (LMAX)** → Java framework with similar ideas (ring buffer, pre-allocation, no locks)
+- **Crossbeam (Rust)** → MPMC `channel::unbounded()`, similar design to moodycamel
+
+**When to use lock-free MPMC:**
+- Fan-out/fan-in pipelines: one dispatcher distributing tasks to N workers
+- Multi-stage processing: each stage has multiple worker threads
+- Producer-consumer with bursty traffic (bulk operations shine here)
+- Systems where P99 latency matters more than P50 (mutexes have worse tail latency)
+
+**When NOT to use:**
+- Low contention (1-2 threads): mutex is simpler
+- Need strict FIFO across all producers: lock-free MPMC doesn't guarantee global ordering
+- Ultra-low-latency hot path: SPSC is faster (5-15 ns vs 15-40 ns)
+
+moodycamel's sweet spot is **general-purpose server software**: web servers, databases, game engines, data pipelines. It's not HFT-hot-path fast (that's SPSC territory), but it's 3-10× faster than mutex queues under real-world contention.
+
 ## Description
 
 Master **concurrent queue patterns** using moodycamel::ConcurrentQueue -- the most widely-used lock-free MPMC queue in production C++. While practice 020a covered SPSC (single-producer single-consumer) ring buffers for HFT hot paths, this practice covers the **general-purpose MPMC** case: multiple threads producing and consuming concurrently without locks.

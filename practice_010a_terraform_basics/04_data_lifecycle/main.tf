@@ -1,6 +1,12 @@
 # =============================================================================
 # Exercise 4: Data Sources & Lifecycle Rules
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise demonstrates two advanced Terraform features: data sources (querying
+# existing infrastructure) and lifecycle rules (controlling replacement behavior).
+# Understanding these patterns is critical for managing brownfield infrastructure and
+# preventing accidental deletions in production.
+#
 # Goal: Learn two important concepts:
 #
 # 1. DATA SOURCES: Read existing infrastructure without managing it.

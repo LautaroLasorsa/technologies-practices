@@ -129,6 +129,11 @@ def raw_weather_data(
 # ---------------------------------------------------------------------------
 # TODO(human): Implement cleaned_weather_data
 # ---------------------------------------------------------------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This teaches Dagster's core innovation: implicit dependency wiring via function parameters.
+# By naming the parameter `raw_weather_data`, Dagster infers the asset graph automatically.
+# This demonstrates the paradigm shift from task-centric (Airflow) to data-centric (Dagster).
+#
 # YOUR TASK: Implement the `cleaned_weather_data` asset below.
 #
 # This asset depends on `raw_weather_data` -- and here's the magic of Dagster:

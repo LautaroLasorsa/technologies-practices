@@ -43,6 +43,15 @@ class SagaOrchestrator:
 
         This is the STATE MACHINE -- the most important method in the practice.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches orchestration-based saga coordination. The state
+        # machine is the heart of the SAGA pattern: it sequences forward steps,
+        # detects failures, and triggers compensations. Understanding this explicit
+        # coordination logic is key to debugging and extending sagas in production.
+        # Production systems often persist this state machine to a database for
+        # crash recovery and replay.
+        # ──────────────────────────────────────────────────────────────────────
+
         TODO(human): Implement the full state machine logic.
 
         The orchestrator should handle these incoming message types:

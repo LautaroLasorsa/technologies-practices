@@ -13,6 +13,10 @@ Docs: https://spark.apache.org/docs/3.5.0/api/python/reference/pyspark.sql/dataf
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches essential data cleaning operations in Spark DataFrames.
+# Learning to chain deduplication, null handling, filtering, and type casting is fundamental
+# for building production ETL pipelines where dirty data is the norm, not the exception.
 
 def clean_sales(raw_sales: DataFrame) -> DataFrame:
     """Clean the raw sales DataFrame.

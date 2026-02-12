@@ -120,6 +120,11 @@ def import_and_compile(
 ) -> tuple:
     """Import a traced PyTorch model into TVM Relay, compile, and return the module.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches TVM's frontend import pipeline (Relay). Understanding how
+    # PyTorch models map to Relay IR and how graph-level passes optimize before lowering
+    # is essential for using TVM with real models in production.
+
     TODO(human): Implement the Relay import and compilation pipeline.
 
     This is the real-world TVM workflow: take a trained PyTorch model, import

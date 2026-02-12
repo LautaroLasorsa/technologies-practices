@@ -1,5 +1,10 @@
 # configmap.yaml — Stores non-sensitive configuration as key-value pairs.
 #
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches the 12-factor principle of externalizing configuration.
+# Separating config from container images enables reusing the same image across
+# environments (dev/staging/prod) with different ConfigMaps -- critical for GitOps workflows.
+#
 # Concepts to learn:
 #   - ConfigMaps decouple configuration from container images
 #   - Values are stored as plain text (NOT for passwords or secrets)

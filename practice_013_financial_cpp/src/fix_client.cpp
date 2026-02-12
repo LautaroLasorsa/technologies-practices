@@ -104,6 +104,13 @@ FIX44::NewOrderSingle build_new_order(
     double quantity,
     double price)
 {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches FIX order message construction from the client side.
+    // NewOrderSingle is the most common FIX message type in electronic trading.
+    // Understanding required vs optional fields (HandlInst, TimeInForce) and their
+    // semantics is critical for order routing correctness in production systems.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Build a FIX44::NewOrderSingle message.
     //
     // The constructor requires:
@@ -137,6 +144,13 @@ FIX44::NewOrderSingle build_new_order(
 void send_order(const FIX44::NewOrderSingle& order,
                 const FIX::SessionID& session_id)
 {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches FIX message transmission via QuickFIX sessions.
+    // sendToTarget abstracts sequencing, checksums, and header generation.
+    // Understanding that QuickFIX queues messages asynchronously (not blocking)
+    // is key for avoiding race conditions in production trading systems.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Send the message using FIX::Session::sendToTarget.
     //
     // Hint: FIX::Session::sendToTarget(order, session_id);

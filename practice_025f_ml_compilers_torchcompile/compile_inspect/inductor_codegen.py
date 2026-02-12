@@ -303,6 +303,11 @@ def print_code_summary(code: str, model_name: str) -> None:
 def run_inductor_inspection() -> None:
     """Inspect TorchInductor's generated code for different model patterns.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches inspecting generated Triton/C++ code from TorchInductor.
+    # Understanding what code the compiler generates and which operations get fused
+    # is essential for optimizing model performance with torch.compile.
+
     TODO(human): Implement this function.
 
     This is the core exercise of Phase 4. You will trigger inductor compilation

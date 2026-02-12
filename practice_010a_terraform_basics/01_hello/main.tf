@@ -1,6 +1,11 @@
 # =============================================================================
 # Exercise 1: Hello Terraform
 # =============================================================================
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches Terraform's core workflow (init/plan/apply/destroy) and
+# fundamental HCL syntax (terraform block, provider, resource). Understanding the
+# relationship between resource references and implicit dependencies is critical.
+#
 # Goal: Pull an nginx image and run it as a container using Terraform.
 #
 # Terraform configs are declarative: you describe the DESIRED STATE, and

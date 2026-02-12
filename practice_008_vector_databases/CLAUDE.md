@@ -12,6 +12,41 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose
 
+## Theoretical Context
+
+Vector databases are specialized data stores optimized for storing high-dimensional vectors (embeddings) and performing fast approximate nearest-neighbor (ANN) search. Unlike traditional databases optimized for exact lookups and ranges, vector databases solve the problem: "Given a query vector, find the k most similar vectors from millions/billions of candidates in milliseconds."
+
+**The Similarity Search Problem:**
+
+In modern AI systems, data (text, images, audio) is represented as dense numerical vectors produced by neural network encoders. Semantic similarity between items corresponds to geometric proximity in vector space (measured by cosine similarity, dot product, or Euclidean distance). Brute-force comparison of a query against all stored vectors is O(n) and infeasible at scale—searching 10 million 768-dimensional vectors would require billions of floating-point operations per query.
+
+**How HNSW (Hierarchical Navigable Small World) Works:**
+
+HNSW is a graph-based ANN algorithm that builds a multi-layer proximity graph. The top layer is sparse (few nodes, long-distance connections), and each layer below is denser. Search starts at the top layer and greedily navigates toward the query, descending layers until reaching the bottom (full dataset). At each step, it follows edges to the nearest neighbor, pruning the search space exponentially. The hierarchical structure provides logarithmic-like search complexity even in high dimensions, trading perfect recall for speed (typically 95-99% recall with 10-100x speedup vs brute-force).
+
+The key parameters are `m` (number of bidirectional links per node—higher m = better connectivity but more memory) and `ef_construct` (candidate list size during graph construction—higher = better graph quality but slower indexing). During search, `ef` controls the beam width (more candidates = higher recall, slower search).
+
+**Filtered Search Challenge:**
+
+Combining vector similarity with metadata filters (e.g., "find similar articles published after 2023 in category AI") is non-trivial. Naive post-filtering (search first, then discard) fails when most top-k results don't match the filter. Qdrant solves this with **payload indexing**: it extends the HNSW graph with filter-aware edges, enabling pre-filtering where the graph traversal only visits nodes matching the payload condition. This keeps filtered search nearly as fast as unfiltered.
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **Embedding** | Dense vector representation of data (text, image, etc.) produced by a neural encoder |
+| **ANN (Approximate Nearest Neighbor)** | Fast search that returns "close enough" neighbors, trading accuracy for speed |
+| **HNSW** | Hierarchical Navigable Small World graph—multi-layer proximity graph for logarithmic ANN search |
+| **Distance Metric** | Similarity function: Cosine (angle-based), Dot Product (magnitude-aware), Euclidean (L2 distance) |
+| **Payload** | Metadata attached to each vector (arbitrary JSON-like data) |
+| **Payload Index** | Auxiliary index on payload fields to accelerate filtered searches |
+| **Cardinality** | Number of unique points or dimensionality—higher dims require more sophisticated indexing |
+| **Recall** | Fraction of true nearest neighbors found by ANN (e.g., 95% recall = 95 out of 100 true neighbors returned) |
+
+**Ecosystem Context:**
+
+Vector databases are the retrieval backbone of modern RAG (Retrieval-Augmented Generation) pipelines—when you ask a question to an LLM-powered chatbot, it searches a vector DB for relevant context before generating an answer. Qdrant, Pinecone, Weaviate, and Milvus dominate the space. Qdrant (Rust-based, open-source) offers strong filtering, Pinecone is serverless-only, Weaviate has built-in vectorizers, and Milvus targets billion-scale deployments. For smaller datasets or prototypes, pgvector (Postgres extension) or FAISS (Meta's library) suffice, but they lack production features like persistence, distributed queries, and rich filtering.
+
 ## Description
 
 Build a **document similarity search system** that demonstrates core vector database operations: creating collections with different distance metrics, upserting points with rich payloads, performing similarity search with filters, scrolling through results, tuning HNSW parameters, and benchmarking search strategies.

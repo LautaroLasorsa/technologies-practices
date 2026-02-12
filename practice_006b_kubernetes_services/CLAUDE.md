@@ -15,6 +15,29 @@
 - Docker (multi-stage builds)
 - minikube with NGINX Ingress addon and metrics-server addon
 
+## Theoretical Context
+
+Kubernetes Services provide stable networking endpoints for ephemeral Pods, solving the problem of dynamic IP addresses that change every time a Pod restarts. Without Services, clients would need to track individual Pod IPs manually -- Services abstract away this complexity by assigning a virtual IP (ClusterIP) or exposing ports on nodes (NodePort) that route traffic to healthy Pods via label selectors. Ingress extends Services by providing Layer 7 (HTTP/HTTPS) routing rules, enabling path-based and host-based traffic management without allocating separate IP addresses per service.
+
+Internally, **ClusterIP** (the default Service type) allocates a virtual IP from the cluster's service CIDR range and programs iptables/IPVS rules on every node to load-balance traffic across Pods matching the Service's selector. CoreDNS creates a DNS record (`<service>.<namespace>.svc.cluster.local`) pointing to this ClusterIP. When a Pod queries this DNS name, it gets the ClusterIP, and the kernel's iptables NATs the connection to a backend Pod's IP. **NodePort** builds on ClusterIP by additionally opening a static port (30000-32767) on every node -- traffic to `<node-IP>:<node-port>` gets forwarded to the ClusterIP, then to a Pod. **LoadBalancer** (cloud-only) provisions an external load balancer (AWS NLB, GCP Load Balancer) that forwards to the NodePort. **Ingress** operates differently: an Ingress Controller (e.g., NGINX, Traefik) runs as Pods inside the cluster, watches Ingress resources, and dynamically configures its internal routing rules -- it's essentially an L7 proxy managed by Kubernetes manifests.
+
+**Horizontal Pod Autoscaler (HPA)** automatically adjusts replica counts based on observed metrics (CPU, memory, custom metrics). The HPA controller queries metrics-server every 15 seconds, computes `desiredReplicas = ceil(currentReplicas * (currentMetric / targetMetric))`, and patches the Deployment's replica field if the calculated value differs. Crucially, HPA requires **resource requests** to be defined on Pods -- CPU utilization is calculated as `(actual CPU usage) / (requested CPU)`, so without requests, the denominator is undefined. HPA enforces scaling rate limits (scale-up is fast, scale-down waits ~5 minutes by default to avoid flapping) and respects min/max replica bounds. Liveness and readiness probes interact with scaling: only Pods passing readiness checks are added to Service endpoints, so during scale-up, new Pods don't receive traffic until ready; during rolling updates, old Pods drain gracefully before termination.
+
+| Concept | Description |
+|---------|-------------|
+| **ClusterIP** | Default Service type. Allocates a virtual IP accessible only inside the cluster. Used for inter-service communication. |
+| **NodePort** | Exposes a Service on a static port (30000-32767) on every node. External clients hit `<node-IP>:<node-port>`. |
+| **LoadBalancer** | Cloud-only. Provisions an external load balancer (AWS ALB/NLB, GCP LB) that forwards to NodePort. |
+| **Ingress** | Layer 7 (HTTP) routing rules. Managed by an Ingress Controller (NGINX, Traefik). Routes traffic based on paths/hosts. |
+| **Liveness Probe** | Restarts the container if it fails. Use for deadlock detection. Failure = restart, not traffic removal. |
+| **Readiness Probe** | Removes Pod from Service endpoints if it fails. Use for temporary unavailability (e.g., warming up cache). |
+| **Resource Requests** | Guaranteed minimum resources. Scheduler uses these to place Pods. HPA calculates utilization based on requests. |
+| **Resource Limits** | Hard caps. Kubelet throttles CPU or OOM-kills containers exceeding memory limits. |
+| **HPA** | Automatically scales Pods based on metrics. Requires metrics-server. Computes replicas = ceil(current * (metric/target)). |
+| **Rolling Update** | Gradually replaces old Pods with new ones. `maxSurge` allows extra Pods; `maxUnavailable` sets minimum ready Pods. |
+
+**ClusterIP** is for internal microservice communication; **NodePort** is for dev/testing external access (insecure, exposes random high ports); **LoadBalancer** is for production external access (cloud-native, assigns a real IP); **Ingress** is for HTTP/HTTPS routing with path-based rules (most production-friendly for web apps). Alternatives include **service meshes** (Istio, Linkerd) which provide advanced L7 routing, retries, circuit breaking, and mTLS but add operational complexity. For simple single-service exposure, NodePort suffices; for multi-service web apps, Ingress is standard; for non-HTTP protocols (gRPC, databases), LoadBalancer or headless Services (StatefulSets) are used. HPA is essential for unpredictable traffic patterns but requires careful tuning of scale-up/down policies to avoid cost spikes or latency during sudden load changes.
+
 ## Description
 
 Build and deploy a **two-service microservice system** (frontend gateway + backend API) into minikube, then progressively layer Kubernetes networking, health checks, autoscaling, and ingress on top. The Python apps are fully implemented -- the learning happens entirely in the K8s YAML manifests.

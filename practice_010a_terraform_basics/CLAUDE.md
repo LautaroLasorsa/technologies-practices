@@ -12,6 +12,29 @@
 - HCL (Terraform configuration language)
 - Docker provider (no cloud credentials needed)
 
+## Theoretical Context
+
+Terraform is an Infrastructure as Code (IaC) tool that enables declarative infrastructure management through configuration files written in HashiCorp Configuration Language (HCL). It solves the problem of manual infrastructure provisioning and configuration drift -- instead of clicking through cloud consoles or running ad-hoc scripts, you declare the desired state of your infrastructure in `.tf` files, and Terraform automatically figures out what actions (create, update, delete) are needed to reach that state. This declarative model enables version control, peer review, and reproducible environments.
+
+Internally, Terraform's architecture consists of four core components: (1) **Terraform Core** -- a statically compiled binary (written in Go) that parses HCL configurations, builds a dependency graph of resources, and orchestrates the plan/apply workflow; (2) **Providers** -- plugins (also written in Go) that translate Terraform's generic resource definitions into API calls for specific platforms (AWS, Azure, Docker, Kubernetes, etc.); (3) **State file** -- a JSON file (`terraform.tfstate`) that stores the current state of managed infrastructure, mapping resource addresses (e.g., `docker_container.web`) to real-world identifiers (e.g., container ID `a3f8b92c...`); (4) **Backend** -- the storage mechanism for state (local filesystem, S3, Azure Blob, Terraform Cloud) that enables collaboration and state locking.
+
+When you run `terraform apply`, the workflow is: (1) **Init** -- download provider plugins declared in `terraform { required_providers {...} }` and store them in `.terraform/` (happens once per project unless providers change); (2) **Parse** -- read all `.tf` files in the current directory, merge them into a single configuration tree; (3) **Refresh** -- query the real infrastructure via provider APIs to detect drift (manual changes made outside Terraform); (4) **Plan** -- compare desired state (HCL) with current state (JSON + API response) and compute the minimal set of actions (create, update, delete) needed; (5) **Apply** -- execute the plan by calling provider APIs in dependency order (Terraform's DAG ensures networks are created before containers attached to them); (6) **Update State** -- write the new resource IDs and attributes back to `terraform.tfstate` so future runs know what exists. The state file is **critical** -- losing it means Terraform forgets it ever created those resources and may try to create duplicates. Never edit it manually; use `terraform state` commands.
+
+| Concept | Description |
+|---------|-------------|
+| **Resource** | A single infrastructure object (e.g., `docker_container.web`). Declared as `resource "<type>" "<name>" {...}`. |
+| **Provider** | A plugin that communicates with an external API (e.g., `kreuzwerker/docker`). Downloaded during `terraform init`. |
+| **State File** | JSON file tracking managed resources. Maps Terraform addresses to real IDs (container IDs, AWS ARNs, etc.). |
+| **Plan** | Preview of actions Terraform will take. Shown as `+` (create), `~` (update), `-` (delete). Run `terraform plan` to see it. |
+| **Apply** | Execute the plan. Prompts for confirmation unless `-auto-approve` is passed. Updates state after success. |
+| **Destroy** | Delete all resources tracked in state. Runs a "delete" plan then applies it. Use `terraform destroy`. |
+| **Variable** | Input parameter. Defined with `variable "name" {...}`, referenced with `var.name`. Overridable via CLI, tfvars, env. |
+| **Output** | Computed value exposed after apply. Defined with `output "name" {...}`. Query with `terraform output`. |
+| **Local** | Computed expression for DRY. Defined in `locals {...}`, referenced with `local.name`. Not overridable like variables. |
+| **Data Source** | Query existing infrastructure without managing it. Declared as `data "<type>" "<name>" {...}`. Read-only. |
+
+Terraform is the **most widely adopted IaC tool**, used across AWS, Azure, GCP, and on-prem infrastructure. Alternatives include **Pulumi** (supports real programming languages -- Python, TypeScript, Go -- instead of HCL, better for complex logic but smaller community), **CloudFormation** (AWS-only, YAML/JSON, tightly integrated but vendor-locked), **Ansible** (procedural, not declarative -- better for configuration management than infrastructure provisioning), and **CDK** (AWS CDK, Terraform CDK -- code-generates Terraform/CloudFormation, best of both worlds but adds complexity). Terraform's strengths are **provider ecosystem** (3000+ providers), **HCL readability** (more readable than YAML/JSON for infrastructure), and **state management** (explicit tracking of what exists). Its weaknesses are **state file brittleness** (corruption or loss can orphan resources), **HCL limitations** (not Turing-complete -- no complex loops, no functions), and **manual state resolution** (drift detection requires manual `terraform refresh` or `-refresh=true`).
+
 ## Description
 
 Build **local Docker infrastructure entirely through Terraform**: pull images, create networks, volumes, and containers -- all declared in `.tf` files. This teaches Terraform's core mechanics -- providers, resources, variables, outputs, state, plan/apply/destroy lifecycle -- without needing any cloud account.

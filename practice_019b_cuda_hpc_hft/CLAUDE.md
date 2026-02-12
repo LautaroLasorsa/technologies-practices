@@ -10,6 +10,92 @@
 - C++17 (host), CUDA C++ (device)
 - Windows, VS 2022, CUDA Toolkit 12.6
 
+## Theoretical Context
+
+### What Advanced CUDA Patterns Solve
+
+Practice 019a taught kernel basics (memory model, thread hierarchy, shared memory). Real HPC/HFT GPU systems require **pipeline optimization**: overlapping data transfers and computation to maximize GPU utilization. A naive approach (copy data → compute → copy result back) leaves the GPU idle during transfers. **CUDA streams** enable concurrent execution of transfers and kernels on different data chunks, achieving continuous GPU utilization—critical for throughput-bound HFT systems (processing millions of ticks/sec) and HPC simulations (multi-hour runs where every wasted cycle matters).
+
+**Pinned (page-locked) memory** eliminates OS paging overhead during DMA transfers between host and device. Normal pageable memory requires the CUDA driver to first copy data to a staging buffer before DMA; pinned memory enables direct DMA, achieving 2-3x faster transfer speeds (PCIe Gen4: ~25 GB/s pinned vs ~10 GB/s pageable). For HFT market data ingestion (network → CPU → GPU), pinned buffers are essential.
+
+**Persistent kernels** eliminate kernel launch overhead (~5-10 µs per launch). Instead of launching a kernel for each task, a persistent kernel stays running and polls a work queue. This reduces latency from milliseconds to microseconds—crucial for HFT where microseconds matter. Production HFT GPU systems use persistent kernels for pricing engines, risk calculations, and order book updates.
+
+### How CUDA Streams and Async Operations Work
+
+CUDA operations execute in **streams** (command queues). The **default stream (stream 0)** is synchronous with host and blocking between kernels. **Non-default streams** enable concurrent execution: kernels/memcopies in different streams can run simultaneously if hardware resources (SMs, DMA engines) are available. Modern GPUs have 2+ DMA engines (one for H2D, one for D2H), enabling bidirectional transfers while kernels execute.
+
+A typical pipeline pattern:
+```
+Stream 0: [H2D chunk 1] → [Kernel chunk 1] → [D2H chunk 1]
+Stream 1:                 [H2D chunk 2] → [Kernel chunk 2] → [D2H chunk 2]
+Stream 2:                                 [H2D chunk 3] → [Kernel chunk 3] → [D2H chunk 3]
+```
+By staggering operations across streams, you achieve **overlapped execution**: while chunk 1 is transferring results back, chunk 2 is computing, and chunk 3 is transferring in. This saturates GPU resources, achieving 2-3x throughput vs single-stream.
+
+**`cudaMemcpyAsync`** returns immediately; the transfer happens asynchronously. **`cudaStreamSynchronize(stream)`** blocks host until all work in that stream completes. **`cudaEventRecord` / `cudaEventSynchronize`** provide fine-grained synchronization: record an event in a stream, wait on it from another stream or host.
+
+### Pinned Memory and Zero-Copy
+
+**Pageable memory** (`malloc`, `new`) can be swapped to disk by the OS. CUDA must lock pages before DMA, requiring a staging copy. **Pinned memory** (`cudaMallocHost`, `cudaHostAlloc`) is guaranteed resident in physical RAM, enabling direct DMA. Trade-off: pinned memory reduces OS flexibility (can't be paged out) and counts against system RAM limits. Best practice: use pinned memory only for active transfer buffers, not bulk storage.
+
+**Zero-copy memory** (`cudaHostAllocMapped`) allows GPU kernels to directly access host memory via PCIe. Latency is high (~400ns vs ~100ns for device memory), but it eliminates explicit `cudaMemcpy` for small data. Use case: configuration structs, rare-access metadata. Not suitable for bulk data (bandwidth limited to PCIe ~25 GB/s vs device HBM ~900 GB/s).
+
+### Cooperative Groups and Grid-Wide Synchronization
+
+**Cooperative Groups** (`cooperative_groups` namespace) generalize thread synchronization beyond `__syncthreads()`. **`thread_block`** represents all threads in a block (equivalent to `__syncthreads()`). **`thread_block_tile<N>`** represents a subgroup of N threads (e.g., warp-level primitives). **`grid_group`** enables grid-wide synchronization across all blocks—impossible with `__syncthreads()`.
+
+Grid-wide sync requires special kernel launch:
+```cpp
+cudaLaunchCooperativeKernel(&kernel, gridDim, blockDim, args, sharedMem, stream);
+```
+Hardware must support cooperative groups (compute capability ≥7.0). Use case: multi-pass algorithms (e.g., histogram where one pass counts, next pass writes) implemented in a single kernel launch (faster than multiple kernel launches with implicit sync).
+
+### Unified Memory and Prefetching
+
+**Unified Memory** (`cudaMallocManaged`) presents a single pointer accessible from host and device. Internally, CUDA uses demand paging: when the GPU accesses a page not in device memory, a page fault occurs, triggering migration. Naive unified memory is **slow** (page faults stall kernels). **`cudaMemPrefetchAsync`** migrates pages to the GPU before the kernel, eliminating faults. **`cudaMemAdvise`** provides hints (read-mostly, preferred location) for the CUDA runtime's heuristic.
+
+Unified memory simplifies development (no explicit `cudaMemcpy`) but requires tuning for performance. For production HFT/HPC, explicit transfers with pinned memory and streams yield better control and predictability.
+
+### Persistent Kernels and GPU Task Queues
+
+**Persistent kernels** loop indefinitely, polling a work queue:
+```cuda
+__global__ void persistent_kernel(WorkQueue* queue) {
+    while (!queue->should_stop()) {
+        Task task = queue->pop();
+        if (task.valid()) process(task);
+    }
+}
+```
+Launched once, they handle thousands of tasks without re-launch overhead. Synchronization via atomic operations or lock-free queues. Use case: HFT pricing engine where tasks arrive asynchronously (new market data, order submission).
+
+Trade-off: persistent kernels consume GPU resources (SMs, registers) even when idle. For bursty workloads (HFT: idle 99% of time, burst at market open), dynamic kernel launches may be better. For continuous workloads (HPC simulation), persistent kernels eliminate overhead.
+
+### Key Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **CUDA Stream** | Command queue for asynchronous execution. Non-default streams enable concurrent kernel/memcpy overlap. Modern GPUs have 2+ DMA engines. |
+| **Pinned Memory** | Page-locked host memory (`cudaMallocHost`) enabling direct DMA. 2-3x faster transfers than pageable memory. Counts against RAM limits. |
+| **Zero-Copy** | GPU directly accesses host memory (`cudaHostAllocMapped`). High latency (~400ns) but eliminates explicit memcpy for small/rare-access data. |
+| **`cudaMemcpyAsync`** | Asynchronous host-device transfer. Returns immediately; completion checked via `cudaStreamSynchronize` or `cudaEventQuery`. |
+| **Cooperative Groups** | Namespace for flexible thread synchronization. `thread_block`, `thread_block_tile<N>`, `grid_group` (requires cooperative launch). |
+| **Grid-Wide Sync** | `cooperative_groups::grid_group::sync()` synchronizes all threads across all blocks. Requires `cudaLaunchCooperativeKernel`, compute ≥7.0. |
+| **Unified Memory** | Single pointer accessible from host/device (`cudaMallocManaged`). Uses demand paging; prefetch with `cudaMemPrefetchAsync` for performance. |
+| **`cudaMemPrefetchAsync`** | Migrate unified memory pages to GPU before kernel, eliminating page faults. Essential for unified memory performance. |
+| **Persistent Kernel** | Kernel that loops forever, polling a work queue. Eliminates launch overhead (~5-10 µs) for latency-critical workloads (HFT). |
+| **Pipeline Pattern** | Overlap H2D/kernel/D2H across streams. Chunk 1 transfers out while chunk 2 computes and chunk 3 transfers in—maximizes utilization. |
+
+### Ecosystem Context
+
+**Streams vs multi-GPU**: CUDA streams handle concurrency on a single GPU. Multi-GPU programming uses **peer-to-peer (P2P) transfers** (`cudaMemcpyPeer`, NVLink) and **multi-stream multi-GPU** patterns (one stream per GPU, synchronized via events). Production ML training (data parallelism) uses NCCL (NVIDIA Collective Communications Library) for multi-GPU allreduce/broadcast, abstracting streams and P2P.
+
+**Pinned memory limits**: OS limits pinned memory to avoid RAM exhaustion. On Linux, `ulimit -l` sets per-process limit. On Windows, driver allocates ~50% of RAM for pinned memory. For HFT systems with 128 GB RAM, allocate 10-20 GB pinned buffers for market data ingestion—enough for sub-millisecond buffering without hitting limits.
+
+**Persistent kernels vs CPU-GPU hybrid**: Some HFT systems use CPU for serial order matching (low latency, simple logic) and GPU for parallel pricing (Monte Carlo, Greeks). Persistent kernels sit in-between: GPU handles both, using atomic queues for task distribution. Trade-off: CPU-GPU hybrid is simpler (familiar CPU code), but persistent kernels eliminate PCIe round-trips (~1 µs overhead per task).
+
+**Unified Memory in production**: Unified memory simplifies prototyping (no manual memcpy) but adds unpredictability (page faults, migration latency). HPC teams use it for algorithm development, then switch to explicit pinned memory + streams for production. HFT avoids unified memory entirely (latency unpredictability is unacceptable).
+
 ## Description
 
 Advanced CUDA patterns used in real HPC and HFT (high-frequency trading) GPU systems. Builds on 019a fundamentals (kernels, memory model, thread hierarchy, shared memory, reductions) to cover the techniques that separate tutorial code from production GPU pipelines.

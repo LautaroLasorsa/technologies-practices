@@ -165,6 +165,11 @@ def demo_naive_schedule(M: int, K: int, N: int) -> None:
 def demo_tiled_schedule(M: int, K: int, N: int) -> None:
     """Apply split + reorder to tile the matmul.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches loop tiling via TVM schedule primitives. Tiling (split + reorder)
+    # is the #1 optimization for cache locality in matmul. Understanding how split/reorder
+    # transform loop nests is essential for manual scheduling and reading TIR.
+
     TODO(human): Implement the tiled schedule using split and reorder.
 
     The goal is to transform the naive loop nest:
@@ -246,6 +251,11 @@ def demo_tiled_schedule(M: int, K: int, N: int) -> None:
 
 def demo_optimized_schedule(M: int, K: int, N: int) -> None:
     """Apply split + reorder + vectorize + parallel to the matmul.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches combining schedule primitives (tiling + vectorization + parallelization).
+    # Understanding how primitives compose to exploit cache, SIMD, and multi-core parallelism
+    # is key to writing high-performance manual schedules in TVM.
 
     TODO(human): Implement the fully optimized schedule.
 

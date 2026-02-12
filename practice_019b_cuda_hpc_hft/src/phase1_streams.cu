@@ -94,6 +94,11 @@ float run_single_stream(float* h_in, float* h_out, float* d_in, float* d_out,
 // --------------------------------------------------------------------------- //
 // Approach 2: Multiple streams (async, overlapped)
 //
+// ── Exercise Context ──────────────────────────────────────────────────
+// This exercise teaches stream-based concurrency—the foundation of GPU pipelines.
+// Overlapping H2D/compute/D2H achieves 2-3x throughput vs single-stream sequential execution.
+// This pattern is ubiquitous in production HPC/HFT: process chunk N while transferring chunk N+1.
+
 // TODO(human): Implement the multi-stream approach.
 //
 // Steps:

@@ -54,6 +54,11 @@ if TRITON_AVAILABLE:
     ):
         """Numerically-stable softmax for a single row.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches reduction operations (tl.max, tl.sum) within Triton blocks.
+        # Softmax's numerical stability pattern (subtract max before exp) is critical for
+        # all normalization layers (LayerNorm, RMSNorm). Production frameworks use this pattern.
+
         TODO(human): Replace the stub body below with the actual kernel logic.
 
         Each program instance processes ONE ROW of the input matrix.

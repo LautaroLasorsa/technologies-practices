@@ -90,6 +90,11 @@ void exercise1_producer_tokens() {
     constexpr int ITEMS_PER_PRODUCER = 250'000;
     constexpr int TOTAL_ITEMS = NUM_PRODUCERS * ITEMS_PER_PRODUCER;
 
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches ProducerToken—the key optimization that makes moodycamel shine.
+    // Tokens give each producer a dedicated sub-queue, eliminating CAS contention on the
+    // shared enqueue counter. Under multi-core contention, this yields 2-3× throughput gains.
+    //
     // TODO(human): Implement producers with ProducerToken.
     //
     // STEPS:

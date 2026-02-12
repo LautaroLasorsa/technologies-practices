@@ -34,6 +34,10 @@ void check(bool condition, const char* test_name) {
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 void test_constructor() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise writes tests for a library target. test_greeter is a separate
+    // executable that links against greeter, just like main_app does.
+
     // TODO(human): Test that the Greeter stores the name correctly.
     //
     // 1. Create a Greeter with name "Alice"
@@ -45,6 +49,10 @@ void test_constructor() {
 }
 
 void test_greet() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This tests the core library method. Real libraries have test suites that link
+    // against the library just like production code does—same CMake patterns.
+
     // TODO(human): Test that greet() returns the expected format.
     //
     // 1. Create a Greeter with name "Bob"
@@ -59,6 +67,10 @@ void test_greet() {
 }
 
 void test_greet_many() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This tests the batch greeting method. Notice the test structure mirrors
+    // production code structure—same headers, same linkage, just different logic.
+
     // TODO(human): Test greet_many() with multiple names.
     //
     // 1. Create a Greeter with name "Host"
@@ -83,6 +95,10 @@ void test_greet_many() {
 }
 
 void test_greet_many_empty() {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This tests edge cases. Comprehensive test coverage matters for libraries—
+    // other projects depend on your code behaving correctly.
+
     // TODO(human): Test greet_many() with an empty list.
     //
     // Should return an empty vector.

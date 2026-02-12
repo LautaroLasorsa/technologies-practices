@@ -26,6 +26,11 @@ pub struct CacheEntry {
 impl CacheEntry {
     /// Check if this entry has expired.
     ///
+    /// // ── Exercise Context ──────────────────────────────────────────────────
+    /// // This teaches TDD in Rust: write failing tests first, then implement.
+    /// // The pure function design (taking `now` as parameter) makes testing trivial —
+    /// // no need to mock Instant::now(), just pass any value you want to test.
+    ///
     /// TODO(human): Implement expiration check (Phase 2, TDD).
     ///
     /// Steps:
@@ -87,6 +92,11 @@ impl<T: TimeProvider> Cache<T> {
     }
 
     /// Validate a cache key.
+    ///
+    /// // ── Exercise Context ──────────────────────────────────────────────────
+    /// // This demonstrates error handling in Rust: returning Result with descriptive
+    /// // errors. It teaches using pattern matching and iterator methods to validate
+    /// // input, a common pattern in Rust for building robust APIs.
     ///
     /// TODO(human): Implement key validation (Phase 3).
     ///

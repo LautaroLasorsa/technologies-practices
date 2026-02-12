@@ -54,6 +54,11 @@ class WalletService:
     def withdraw(self, wallet: Wallet, amount: float) -> Transaction:
         """Withdraw funds from a wallet.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This teaches implementing business logic with validation and error handling.
+        # It's a mirror of deposit() but with an additional constraint (balance check),
+        # demonstrating how to design functions that fail fast with descriptive errors.
+
         TODO(human): Implement withdrawal logic. Follow the deposit() pattern above.
 
         Steps:
@@ -79,6 +84,11 @@ class WalletService:
         amount: float,
     ) -> tuple[Transaction, Transaction]:
         """Transfer funds between wallets with notification.
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This teaches coordinating multi-object updates and integrating external dependencies
+        # (notification service). It demonstrates dependency injection for testability: the
+        # notifier is optional, making it easy to test with mocks or without notification.
 
         TODO(human): Implement transfer logic.
 

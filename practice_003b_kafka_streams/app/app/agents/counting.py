@@ -45,6 +45,12 @@ sensor_counts = app.Table(
 async def count_by_sensor(stream):
     """Increment the per-sensor reading count for each enriched event.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches stateful stream processing with Faust Tables.
+    # Unlike stateless agents, this one maintains distributed key-value state
+    # backed by a Kafka changelog topic, enabling fault-tolerant counting and
+    # demonstrating the core mechanism behind joins, aggregations, and windowing.
+
     TODO(human): Implement the body of this agent.
 
     Steps:
@@ -80,6 +86,11 @@ async def count_by_sensor(stream):
 @app.timer(interval=30.0)
 async def check_high_count_sensors():
     """Periodic task: log any sensors that have exceeded the count threshold.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches Faust timers: background periodic tasks that run
+    # independently of event streams. Timers are essential for scheduled monitoring,
+    # cleanup, and emitting windowed aggregates — a pattern you'll extend in windowing.py.
 
     TODO(human): Implement this timer function.
 

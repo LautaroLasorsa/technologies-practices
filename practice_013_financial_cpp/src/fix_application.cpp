@@ -17,6 +17,12 @@
 
 void FixApplication::onCreate(const FIX::SessionID& session_id)
 {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches FIX session lifecycle awareness. Understanding
+    // onCreate vs onLogon is critical: onCreate fires when QuickFIX initializes
+    // the session object, onLogon fires after successful Logon handshake.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Log that a session was created.
     // Print the session_id to stdout so you can see the
     // BeginString, SenderCompID, and TargetCompID.
@@ -83,6 +89,14 @@ void FixApplication::fromApp(const FIX::Message& message,
 void FixApplication::onMessage(const FIX44::NewOrderSingle& message,
                                const FIX::SessionID& session_id)
 {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches FIX field extraction and MessageCracker dispatch.
+    // The MessageCracker pattern (Visitor) ensures type-safe access to fields:
+    // instead of manually checking MsgType and parsing tags, QuickFIX routes
+    // each message to its strongly-typed handler. This is production-critical
+    // for avoiding tag misinterpretation and reducing parsing bugs.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Extract order fields from the incoming NewOrderSingle.
     //
     // The FIX44::NewOrderSingle message contains typed fields. You extract
@@ -119,6 +133,14 @@ void FixApplication::send_execution_report(
     const FIX::ClOrdID& cl_ord_id,
     const FIX::SessionID& session_id)
 {
+    // ── Exercise Context ──────────────────────────────────────────────────
+    // This exercise teaches FIX message construction and the ExecutionReport
+    // lifecycle. ExecType and OrdStatus fields communicate order state (NEW,
+    // PARTIAL_FILL, FILLED, CANCELED). Understanding LeavesQty vs CumQty is
+    // essential for order management systems: LeavesQty = unfilled quantity,
+    // CumQty = total filled quantity across all executions.
+    // ──────────────────────────────────────────────────────────────────────
+
     // TODO(human): Build and send a FIX44::ExecutionReport message.
     //
     // An ExecutionReport (MsgType=8) is the exchange's response to an order.

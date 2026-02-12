@@ -77,6 +77,11 @@ pub mod solana_practice {
     // Each user gets their own vault.
     //
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+        // ── Exercise Context ──────────────────────────────────────────────────
+        // This exercise teaches Cross-Program Invocations (CPI)—the mechanism for programs
+        // to call other programs. Understanding CPI is essential for composability in Solana:
+        // every DeFi protocol (DEX, lending, staking) relies on CPI to transfer tokens and SOL.
+        //
         // TODO(human): Create the CPI context for system_program::transfer
         //
         // Hint: Build the CPI accounts struct and context:

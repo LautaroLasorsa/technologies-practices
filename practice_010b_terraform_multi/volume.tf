@@ -1,6 +1,11 @@
 # -----------------------------------------------------------------------------
 # Docker Volume -- persistent storage for Redis data
 # -----------------------------------------------------------------------------
+# ── Exercise Context ──────────────────────────────────────────────────
+# This exercise teaches volume resource provisioning and lifecycle rules like
+# prevent_destroy. Understanding persistent storage patterns is critical for
+# databases and stateful applications in production environments.
+#
 # Phase 2: Implement this resource.
 #
 # Requirements:

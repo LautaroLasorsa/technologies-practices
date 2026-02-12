@@ -92,6 +92,11 @@ class TestWithdraw:
     ):
         """Withdrawing 200 from a 1000-balance wallet leaves 800.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This teaches writing focused unit tests that verify a single behavior.
+        # Following the Arrange-Act-Assert pattern, this test sets up state (fixture provides
+        # a funded wallet), performs one action (withdraw), and checks one outcome (balance decreased).
+
         TODO(human): Implement this test.
         1. Call service.withdraw(funded_wallet, 200.0)
         2. Assert funded_wallet.balance == 800.0

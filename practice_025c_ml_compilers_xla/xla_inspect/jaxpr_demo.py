@@ -150,6 +150,11 @@ def demo_simple_jaxpr() -> None:
 def demo_mlp_jaxpr() -> None:
     """Capture and analyze the Jaxpr for the MLP forward pass.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches reading Jaxpr IR — JAX's internal representation before
+    # lowering to XLA. Understanding Jaxpr primitives (dot_general, add, broadcast)
+    # is essential for debugging JAX transformations and understanding what XLA compiles.
+
     TODO(human): Use jax.make_jaxpr to capture the MLP's computation graph
     and analyze what primitive operations it contains.
 
@@ -222,6 +227,11 @@ def demo_mlp_jaxpr() -> None:
 def demo_grad_jaxpr() -> None:
     """Capture the Jaxpr of the gradient of the MLP loss.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches how jax.grad transforms computation graphs. The backward
+    # pass adds new primitives for gradient propagation. Understanding this reveals
+    # how autodiff is implemented at the IR level.
+
     TODO(human): Use jax.make_jaxpr to see what the backward pass looks like
     as a Jaxpr. This reveals the primitives JAX uses for automatic
     differentiation.
@@ -293,6 +303,11 @@ def demo_grad_jaxpr() -> None:
 
 def demo_vmap_jaxpr() -> None:
     """Capture the Jaxpr of the vmap-batched MLP forward pass.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches jax.vmap's automatic batching transformation. vmap adds
+    # batch dimensions to operations, enabling SIMD/vectorization. Understanding this
+    # shows how JAX achieves high throughput without manual loop unrolling.
 
     TODO(human): Use jax.make_jaxpr to see how vmap transforms the
     computation graph to handle batched inputs.

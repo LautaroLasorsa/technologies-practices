@@ -158,6 +158,11 @@ class Graph:
     def add_op(self, op: Op, name: str, inputs: list[Node]) -> Node:
         """Add an operation node to the graph.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches DAG construction — how edges are created by wiring
+        # nodes to their inputs. Every ML compiler (XLA, TVM, torch.compile) has
+        # this operation at its core: building a graph by adding nodes in topo order.
+
         TODO(human): Implement this method. It creates a new Node for the given
         operation, connects it to its input nodes, and appends it to the graph.
 

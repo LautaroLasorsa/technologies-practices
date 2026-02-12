@@ -25,6 +25,11 @@ from app.connection import run_query, run_explain
 def window_rank_products_by_price():
     """Rank products by unit_price within each category.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This teaches the core window function syntax: PARTITION BY and ORDER BY.
+    # Comparing ROW_NUMBER, RANK, and DENSE_RANK side-by-side demonstrates how
+    # different ranking functions handle ties — critical for analytics queries.
+
     TODO(human): Write a SELECT that returns:
       - category name (from the categories table, aliased as "category")
       - product name (from the products table, aliased as "product")
@@ -76,6 +81,11 @@ def window_rank_products_by_price():
 
 def window_top3_per_supplier():
     """Find top 3 products per supplier by total units sold.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This demonstrates the top-N-per-group pattern using CTEs to filter window functions.
+    # It's one of the most common analytics patterns in production SQL and shows why
+    # window functions can't be used directly in WHERE clauses (timing in query execution).
 
     TODO(human): Write a query that:
 

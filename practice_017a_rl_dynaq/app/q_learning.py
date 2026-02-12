@@ -42,6 +42,11 @@ class QLearningAgent:
     def select_action(self, state: int) -> int:
         """Choose an action using epsilon-greedy policy.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise teaches the explore/exploit tradeoff fundamental to RL.
+        # Epsilon-greedy is the simplest exploration strategy: occasionally take
+        # random actions to discover new states, but mostly exploit current knowledge.
+
         TODO(human): Implement epsilon-greedy action selection.
 
         With probability epsilon, pick a random action (exploration).
@@ -56,6 +61,11 @@ class QLearningAgent:
     def update(self, state: int, action: int, reward: float, next_state: int, done: bool) -> None:
         """Apply one-step Q-learning update.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This is the core of Q-learning: bootstrapping value estimates from future states.
+        # The temporal-difference error [r + gamma * max Q(s',a') - Q(s,a)] tells you
+        # whether your current estimate was too high or too low, driving convergence.
+
         TODO(human): Implement the Q-learning update rule.
 
         Formula: Q(s,a) += alpha * [r + gamma * max_a' Q(s',a') - Q(s,a)]
@@ -68,6 +78,11 @@ class QLearningAgent:
 
     def train_episode(self, env: gym.Env) -> float:
         """Run one episode of Q-learning, returning total reward.
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This ties together action selection and Q-value updates into a full RL loop.
+        # Each episode is a trajectory from initial state to terminal state, accumulating
+        # experience that refines the Q-table toward the optimal policy.
 
         TODO(human): Implement the episode training loop.
 

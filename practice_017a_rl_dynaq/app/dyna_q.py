@@ -43,6 +43,11 @@ class DynaQAgent(QLearningAgent):
     def train_episode(self, env: gym.Env) -> float:
         """Run one episode of Dyna-Q, returning total reward.
 
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This exercise integrates direct RL, model learning, and planning into one loop.
+        # It demonstrates how model-based RL amplifies sample efficiency: each real step
+        # triggers n planning steps, accelerating convergence without extra environment interaction.
+
         TODO(human): Implement the Dyna-Q episode loop.
 
         This is like Q-learning's train_episode, but after each real step you add:

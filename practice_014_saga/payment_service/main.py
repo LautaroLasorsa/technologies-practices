@@ -57,6 +57,14 @@ def process_payment(saga_id: str, payload: dict) -> SagaMessage:
     """
     Process a payment for an order.
 
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches failure detection and error propagation in sagas.
+    # The payment service simulates a declined transaction (price > $500), which
+    # triggers the orchestrator's compensation flow. Production payment gateways
+    # (Stripe, PayPal) return rich error codes; sagas must map these to appropriate
+    # compensations or retries.
+    # ──────────────────────────────────────────────────────────────────────
+
     TODO(human): Implement the payment logic.
 
     Steps:
@@ -87,6 +95,14 @@ def process_payment(saga_id: str, payload: dict) -> SagaMessage:
 def refund_payment(saga_id: str, payload: dict) -> SagaMessage:
     """
     Refund a previously processed payment (compensating transaction).
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches payment refund as a compensating transaction. In
+    # production, refunds often interact with external systems (payment gateways)
+    # that have their own idempotency semantics. SAGAs must handle cases where
+    # the gateway confirms a refund but the confirmation message is lost, requiring
+    # retry-safe compensations.
+    # ──────────────────────────────────────────────────────────────────────
 
     TODO(human): Implement the refund logic.
 
