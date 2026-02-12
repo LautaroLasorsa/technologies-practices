@@ -21,13 +21,12 @@ from google.cloud import pubsub_v1
 
 import config
 
-
 # ── Helpers (boilerplate) ────────────────────────────────────────────
 
 FANOUT_ORDERS = [
-    {"order_id": "FAN-001", "item": "Tablet",     "quantity": 1},
+    {"order_id": "FAN-001", "item": "Tablet", "quantity": 1},
     {"order_id": "FAN-002", "item": "Headphones", "quantity": 2},
-    {"order_id": "FAN-003", "item": "Charger",    "quantity": 4},
+    {"order_id": "FAN-003", "item": "Charger", "quantity": 4},
 ]
 
 
@@ -35,12 +34,14 @@ def publish_fanout_orders(publisher: pubsub_v1.PublisherClient, topic_path: str)
     """Publish test orders and return the count."""
     print("\n=== Publishing fan-out test orders ===")
     for order in FANOUT_ORDERS:
-        payload = json.dumps({
-            "order_id": order["order_id"],
-            "item": order["item"],
-            "quantity": order["quantity"],
-            "timestamp": time.time(),
-        }).encode("utf-8")
+        payload = json.dumps(
+            {
+                "order_id": order["order_id"],
+                "item": order["item"],
+                "quantity": order["quantity"],
+                "timestamp": time.time(),
+            }
+        ).encode("utf-8")
         future = publisher.publish(
             topic_path,
             data=payload,
@@ -123,7 +124,23 @@ def verify_fanout(
           results.append(len(orders) == expected_count)
       return all(results)
     """
-    raise NotImplementedError("TODO(human): implement verify_fanout")
+    ok = True
+
+    for subpath in sub_paths:
+        pulled = pull_all_messages(subscriber, subpath)
+        print(f"{subpath} pulled {len(pulled)} messages")
+        ok = ok and (len(pulled) == expected_count)
+
+    if ok:
+        print(
+            f"Fan-out PASSED: all {len(sub_paths)} subscriptions received {expected_count} messages."
+        )
+    else:
+        print(
+            f"Fan-out FAILED: not all subscriptions received {expected_count} messages."
+        )
+
+    return ok
 
 
 # ── Orchestration ────────────────────────────────────────────────────
