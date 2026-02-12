@@ -167,7 +167,12 @@ All commands run from `practice_002_cloud_pubsub/`.
 ## Notes
 
 - **User observation:** Pub/Sub's ordered publish returns independent futures per ordering key — handling failures as values (`str | Exception`) instead of raising preserves the batch length invariant, mirroring Rust's `Result<T, E>` / monadic error handling pattern. This is preferable in batch/pipeline scenarios where you want to resolve all futures before propagating errors.
+- **Streaming pull timeout as control flow:** `StreamingPullFuture.result(timeout=N)` raises `TimeoutError` by design — the future never resolves because the gRPC stream is infinite. The exception is the intended shutdown signal, not a failure. Same pattern as `KeyboardInterrupt`.
+- **Batch ack vs per-message ack:** Sync pull batches ack_ids and calls `acknowledge()` once (fewer RPCs, but crash = full batch redelivery). Streaming pull acks per-message inside callbacks because callbacks run on a thread pool concurrently — batching wouldn't make sense.
+- **Dead-letter bypass:** Pub/Sub has no API to send a message directly to the DLQ. The server counts delivery attempts. Workaround: ack the message and publish it to the dead-letter topic yourself — faster and allows adding `failure_reason` metadata. The built-in dead-letter policy is a safety net for unexpected failures.
+- **From discussion (deduplication):** User identified three strategies: (1) message ID + Redis idempotency store (standard but has race conditions), (2) partition/shard-based dedup with single consumer per key (industry standard in Kafka, Pub/Sub equivalent is ordering keys), (3) idempotent operations (`INSERT ON CONFLICT DO NOTHING`). Strategy 2 eliminates coordination overhead entirely.
+- **From discussion (push vs pull):** User's initial model (push=OLTP, pull=OLAP) captures latency-vs-throughput, but the real axis is **who controls flow** — push means Pub/Sub drives pace (serverless, webhooks), pull means consumer drives pace (batch, backpressure).
 
 ## State
 
-`not-started`
+`completed`

@@ -16,14 +16,12 @@ Run after setup_resources.py and publisher.py:
 """
 
 import json
-
 from concurrent.futures import TimeoutError
 
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
 
 import config
-
 
 # ── TODO(human): Implement this function ─────────────────────────────
 
@@ -56,7 +54,13 @@ def poison_message_handler(message: Message) -> None:
 
     Docs: https://cloud.google.com/pubsub/docs/dead-letter-topics
     """
-    raise NotImplementedError("TODO(human): implement poison_message_handler")
+    decoded = json.loads(message.data.decode("utf-8"))
+    if decoded["item"] == "Monitor":
+        print(f"NACK poison message: {decoded['order_id']} (item={decoded['item']})")
+        message.nack()
+    else:
+        print(f"ACK order: {decoded['order_id']} (item={decoded['item']})")
+        message.ack()
 
 
 # ── Dead-letter monitor ──────────────────────────────────────────────
