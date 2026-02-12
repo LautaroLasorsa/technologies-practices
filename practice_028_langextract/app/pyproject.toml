@@ -1,0 +1,11 @@
+[project]
+name = "practice-028-langextract"
+version = "0.1.0"
+description = "Practice 028: LangExtract — Structured Extraction from Unstructured Text"
+requires-python = ">=3.12"
+dependencies = [
+    "langextract>=1.1.0",
+]
+
+[tool.uv]
+dev-dependencies = []
