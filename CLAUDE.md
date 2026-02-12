@@ -76,6 +76,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 025f | ML Compilers: torch.compile Deep Dive | Python (PyTorch 2.x) | `not-started` |
 | 026a | ETL/ELT Orchestration: Airflow Fundamentals | Python, Docker (Airflow) | `not-started` |
 | 026b | ETL/ELT Orchestration: Dagster Assets & dbt | Python, Docker (Dagster, dbt) | `not-started` |
+| 027 | Advanced System Design Interview | Markdown (design docs, no code) | `not-started` |
+| 028 | LangExtract: Structured Extraction from Text | Python, Docker (Ollama) | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
