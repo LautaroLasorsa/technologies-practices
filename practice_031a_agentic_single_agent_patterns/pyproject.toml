@@ -1,0 +1,12 @@
+[project]
+name = "practice-031a-agentic-single-agent-patterns"
+version = "0.1.0"
+description = "Agentic AI: Single-Agent Design Patterns with LangGraph"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph",
+    "langchain",
+    "langchain-core",
+    "langchain-ollama",
+    "pydantic",
+]

@@ -1,0 +1,10 @@
+[project]
+name = "practice-030b-dspy-advanced"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "dspy-ai",
+    "qdrant-client",
+    "pydantic",
+    "sentence-transformers",
+]

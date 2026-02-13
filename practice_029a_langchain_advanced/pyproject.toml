@@ -1,0 +1,12 @@
+[project]
+name = "practice-029a-langchain-advanced"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain",
+    "langchain-core",
+    "langchain-ollama",
+    "langchain-community",
+    "chromadb",
+    "pydantic",
+]
