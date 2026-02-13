@@ -1,0 +1,16 @@
+[project]
+name = "practice-031c-agentic-production-patterns"
+version = "0.1.0"
+description = "Agentic AI: Production Patterns — type safety, guardrails, HITL, memory, observability, evaluation"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph",
+    "langchain",
+    "langchain-core",
+    "langchain-ollama",
+    "pydantic-ai",
+    "qdrant-client",
+    "langfuse",
+    "pydantic",
+    "tenacity",
+]

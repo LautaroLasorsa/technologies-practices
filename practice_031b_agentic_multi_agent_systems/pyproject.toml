@@ -1,0 +1,15 @@
+[project]
+name = "practice-031b-agentic-multi-agent-systems"
+version = "0.1.0"
+description = "Practice 031b: Agentic AI — Multi-Agent Systems (Supervisor, Swarm, CrewAI)"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph",
+    "langchain",
+    "langchain-core",
+    "langchain-ollama",
+    "langgraph-supervisor",
+    "langgraph-swarm",
+    "crewai",
+    "pydantic",
+]

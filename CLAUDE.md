@@ -78,6 +78,14 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 026b | ETL/ELT Orchestration: Dagster Assets & dbt | Python, Docker (Dagster, dbt) | `not-started` |
 | 027 | Advanced System Design Interview | Markdown (design docs, no code) | `not-started` |
 | 028 | LangExtract: Structured Extraction from Text | Python, Docker (Ollama) | `not-started` |
+| 029a | LangChain Advanced: LCEL, Tools & Structured Output | Python, Docker (Ollama) | `not-started` |
+| 029b | LangGraph: Stateful Agent Graphs | Python, Docker (Ollama) | `not-started` |
+| 030a | DSPy Fundamentals: Signatures, Modules & Optimization | Python, Docker (Ollama) | `not-started` |
+| 030b | DSPy Advanced: RAG, Assertions & MIPROv2 | Python, Docker (Ollama, Qdrant) | `not-started` |
+| 030c | DSPy + LangGraph Integration | Python, Docker (Ollama) | `not-started` |
+| 031a | Agentic AI: Single-Agent Design Patterns | Python, Docker (Ollama) | `not-started` |
+| 031b | Agentic AI: Multi-Agent Systems | Python, Docker (Ollama) | `not-started` |
+| 031c | Agentic AI: Production Patterns | Python, Docker (Ollama, Qdrant, Langfuse) | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
@@ -97,6 +105,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 - **Research before creating**: When creating a new practice or its content, first do in-depth research about all relevant information related to the practice's topic.
 
 - **Skills creation**: When you find that some information is hard or expensive to reproduce and is useful in a wide variety of situations related to the purpose of this repository, create a project-level skill containing that information in detail so it can be easily recovered in the future.
+
+- **Use subagents**: When you have to make a task specific for a practice in isolation of the whole context, and speciall if you want to make a similar action in many diferent practices, send a subagent to do the task in each practice (one subagent asigned to one task)
 
 ---
 

@@ -1,0 +1,12 @@
+[project]
+name = "practice-029b-langgraph"
+version = "0.1.0"
+description = "LangGraph: Stateful Agent Graphs"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph",
+    "langchain",
+    "langchain-core",
+    "langchain-ollama",
+    "pydantic",
+]
