@@ -1,0 +1,18 @@
+[project]
+name = "practice-043-global-optimization"
+version = "0.1.0"
+description = "Global Optimization with scipy and Optuna"
+requires-python = ">=3.12"
+dependencies = [
+    "scipy>=1.12",
+    "optuna>=3.5",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

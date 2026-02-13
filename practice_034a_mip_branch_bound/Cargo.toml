@@ -1,0 +1,24 @@
+[package]
+name = "practice_034a_mip_branch_bound"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+good_lp = { version = "1.10", features = ["highs"] }
+ordered-float = "4"
+
+[[bin]]
+name = "phase1_relaxation"
+path = "src/relaxation.rs"
+
+[[bin]]
+name = "phase2_single_branch"
+path = "src/single_branch.rs"
+
+[[bin]]
+name = "phase3_branch_bound"
+path = "src/branch_bound.rs"
+
+[[bin]]
+name = "phase4_strategies"
+path = "src/strategies.rs"

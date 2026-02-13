@@ -1,0 +1,12 @@
+[project]
+name = "practice-042a-cpsat"
+version = "0.1.0"
+description = "Constraint Programming with OR-Tools CP-SAT"
+requires-python = ">=3.12"
+dependencies = [
+    "ortools>=9.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

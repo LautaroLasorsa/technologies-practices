@@ -1,0 +1,14 @@
+[project]
+name = "practice-041a-cvxpy"
+version = "0.1.0"
+description = "Convex Optimization with CVXPY"
+requires-python = ">=3.12"
+dependencies = [
+    "cvxpy>=1.5",
+    "numpy>=1.26",
+    "scipy>=1.12",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

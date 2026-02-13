@@ -86,6 +86,31 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 031a | Agentic AI: Single-Agent Design Patterns | Python, Docker (Ollama) | `not-started` |
 | 031b | Agentic AI: Multi-Agent Systems | Python, Docker (Ollama) | `not-started` |
 | 031c | Agentic AI: Production Patterns | Python, Docker (Ollama, Qdrant, Langfuse) | `not-started` |
+| 032a | LP: Simplex Method | C++17, Eigen | `not-started` |
+| 032b | LP: Duality & Interior Point | C++17, Eigen | `not-started` |
+| 033a | Convex Opt: First-Order Methods | C++17, Eigen | `not-started` |
+| 033b | Convex Opt: Proximal & Second-Order | C++17, Eigen | `not-started` |
+| 034a | MIP: Branch & Bound | Rust | `not-started` |
+| 034b | MIP: Cutting Planes & Heuristics | Rust | `not-started` |
+| 035a | Non-convex: Local Search & SA | Rust | `not-started` |
+| 035b | Non-convex: Evolutionary Algorithms | Rust | `not-started` |
+| 036a | Network Opt: Flows & Assignment | C++17 | `not-started` |
+| 036b | Network Opt: TSP & VRP Heuristics | C++17 | `not-started` |
+| 037 | Constraint Programming | Rust | `not-started` |
+| 038 | Multi-Objective: NSGA-II | Rust | `not-started` |
+| 039 | Stochastic DP: MDPs | C++17, Eigen | `not-started` |
+| 040a | LP/MIP: PuLP & HiGHS | Python | `not-started` |
+| 040b | Advanced Modeling: Pyomo | Python | `not-started` |
+| 041a | Convex Opt: CVXPY | Python | `not-started` |
+| 041b | Conic: SOCP & SDP | Python | `not-started` |
+| 042a | CP: OR-Tools CP-SAT | Python | `not-started` |
+| 042b | Routing: OR-Tools | Python | `not-started` |
+| 043 | Global Opt: scipy & Optuna | Python | `not-started` |
+| 044 | Multi-Objective: pymoo | Python | `not-started` |
+| 045 | Stochastic Programming | Python | `not-started` |
+| 046 | Robust Optimization | Python | `not-started` |
+| 047 | Bayesian Optimization | Python | `not-started` |
+| 048 | Integrated OR: Supply Chain | Python | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 

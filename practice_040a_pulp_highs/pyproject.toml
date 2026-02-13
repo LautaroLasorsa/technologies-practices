@@ -1,0 +1,13 @@
+[project]
+name = "practice-040a-pulp-highs"
+version = "0.1.0"
+description = "LP/MIP Modeling with PuLP & HiGHS"
+requires-python = ">=3.12"
+dependencies = [
+    "pulp>=2.9",
+    "highspy>=1.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

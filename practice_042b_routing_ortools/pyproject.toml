@@ -1,0 +1,13 @@
+[project]
+name = "practice-042b-routing-ortools"
+version = "0.1.0"
+description = "Vehicle Routing with OR-Tools Routing Solver"
+requires-python = ">=3.12"
+dependencies = [
+    "ortools>=9.9",
+    "numpy>=1.26",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

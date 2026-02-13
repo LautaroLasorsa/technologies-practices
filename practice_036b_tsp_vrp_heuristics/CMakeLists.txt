@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.16)
+project(practice_036b_tsp_vrp_heuristics LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_executable(phase1_tsp_construction src/tsp_construction.cpp)
+add_executable(phase2_tsp_improvement src/tsp_improvement.cpp)
+add_executable(phase3_vrp_construction src/vrp_construction.cpp)
+add_executable(phase4_vrp_improvement src/vrp_improvement.cpp)
+
+add_custom_target(all_phases DEPENDS phase1_tsp_construction phase2_tsp_improvement phase3_vrp_construction phase4_vrp_improvement)

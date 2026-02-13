@@ -1,0 +1,23 @@
+[package]
+name = "practice_038_multi_objective_nsga2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+
+[[bin]]
+name = "phase1_nondominated_sort"
+path = "src/nondominated_sort.rs"
+
+[[bin]]
+name = "phase2_crowding"
+path = "src/crowding.rs"
+
+[[bin]]
+name = "phase3_nsga2"
+path = "src/nsga2.rs"
+
+[[bin]]
+name = "phase4_benchmarks"
+path = "src/benchmarks.rs"
