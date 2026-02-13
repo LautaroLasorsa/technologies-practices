@@ -92,6 +92,14 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 
 ---
 
+## Best practices
+
+- **Research before creating**: When creating a new practice or its content, first do in-depth research about all relevant information related to the practice's topic.
+
+- **Skills creation**: When you find that some information is hard or expensive to reproduce and is useful in a wide variety of situations related to the purpose of this repository, create a project-level skill containing that information in detail so it can be easily recovered in the future.
+
+---
+
 ## Practice CLAUDE.md Template
 
 Each practice folder must contain a `CLAUDE.md` with:
