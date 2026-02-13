@@ -1,0 +1,16 @@
+[project]
+name = "practice-048-supply-chain-capstone"
+version = "0.1.0"
+description = "Integrated OR -- Supply Chain Optimization (capstone)"
+requires-python = ">=3.12"
+dependencies = [
+    "pyomo>=6.7",
+    "highspy>=1.7",
+    "ortools>=9.9",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

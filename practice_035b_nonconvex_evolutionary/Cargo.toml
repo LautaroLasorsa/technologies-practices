@@ -1,0 +1,23 @@
+[package]
+name = "practice_035b_nonconvex_evolutionary"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+
+[[bin]]
+name = "phase1_genetic"
+path = "src/genetic.rs"
+
+[[bin]]
+name = "phase2_de"
+path = "src/differential_evolution.rs"
+
+[[bin]]
+name = "phase3_pso"
+path = "src/pso.rs"
+
+[[bin]]
+name = "phase4_comparison"
+path = "src/comparison.rs"

@@ -1,0 +1,13 @@
+[project]
+name = "practice-040b-pyomo-advanced"
+version = "0.1.0"
+description = "Advanced OR Modeling with Pyomo"
+requires-python = ">=3.12"
+dependencies = [
+    "pyomo>=6.8",
+    "highspy>=1.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,0 +1,14 @@
+[project]
+name = "practice-044-multi-objective-pymoo"
+version = "0.1.0"
+description = "Multi-Objective Optimization with pymoo"
+requires-python = ">=3.12"
+dependencies = [
+    "pymoo>=0.6",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

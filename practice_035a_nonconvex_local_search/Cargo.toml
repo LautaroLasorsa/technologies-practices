@@ -1,0 +1,23 @@
+[package]
+name = "practice_035a_nonconvex_local_search"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+
+[[bin]]
+name = "phase1_hill_climbing"
+path = "src/hill_climbing.rs"
+
+[[bin]]
+name = "phase2_multi_start"
+path = "src/multi_start.rs"
+
+[[bin]]
+name = "phase3_sa_continuous"
+path = "src/sa_continuous.rs"
+
+[[bin]]
+name = "phase4_sa_tsp"
+path = "src/sa_tsp.rs"

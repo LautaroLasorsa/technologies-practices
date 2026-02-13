@@ -1,0 +1,15 @@
+[project]
+name = "practice-045-stochastic-programming"
+version = "0.1.0"
+description = "Stochastic Programming with Pyomo"
+requires-python = ">=3.12"
+dependencies = [
+    "pyomo>=6.7",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "highspy>=1.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
