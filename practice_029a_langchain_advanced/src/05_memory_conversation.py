@@ -10,18 +10,19 @@ and injects it via RunnableWithMessageHistory. This is more explicit, testable,
 and compatible with LangGraph's persistence model.
 """
 
-from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.fallbacks import RunnableWithFallbacks
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_ollama import ChatOllama
 
 # ---------------------------------------------------------------------------
 # Setup: model, parser, and conversation prompt template
 # ---------------------------------------------------------------------------
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 llm = ChatOllama(
     model=MODEL_NAME,
@@ -34,13 +35,17 @@ parser = StrOutputParser()
 # This prompt template includes a MessagesPlaceholder for chat history.
 # RunnableWithMessageHistory will inject the conversation history here
 # automatically before each invocation.
-conversation_prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     "You are a helpful assistant. Be concise and friendly. "
-     "Remember what the user told you in previous messages."),
-    MessagesPlaceholder(variable_name="history"),
-    ("human", "{input}"),
-])
+conversation_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a helpful assistant. Be concise and friendly. "
+            "Remember what the user told you in previous messages.",
+        ),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}"),
+    ]
+)
 
 # Pre-built base chain (without memory).
 base_chain = conversation_prompt | llm | parser
@@ -65,6 +70,7 @@ def get_session_history(session_id: str) -> InMemoryChatMessageHistory:
 # ---------------------------------------------------------------------------
 # Exercise 1: Conversation with buffer memory
 # ---------------------------------------------------------------------------
+
 
 def exercise_buffer_memory() -> None:
     # TODO(human): Build a conversational chain using RunnableWithMessageHistory.
@@ -128,12 +134,45 @@ def exercise_buffer_memory() -> None:
     #   Message 1: Bot acknowledges your name and profession
     #   Message 2: Bot correctly recalls "Carlos" and "software engineer"
     #   Message 3: Bot gives language recommendations personalized to your role
-    raise NotImplementedError("Build conversational chain with buffer memory here")
+
+    chain_with_memory = RunnableWithMessageHistory(
+        base_chain,
+        get_session_history,
+        input_message_key="input",
+        history_messages_key="history",
+    )
+
+    config = {"configurable": {"session_id": "user_001"}}
+
+    response1 = chain_with_memory.invoke(
+        {"input": "My name is Carlos and I'm a software engineer."},
+        config=config,
+    )
+    print(f"Bot: {response1}\n")
+
+    response2 = chain_with_memory.invoke(
+        {"input": "What's my name and what do I do?"},
+        config=config,
+    )
+    print(f"Bot: {response2}\n")
+
+    response3 = chain_with_memory.invoke(
+        {"input": "What programming languages should I learn next?"},
+        config=config,
+    )
+    print(f"Bot: {response3}\n")
+
+    response4 = chain_with_memory.invoke(
+        {"input": "What's my name and what do I do?"},
+        config={"configurable": {"session_id": "user_002"}},
+    )
+    print(f"Bot (to 2): {response4}\n")
 
 
 # ---------------------------------------------------------------------------
 # Exercise 2: Windowed memory (last N exchanges)
 # ---------------------------------------------------------------------------
+
 
 def exercise_windowed_memory() -> None:
     # TODO(human): Implement conversation memory that only keeps the last N exchanges.
@@ -205,7 +244,36 @@ def exercise_windowed_memory() -> None:
     #   With WINDOW_SIZE=3, the bot should remember recent topics (decorators,
     #   generators, context managers) but forget the favorite number from
     #   message 1, since it falls outside the window.
-    raise NotImplementedError("Implement windowed memory here")
+
+    def get_session_window(window_size: int):
+        def inner_function(session_id: str) -> InMemoryChatMessageHistory:
+            memory = get_session_history(session_id)
+            memory.messages = memory.messages[-2 * window_size :]
+            return memory
+
+        return inner_function
+
+    chain_with_windowed_memory = RunnableWithMessageHistory(
+        base_chain,
+        get_session_window(4),
+        input_messages_key="input",
+        history_messages_key="history",
+    )
+
+    config = {"configurable": {"session_id": "windowed-001"}}
+    messages = [
+        "My name is Lautaro",
+        "A = 100",
+        "B = 12",
+        "C = 1000",
+        "D = 0",
+        "E = -1",
+        "What is my name?",
+    ]
+
+    for msg in messages:
+        answer = chain_with_windowed_memory.invoke({"input": msg}, config=config)
+        print(f"USER:{msg}\n\nAgent:{answer}\n")
 
 
 if __name__ == "__main__":

@@ -6,16 +6,16 @@ Everything in LangChain v0.3 builds on this — once you understand how three
 Runnables compose into a pipeline, you can build arbitrarily complex chains.
 """
 
-from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama import ChatOllama
 
 # ---------------------------------------------------------------------------
 # Setup: model and output parser (boilerplate — already done for you)
 # ---------------------------------------------------------------------------
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 llm = ChatOllama(
     model=MODEL_NAME,
@@ -29,6 +29,7 @@ output_parser = StrOutputParser()
 # ---------------------------------------------------------------------------
 # Exercise: Build your first LCEL chain
 # ---------------------------------------------------------------------------
+
 
 def build_and_run_first_chain() -> None:
     # TODO(human): Build a basic LCEL chain and test it with multiple topics.
@@ -65,7 +66,19 @@ def build_and_run_first_chain() -> None:
     #       ("system", "your system prompt here"),
     #       ("human", "{topic}"),
     #   ])
-    raise NotImplementedError("Build your first LCEL chain here")
+    prompt_template = ChatPromptTemplate(
+        [
+            (
+                "system",
+                "You must explain the topic asked by the human in 2 or 3 sentences for a beginner",
+            ),
+            ("human", "{topic}"),
+        ]
+    )
+
+    chain = prompt_template | llm | output_parser
+    print(chain.invoke({"topic": "recursion"}))
+    print(chain.invoke({"topic": "GRASP"}))
 
 
 if __name__ == "__main__":

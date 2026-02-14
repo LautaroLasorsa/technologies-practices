@@ -9,21 +9,21 @@ This exercise teaches the three core LCEL composition patterns:
 Together these let you build any data flow topology from simple Runnables.
 """
 
-from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import (
+    RunnableLambda,
     RunnableParallel,
     RunnablePassthrough,
-    RunnableLambda,
 )
+from langchain_ollama import ChatOllama
 
 # ---------------------------------------------------------------------------
 # Setup: model, parser, and pre-built prompt templates
 # ---------------------------------------------------------------------------
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 llm = ChatOllama(
     model=MODEL_NAME,
@@ -36,32 +36,57 @@ parser = StrOutputParser()
 # Pre-built prompt templates for the multi-step chain exercise.
 # Each template expects a specific input key and produces text output.
 
-summarize_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a concise summarizer. Summarize the given text in 2-3 sentences."),
-    ("human", "{text}"),
-])
+summarize_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a concise summarizer. Summarize the given text in 2-3 sentences.",
+        ),
+        ("human", "{text}"),
+    ]
+)
 
-translate_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a translator. Translate the following text to Spanish. Output only the translation."),
-    ("human", "{text}"),
-])
+translate_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a translator. Translate the following text to Spanish. Output only the translation.",
+        ),
+        ("human", "{text}"),
+    ]
+)
 
-format_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a formatter. Reformat the following text as a bullet-point list. Use '- ' for each bullet."),
-    ("human", "{text}"),
-])
+format_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a formatter. Reformat the following text as a bullet-point list. Use '- ' for each bullet.",
+        ),
+        ("human", "{text}"),
+    ]
+)
 
 # Pre-built prompt templates for the parallel chain exercise.
 
-keywords_prompt = ChatPromptTemplate.from_messages([
-    ("system", "Extract 3-5 keywords from the text. Output only the keywords, comma-separated."),
-    ("human", "{text}"),
-])
+keywords_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "Extract 3-5 keywords from the text. Output only the keywords, comma-separated.",
+        ),
+        ("human", "{text}"),
+    ]
+)
 
-sentiment_prompt = ChatPromptTemplate.from_messages([
-    ("system", "Analyze the sentiment of the text. Reply with exactly one word: positive, negative, or neutral."),
-    ("human", "{text}"),
-])
+sentiment_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "Analyze the sentiment of the text. Reply with exactly one word: positive, negative, or neutral.",
+        ),
+        ("human", "{text}"),
+    ]
+)
 
 # Sample text for testing.
 SAMPLE_TEXT = (
@@ -77,6 +102,7 @@ SAMPLE_TEXT = (
 # ---------------------------------------------------------------------------
 # Exercise 1: Multi-step chain (sequential composition)
 # ---------------------------------------------------------------------------
+
 
 def exercise_multi_step_chain() -> None:
     # TODO(human): Build a multi-step chain: summarize → translate → format.
@@ -112,12 +138,26 @@ def exercise_multi_step_chain() -> None:
     # HINT:
     #   You can also use RunnablePassthrough.assign() or a dict comprehension
     #   inside RunnableLambda to reshape data between steps.
-    raise NotImplementedError("Build the multi-step chain here")
+
+    summarize_chain = summarize_prompt | llm | parser
+    translate_chain = translate_prompt | llm | parser
+    format_chain = format_prompt | llm | parser
+
+    def wrap_step(s: str):
+        print("Wrapping : \n", s)
+        return {"text": s}
+
+    wrap = RunnableLambda(wrap_step)
+
+    full_chain = summarize_chain | wrap | translate_chain | wrap | format_chain
+
+    print(full_chain.invoke({"text": SAMPLE_TEXT}))
 
 
 # ---------------------------------------------------------------------------
 # Exercise 2: RunnableParallel fan-out
 # ---------------------------------------------------------------------------
+
 
 def exercise_parallel_chain() -> None:
     # TODO(human): Build a RunnableParallel that processes text three ways simultaneously.
@@ -154,12 +194,22 @@ def exercise_parallel_chain() -> None:
     #   You should see three results printed — a summary paragraph, a comma-
     #   separated keyword list, and a single sentiment word. All three are
     #   derived from the same input text but computed independently.
-    raise NotImplementedError("Build the parallel chain here")
+
+    summary_chain = summarize_prompt | llm | parser
+    keywords_chain = keywords_prompt | llm | parser
+    sentiment_chain = sentiment_prompt | llm | parser
+
+    parallel_chain = RunnableParallel(
+        summary=summary_chain, keywords=keywords_chain, sentiment=sentiment_chain
+    )
+
+    print(parallel_chain.invoke({"text": SAMPLE_TEXT}))
 
 
 # ---------------------------------------------------------------------------
 # Exercise 3: RunnableLambda for custom transformation
 # ---------------------------------------------------------------------------
+
 
 def exercise_lambda_transform() -> None:
     # TODO(human): Use RunnableLambda to insert custom Python logic into a chain.
@@ -198,7 +248,17 @@ def exercise_lambda_transform() -> None:
     # EXPECTED BEHAVIOR:
     #   The output should be the summary text with a "[Word count: N]" header
     #   prepended to it.
-    raise NotImplementedError("Build the lambda transform chain here")
+
+    def signature_hash(text: str):
+        P, B = int(1e9) + 7, 17771
+        hash = 0
+        for c in text:
+            hash = (hash * B + ord(c)) % P
+        return text + f"\n[Hash: {hex(hash)}]"
+
+    hasher = RunnableLambda(signature_hash)
+    chain = summarize_prompt | llm | parser | hasher
+    print(chain.invoke({"text": SAMPLE_TEXT}))
 
 
 if __name__ == "__main__":

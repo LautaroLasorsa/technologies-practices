@@ -11,19 +11,19 @@ import time
 from typing import Any
 from uuid import UUID
 
-from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.outputs import LLMResult
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama import ChatOllama
 
 # ---------------------------------------------------------------------------
 # Setup: model, prompt, and base chain
 # ---------------------------------------------------------------------------
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 llm = ChatOllama(
     model=MODEL_NAME,
@@ -33,12 +33,16 @@ llm = ChatOllama(
 
 parser = StrOutputParser()
 
-story_prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     "You are a creative storyteller. Write a short story (3-5 paragraphs) "
-     "based on the given theme. Use vivid descriptions."),
-    ("human", "{theme}"),
-])
+story_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a creative storyteller. Write a short story (3-5 paragraphs) "
+            "based on the given theme. Use vivid descriptions.",
+        ),
+        ("human", "{theme}"),
+    ]
+)
 
 # Base chain for streaming exercises.
 story_chain = story_prompt | llm | parser
@@ -47,6 +51,7 @@ story_chain = story_prompt | llm | parser
 # ---------------------------------------------------------------------------
 # Exercise 1: Streaming output
 # ---------------------------------------------------------------------------
+
 
 def exercise_streaming() -> None:
     # TODO(human): Implement streaming that prints tokens as they arrive.
@@ -85,12 +90,21 @@ def exercise_streaming() -> None:
     # EXPECTED BEHAVIOR:
     #   You should see the story appear token by token in the terminal,
     #   not all at once after the LLM finishes generating.
-    raise NotImplementedError("Implement streaming here")
+
+    for chunk in story_chain.stream({"theme": "A futuristic sci-fi space police"}):
+        print(chunk, end="", flush=True)
+    print()
+
+    for chunk in story_chain.stream({"theme": "A dog in space"}):
+        sys.stdout.write(chunk)
+        sys.stdout.flush()
+    sys.stdout.write("\n")
 
 
 # ---------------------------------------------------------------------------
 # Exercise 2: Custom callback handler
 # ---------------------------------------------------------------------------
+
 
 def exercise_callback_handler() -> None:
     # TODO(human): Create a custom BaseCallbackHandler that logs chain execution.
@@ -171,7 +185,67 @@ def exercise_callback_handler() -> None:
     #   You should see "[CALLBACK] LLM started" before the response,
     #   then the response text, then "[CALLBACK] LLM finished" with
     #   token count, elapsed time, and tokens/sec metrics.
-    raise NotImplementedError("Create callback handler here")
+
+    class LatencyCallbackHandler(BaseCallbackHandler):
+        def __init__(self):
+            self.events: list[tuple[str, float]] = []
+            self.start_time: float = 0
+
+        def on_llm_start(
+            self,
+            serialized: dict[str, Any],
+            prompts: list[str],
+            *,
+            run_id: UUID,
+            **kwargs: Any,
+        ):
+            self.start_time = time.time()
+
+        def on_llm_new_token(
+            self,
+            token: str,
+            *,
+            run_id: UUID,
+            **kwargs: Any,
+        ) -> None:
+            """Called for each new token during streaming."""
+            self.events.append((token, time.time() - self.start_time))
+
+        def on_llm_end(
+            self,
+            response: LLMResult,
+            *,
+            run_id: UUID,
+            **kwargs: Any,
+        ) -> None:
+            """Print a summary the list of events"""
+            ct: float = 0
+            sum_lag = 0
+            sum_lag_2 = 0
+            for _, t in self.events:
+                lag = t - ct
+                sum_lag += lag
+                sum_lag_2 += lag**2
+                ct = t
+            print("\nTotal: ", time.time() - self.start_time)
+            print("Mean lag: ", sum_lag / len(self.events))
+            print(
+                "Var lag: ",
+                (sum_lag_2 / len(self.events) - (sum_lag / len(self.events)) ** 2),
+            )
+
+    result = story_chain.invoke(
+        {"theme": "a lighthouse keeper's last night"},
+        config={"callbacks": [LatencyCallbackHandler()]},
+    )
+    print(result)
+
+    for chunk in story_chain.stream(
+        {"theme": "A futuristic sci-fi space police"},
+        config={"callbacks": [LatencyCallbackHandler()]},
+    ):
+        print(chunk, end="", flush=True)
+    print()
 
 
 if __name__ == "__main__":

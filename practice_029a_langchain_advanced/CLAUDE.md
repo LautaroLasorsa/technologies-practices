@@ -217,6 +217,24 @@ All commands run from `practice_029a_langchain_advanced/`.
 - [langchain-ollama PyPI](https://pypi.org/project/langchain-ollama/)
 - [Runnable Interface Reference](https://reference.langchain.com/v0.3/python/core/runnables/langchain_core.runnables.base.Runnable.html)
 
+## Notes
+
+### Windowed Memory: Mutate vs Copy Trade-off (From discussion)
+
+`RunnableWithMessageHistory` uses the **same object** returned by `get_session_history` to both read and write. This creates a design tension for windowed memory:
+
+- **Mutate in-place** (`memory.messages = memory.messages[-2*N:]`): Works correctly — new messages persist because `RunnableWithMessageHistory` writes to the same object. But old messages are permanently deleted.
+- **Return a copy** (`memory = memory.copy()`): Breaks — new messages are saved to the copy, which is immediately discarded. The real store never accumulates history.
+- **Custom subclass** (override `.messages` property to return a slice, while `.add_message()` appends to full list): Best of both worlds — full history preserved for auditing, LLM only sees the window. More complex to implement.
+
+### External DB Memory
+
+Swapping from in-memory to Redis/PostgreSQL only requires changing `get_session_history` to return a different `BaseChatMessageHistory` implementation (e.g., `RedisChatMessageHistory`, `PostgresChatMessageHistory`). The chain itself is unchanged — Dependency Inversion via the `BaseChatMessageHistory` abstraction. For windowed memory with a DB, push trimming into the query layer (`LIMIT N`) rather than loading all messages into Python.
+
+### Fallback Chains: Content vs Schema Validation
+
+`.with_structured_output()` only raises on **unparseable JSON or Pydantic validation failure** — it won't raise if the model confidently hallucinates structured data from irrelevant input. For content-level validation (e.g., "is this actually a recipe?"), add a `RunnableLambda` validation step or include a confidence/boolean field in the Pydantic schema.
+
 ## State
 
-`not-started`
+`completed`

@@ -7,10 +7,10 @@ This exercise teaches three critical production patterns:
   3. Building resilient chains with fallback strategies
 """
 
-from langchain_ollama import ChatOllama
+from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.tools import tool
+from langchain_ollama import ChatOllama
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 llm = ChatOllama(
     model=MODEL_NAME,
@@ -31,8 +31,10 @@ parser = StrOutputParser()
 
 # --- Pydantic model for structured output (Exercise 2) ---
 
+
 class Recipe(BaseModel):
     """A structured recipe extracted from unstructured cooking text."""
+
     title: str = Field(description="Name of the recipe")
     servings: int = Field(description="Number of servings")
     prep_time_minutes: int = Field(description="Preparation time in minutes")
@@ -61,6 +63,7 @@ whole thing took maybe 20 minutes from start to finish. Anyone can make this!
 # ---------------------------------------------------------------------------
 # Exercise 1: Create custom tools
 # ---------------------------------------------------------------------------
+
 
 def exercise_custom_tools() -> None:
     # TODO(human): Create 3 custom tools using the @tool decorator.
@@ -114,12 +117,43 @@ def exercise_custom_tools() -> None:
     # EXPECTED BEHAVIOR:
     #   You should see the name, description, and JSON schema for each tool,
     #   followed by the results of invoking each one directly.
-    raise NotImplementedError("Create custom tools here")
+
+    @tool
+    def logger(message: str, level: int) -> None:
+        """Produce a log with the given message and level"""
+        import logging
+
+        logging.log(level, message)
+
+    @tool
+    def adder(a: int, b: int) -> int:
+        """Add two values, a and b"""
+        return a + b
+
+    @tool
+    def word_histogram(text: str) -> dict[str, int]:
+        """Produce an histogram (dict) of the words in the text"""
+        hist: dict[str, int] = dict()
+        for word in text.split():
+            hist[word] = hist.get(word, 0) + 1
+        return hist
+
+    tools = [logger, adder, word_histogram]
+    for t in tools:
+        print(f"Name: {t.name}")
+        print(f"Description: {t.description}")
+        print(f"Schema: {t.args_schema.model_json_schema()}")
+        print()
+
+    logger.invoke({"message": "hi", "level": 1})
+    print(adder.invoke({"a": 1, "b": 10}))
+    print(word_histogram.invoke({"text": RECIPE_TEXT}))
 
 
 # ---------------------------------------------------------------------------
 # Exercise 2: Structured output with .with_structured_output()
 # ---------------------------------------------------------------------------
+
 
 def exercise_structured_output() -> None:
     # TODO(human): Extract a structured Recipe from unstructured cooking text.
@@ -162,12 +196,24 @@ def exercise_structured_output() -> None:
     #   A Recipe object with title="Garlic Butter Pasta" (or similar),
     #   servings=4, prep_time_minutes=20, a list of ingredients, ordered
     #   steps, and difficulty="Easy". All fields populated from the text.
-    raise NotImplementedError("Extract structured recipe here")
+    structured_llm = llm.with_structured_output(Recipe)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "Extract the recipe details from the text, return structured data matching the schema",
+            ),
+            ("human", "{text}"),
+        ]
+    )
+    chain = prompt | structured_llm
+    print(chain.invoke({"text": RECIPE_TEXT}))
 
 
 # ---------------------------------------------------------------------------
 # Exercise 3: Fallback chain
 # ---------------------------------------------------------------------------
+
 
 def exercise_fallback_chain() -> None:
     # TODO(human): Build a chain with automatic fallback on failure.
@@ -213,7 +259,38 @@ def exercise_fallback_chain() -> None:
     #   For bad input: primary may fail validation, fallback returns text.
     #   (Note: with a capable model like qwen2.5:7b, the primary might
     #   succeed even on edge cases — that's fine. The pattern is what matters.)
-    raise NotImplementedError("Build fallback chain here")
+
+    structured_llm = llm.with_structured_output(Recipe)
+    primary_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "Extract recipe details as structured data."),
+            ("human", "{text}"),
+        ]
+    )
+    primary_chain = primary_prompt | structured_llm
+
+    fallback_prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "Extract the recipe title, ingredients and steps from the text. Format as readable text.",
+            ),
+            ("human", "{text}"),
+        ]
+    )
+    fallback_chain = fallback_prompt | llm | parser
+
+    resilient_chain = primary_chain.with_fallbacks([fallback_chain])
+
+    print(resilient_chain.invoke({"text": RECIPE_TEXT}))
+
+    print(
+        resilient_chain.invoke(
+            {
+                "text": "BFS is an algorithm to travel along a graph, which calculates minimum non weighted distances"
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

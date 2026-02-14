@@ -4,11 +4,11 @@ Connects to Ollama, runs a simple prompt, and prints the result.
 This file is fully implemented — no TODO(human) blocks.
 """
 
-from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage
+from langchain_ollama import ChatOllama
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 
 def verify_ollama_connection() -> None:
@@ -23,7 +23,9 @@ def verify_ollama_connection() -> None:
         temperature=0,
     )
 
-    response = llm.invoke([HumanMessage(content="Say 'Hello, LangChain!' and nothing else.")])
+    response = llm.invoke(
+        [HumanMessage(content="Say 'Hello, LangChain!' and nothing else.")]
+    )
 
     print(f"Response type: {type(response).__name__}")
     print(f"Response content: {response.content}")
