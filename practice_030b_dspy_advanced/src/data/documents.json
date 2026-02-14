@@ -1,0 +1,102 @@
+[
+  {
+    "id": "sol_01",
+    "title": "The Sun",
+    "text": "The Sun is the star at the center of the Solar System. It is a nearly perfect ball of hot plasma with a surface temperature of about 5,778 Kelvin. The Sun accounts for approximately 99.86% of the total mass of the Solar System. Its diameter is about 1.39 million kilometers, roughly 109 times that of Earth. The Sun's energy is produced by nuclear fusion of hydrogen into helium in its core."
+  },
+  {
+    "id": "sol_02",
+    "title": "Mercury",
+    "text": "Mercury is the smallest planet in the Solar System and the closest to the Sun. It has no atmosphere to retain heat, so surface temperatures range from -180 degrees Celsius at night to 430 degrees Celsius during the day. Mercury's orbital period is about 88 Earth days, making it the fastest planet to orbit the Sun. Despite being closest to the Sun, Mercury is not the hottest planet — Venus holds that distinction due to its greenhouse effect."
+  },
+  {
+    "id": "sol_03",
+    "title": "Venus",
+    "text": "Venus is the second planet from the Sun and the hottest planet in the Solar System, with surface temperatures reaching 475 degrees Celsius. This extreme heat is caused by a runaway greenhouse effect from its thick carbon dioxide atmosphere, which traps solar radiation. Venus rotates in the opposite direction to most planets (retrograde rotation), and a day on Venus is longer than its year — it takes 243 Earth days to rotate once but only 225 Earth days to orbit the Sun."
+  },
+  {
+    "id": "sol_04",
+    "title": "Earth",
+    "text": "Earth is the third planet from the Sun and the only known planet to support life. It has a diameter of approximately 12,742 kilometers and orbits the Sun at an average distance of about 150 million kilometers (1 astronomical unit). Earth's atmosphere is composed of 78% nitrogen and 21% oxygen, with the remaining 1% being trace gases. The planet has one natural satellite, the Moon, which has a diameter of 3,474 kilometers."
+  },
+  {
+    "id": "sol_05",
+    "title": "The Moon",
+    "text": "The Moon is Earth's only natural satellite and the fifth-largest satellite in the Solar System. It orbits Earth at an average distance of about 384,400 kilometers. The Moon's gravitational influence produces Earth's ocean tides and slightly lengthens Earth's day. The Moon has no atmosphere, so its surface is exposed to cosmic radiation and micrometeorites. Humans first landed on the Moon on July 20, 1969, during NASA's Apollo 11 mission."
+  },
+  {
+    "id": "sol_06",
+    "title": "Mars",
+    "text": "Mars is the fourth planet from the Sun and is known as the Red Planet due to iron oxide (rust) on its surface. Mars has the largest volcano in the Solar System, Olympus Mons, which stands about 21.9 kilometers high — nearly three times the height of Mount Everest. Mars has two small moons, Phobos and Deimos. The planet's thin atmosphere is 95% carbon dioxide, and surface temperatures average about -60 degrees Celsius."
+  },
+  {
+    "id": "sol_07",
+    "title": "The Asteroid Belt",
+    "text": "The asteroid belt is a region of the Solar System located between the orbits of Mars and Jupiter, roughly 2.2 to 3.2 astronomical units from the Sun. It contains millions of rocky bodies, but their total mass is less than 4% of the Moon's mass. The largest object in the asteroid belt is Ceres, a dwarf planet with a diameter of about 940 kilometers. Despite popular depictions, the asteroid belt is mostly empty space — the average distance between asteroids is several million kilometers."
+  },
+  {
+    "id": "sol_08",
+    "title": "Jupiter",
+    "text": "Jupiter is the fifth planet from the Sun and the largest planet in the Solar System, with a mass more than twice that of all other planets combined. It is a gas giant composed primarily of hydrogen and helium. Jupiter's Great Red Spot is a persistent anticyclonic storm larger than Earth that has been observed for over 350 years. Jupiter has at least 95 known moons, including the four large Galilean moons: Io, Europa, Ganymede, and Callisto."
+  },
+  {
+    "id": "sol_09",
+    "title": "Europa",
+    "text": "Europa is one of Jupiter's four Galilean moons and is considered one of the most promising candidates for extraterrestrial life in the Solar System. Beneath its icy surface lies a global ocean of liquid water estimated to contain twice the volume of all Earth's oceans combined. The moon's surface is covered in a network of crisscrossing cracks and ridges formed by tidal flexing from Jupiter's gravity. NASA's Europa Clipper mission, launched in 2024, aims to study the moon's habitability."
+  },
+  {
+    "id": "sol_10",
+    "title": "Saturn",
+    "text": "Saturn is the sixth planet from the Sun and is famous for its extensive ring system, which is made primarily of ice particles with smaller amounts of rocky debris and dust. Saturn is a gas giant with a density less than water — hypothetically, it would float if placed in a large enough body of water. The planet has at least 146 known moons, with Titan being the largest. Saturn's rings extend up to 282,000 kilometers from the planet but are remarkably thin, averaging only about 10 meters in thickness."
+  },
+  {
+    "id": "sol_11",
+    "title": "Titan",
+    "text": "Titan is Saturn's largest moon and the second-largest moon in the Solar System after Jupiter's Ganymede. It is the only moon in the Solar System with a dense atmosphere, composed primarily of nitrogen with traces of methane. Titan has lakes and seas of liquid methane and ethane on its surface, making it the only body besides Earth known to have stable surface liquids. The Cassini-Huygens mission landed a probe on Titan's surface in January 2005."
+  },
+  {
+    "id": "sol_12",
+    "title": "Uranus",
+    "text": "Uranus is the seventh planet from the Sun and has a unique feature: it rotates on its side, with an axial tilt of about 98 degrees. This extreme tilt means each pole gets about 42 years of continuous sunlight followed by 42 years of darkness. Uranus is an ice giant composed primarily of water, methane, and ammonia ices surrounding a small rocky core. It has 27 known moons, all named after characters from works by Shakespeare and Alexander Pope."
+  },
+  {
+    "id": "sol_13",
+    "title": "Neptune",
+    "text": "Neptune is the eighth and farthest planet from the Sun in the Solar System. It has the strongest winds of any planet, reaching speeds of up to 2,100 kilometers per hour. Neptune was the first planet discovered through mathematical prediction rather than direct observation — its existence was predicted by Urbain Le Verrier and John Couch Adams in 1846 based on perturbations in the orbit of Uranus. Neptune has 16 known moons, the largest being Triton."
+  },
+  {
+    "id": "sol_14",
+    "title": "Triton",
+    "text": "Triton is Neptune's largest moon and the only large moon in the Solar System with a retrograde orbit, meaning it orbits in the opposite direction of Neptune's rotation. This suggests Triton was likely captured from the Kuiper Belt rather than forming alongside Neptune. Triton has active geysers that erupt nitrogen gas, making it one of the few geologically active bodies in the outer Solar System. Its surface temperature is about -235 degrees Celsius, one of the coldest in the Solar System."
+  },
+  {
+    "id": "sol_15",
+    "title": "Pluto and the Kuiper Belt",
+    "text": "Pluto was reclassified as a dwarf planet in 2006 by the International Astronomical Union (IAU). It resides in the Kuiper Belt, a region of icy bodies beyond Neptune's orbit extending from about 30 to 50 astronomical units from the Sun. Pluto has five known moons, with Charon being the largest at roughly half Pluto's size. NASA's New Horizons spacecraft performed the first flyby of Pluto in July 2015, revealing a geologically active world with mountains of water ice and a heart-shaped nitrogen ice plain named Tombaugh Regio."
+  },
+  {
+    "id": "sol_16",
+    "title": "Solar Wind and Heliosphere",
+    "text": "The solar wind is a stream of charged particles (mostly protons and electrons) released from the Sun's upper atmosphere at speeds of 300 to 800 kilometers per second. The heliosphere is the vast bubble-like region of space dominated by the solar wind, extending well beyond the orbit of Pluto. The heliopause, where the solar wind meets interstellar space, is located at roughly 120 astronomical units from the Sun. Voyager 1 crossed the heliopause in August 2012, becoming the first human-made object to enter interstellar space."
+  },
+  {
+    "id": "sol_17",
+    "title": "Comets",
+    "text": "Comets are icy bodies that originate from the outer Solar System, primarily the Kuiper Belt and the more distant Oort Cloud. When a comet approaches the Sun, solar radiation causes its ices to sublimate, forming a visible coma (atmosphere) and often two tails: a dust tail and an ion tail that always points away from the Sun. Halley's Comet is the most famous periodic comet, returning to the inner Solar System approximately every 76 years, with its next predicted perihelion in 2061."
+  },
+  {
+    "id": "sol_18",
+    "title": "Formation of the Solar System",
+    "text": "The Solar System formed approximately 4.6 billion years ago from the gravitational collapse of a giant molecular cloud. The vast majority of the collapsing mass collected in the center, forming the Sun, while the remaining material flattened into a protoplanetary disk from which the planets, moons, asteroids, and comets formed. The inner rocky planets (Mercury, Venus, Earth, Mars) formed from materials that could withstand high temperatures, while the outer gas and ice giants formed where volatile compounds like water and methane could remain solid."
+  },
+  {
+    "id": "sol_19",
+    "title": "Galilean Moons Discovery",
+    "text": "The four largest moons of Jupiter — Io, Europa, Ganymede, and Callisto — were discovered by Galileo Galilei in January 1610 using one of the first astronomical telescopes. Their discovery was revolutionary because it provided direct evidence that not all celestial bodies orbit Earth, supporting the Copernican heliocentric model. Ganymede is the largest moon in the Solar System with a diameter of 5,268 kilometers, making it larger than Mercury. Io is the most volcanically active body in the Solar System, with over 400 active volcanoes."
+  },
+  {
+    "id": "sol_20",
+    "title": "Space Exploration Milestones",
+    "text": "Key milestones in Solar System exploration include: Sputnik 1, the first artificial satellite, launched by the Soviet Union in 1957; Yuri Gagarin becoming the first human in space in 1961; Apollo 11 achieving the first crewed Moon landing in 1969; Viking 1 performing the first successful Mars landing in 1976; Voyager 2 completing the Grand Tour of all four outer planets by 1989; the Cassini-Huygens mission orbiting Saturn from 2004 to 2017; and New Horizons flying by Pluto in 2015. The James Webb Space Telescope, launched in 2021, has provided unprecedented infrared observations of the Solar System and beyond."
+  }
+]

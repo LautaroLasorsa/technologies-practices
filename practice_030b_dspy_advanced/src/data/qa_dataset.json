@@ -1,0 +1,122 @@
+[
+  {
+    "question": "What is the surface temperature of the Sun?",
+    "answer": "The Sun has a surface temperature of about 5,778 Kelvin."
+  },
+  {
+    "question": "Which planet is the smallest in the Solar System?",
+    "answer": "Mercury is the smallest planet in the Solar System."
+  },
+  {
+    "question": "Why is Venus hotter than Mercury despite being farther from the Sun?",
+    "answer": "Venus is hotter because of a runaway greenhouse effect caused by its thick carbon dioxide atmosphere, which traps solar radiation."
+  },
+  {
+    "question": "What percentage of the Solar System's total mass does the Sun account for?",
+    "answer": "The Sun accounts for approximately 99.86% of the total mass of the Solar System."
+  },
+  {
+    "question": "How long does it take Mercury to orbit the Sun?",
+    "answer": "Mercury's orbital period is about 88 Earth days."
+  },
+  {
+    "question": "What is unique about Venus's rotation?",
+    "answer": "Venus rotates in the opposite direction to most planets (retrograde rotation), and a day on Venus is longer than its year."
+  },
+  {
+    "question": "What is Earth's atmosphere composed of?",
+    "answer": "Earth's atmosphere is composed of 78% nitrogen and 21% oxygen, with the remaining 1% being trace gases."
+  },
+  {
+    "question": "When did humans first land on the Moon?",
+    "answer": "Humans first landed on the Moon on July 20, 1969, during NASA's Apollo 11 mission."
+  },
+  {
+    "question": "What is the largest volcano in the Solar System?",
+    "answer": "Olympus Mons on Mars is the largest volcano in the Solar System, standing about 21.9 kilometers high."
+  },
+  {
+    "question": "What is the largest object in the asteroid belt?",
+    "answer": "Ceres, a dwarf planet with a diameter of about 940 kilometers, is the largest object in the asteroid belt."
+  },
+  {
+    "question": "How many known moons does Jupiter have?",
+    "answer": "Jupiter has at least 95 known moons."
+  },
+  {
+    "question": "Why is Europa considered a candidate for extraterrestrial life?",
+    "answer": "Europa has a global ocean of liquid water beneath its icy surface, estimated to contain twice the volume of all Earth's oceans combined."
+  },
+  {
+    "question": "What makes Saturn's density unusual among planets?",
+    "answer": "Saturn has a density less than water, meaning it would hypothetically float if placed in a large enough body of water."
+  },
+  {
+    "question": "Which moon is the only one in the Solar System with a dense atmosphere?",
+    "answer": "Titan, Saturn's largest moon, is the only moon in the Solar System with a dense atmosphere."
+  },
+  {
+    "question": "What is special about Uranus's axial tilt?",
+    "answer": "Uranus rotates on its side with an axial tilt of about 98 degrees, causing each pole to get about 42 years of continuous sunlight followed by 42 years of darkness."
+  },
+  {
+    "question": "How was Neptune discovered?",
+    "answer": "Neptune was discovered through mathematical prediction by Urbain Le Verrier and John Couch Adams in 1846, based on perturbations in the orbit of Uranus."
+  },
+  {
+    "question": "Why do scientists believe Triton was captured from the Kuiper Belt?",
+    "answer": "Triton has a retrograde orbit, orbiting in the opposite direction of Neptune's rotation, which suggests it was captured rather than formed alongside Neptune."
+  },
+  {
+    "question": "When was Pluto reclassified as a dwarf planet?",
+    "answer": "Pluto was reclassified as a dwarf planet in 2006 by the International Astronomical Union."
+  },
+  {
+    "question": "What was the first human-made object to enter interstellar space?",
+    "answer": "Voyager 1 crossed the heliopause in August 2012, becoming the first human-made object to enter interstellar space."
+  },
+  {
+    "question": "How often does Halley's Comet return to the inner Solar System?",
+    "answer": "Halley's Comet returns approximately every 76 years, with its next predicted perihelion in 2061."
+  },
+  {
+    "question": "How old is the Solar System?",
+    "answer": "The Solar System formed approximately 4.6 billion years ago from the gravitational collapse of a giant molecular cloud."
+  },
+  {
+    "question": "Who discovered Jupiter's four largest moons?",
+    "answer": "Galileo Galilei discovered the four largest moons of Jupiter in January 1610 using one of the first astronomical telescopes."
+  },
+  {
+    "question": "What is the largest moon in the Solar System?",
+    "answer": "Ganymede, one of Jupiter's Galilean moons, is the largest moon in the Solar System with a diameter of 5,268 kilometers."
+  },
+  {
+    "question": "What are the names of Mars's two moons?",
+    "answer": "Mars has two small moons named Phobos and Deimos."
+  },
+  {
+    "question": "How thick are Saturn's rings on average?",
+    "answer": "Saturn's rings average only about 10 meters in thickness, despite extending up to 282,000 kilometers from the planet."
+  },
+  {
+    "question": "What is the strongest wind speed recorded on any planet?",
+    "answer": "Neptune has the strongest winds of any planet, reaching speeds of up to 2,100 kilometers per hour."
+  },
+  {
+    "question": "What surface liquids exist on Titan?",
+    "answer": "Titan has lakes and seas of liquid methane and ethane on its surface, making it the only body besides Earth known to have stable surface liquids."
+  },
+  {
+    "question": "What mission landed a probe on Titan's surface?",
+    "answer": "The Cassini-Huygens mission landed a probe on Titan's surface in January 2005."
+  },
+  {
+    "question": "How far is the Moon from Earth on average?",
+    "answer": "The Moon orbits Earth at an average distance of about 384,400 kilometers."
+  },
+  {
+    "question": "What is the most volcanically active body in the Solar System?",
+    "answer": "Io, one of Jupiter's Galilean moons, is the most volcanically active body in the Solar System, with over 400 active volcanoes."
+  }
+]
