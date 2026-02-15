@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-6%20%2F%2081%20practices-blue?style=flat-square" alt="Progress: 6/81">
+  <img src="https://img.shields.io/badge/Progress-6%20%2F%2088%20practices-blue?style=flat-square" alt="Progress: 6/88">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -125,6 +125,12 @@
   <td>—</td>
 </tr>
 <tr>
+  <td>006c</td>
+  <td>Service Mesh: Sidecar & Envoy</td>
+  <td><img src="https://skillicons.dev/icons?i=docker,kubernetes" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
   <td>007a</td>
   <td>OpenTelemetry: Instrumentation</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
@@ -212,6 +218,42 @@
   <td>015</td>
   <td>CQRS & Event Sourcing</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>049a</td>
+  <td>Raft Consensus: Leader Election & Log Replication</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>049b</td>
+  <td>Raft Consensus: Safety & Failure Recovery</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>050</td>
+  <td>CRDTs: Conflict-Free Replicated Data Types</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>051</td>
+  <td>Distributed Coordination: etcd</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>052</td>
+  <td>Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker,redis" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>053</td>
+  <td>Consistent Hashing & DHTs</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
