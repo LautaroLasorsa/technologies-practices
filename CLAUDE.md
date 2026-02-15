@@ -30,7 +30,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 
 | # | Name | Stack | State |
 |---|------|-------|-------|
-| 001 | LMDB | Python, Rust | `completed` |
+| 001 | LMDB | Python, Rust | `not-started` |
 | 002 | Cloud Pub/Sub | Python, Docker (emulator) | `not-started` |
 | 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | `not-started` |
 | 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | `not-started` |
@@ -47,8 +47,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 010b | Terraform: Multi-Resource Orchestration | HCL, Docker provider | `not-started` |
 | 011a | Spark: Core Transformations | Python, Docker | `not-started` |
 | 011b | Spark: Real Data Pipeline | Python, Docker | `not-started` |
-| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | `completed` |
-| 012b | Boost Deep-Dive | C++17, Boost | `completed` |
+| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | `not-started` |
+| 012b | Boost Deep-Dive | C++17, Boost | `not-started` |
 | 013 | Financial C++: QuickFIX & QuantLib | C++17, QuickFIX, QuantLib | `not-started` |
 | 014 | SAGA Pattern | Python, Docker Compose, Redpanda | `not-started` |
 | 015 | CQRS & Event Sourcing | Python, Docker Compose, Redpanda | `not-started` |

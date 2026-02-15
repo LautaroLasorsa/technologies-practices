@@ -14,10 +14,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-6%20%2F%2081%20practices-blue?style=flat-square" alt="Progress: 6/81">
+  <img src="https://img.shields.io/badge/Progress-0%20%2F%2081%20practices-blue?style=flat-square" alt="Progress: 0/81">
 </p>
 
-> **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
+> **This is the `template` branch** — all exercises are in `not-started` state, ready for you to implement. Check out [`master`](../../tree/master) to see progress and completed practices.
 
 ---
 
@@ -29,16 +29,16 @@
 </thead>
 <tbody>
 <tr>
-  <td bgcolor="#d4edda"><b>001</b></td>
-  <td bgcolor="#d4edda"><b>LMDB</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,rust" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td>001</td>
+  <td>LMDB</td>
+  <td><img src="https://skillicons.dev/icons?i=py,rust" height="20"></td>
+  <td>—</td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>002</b></td>
-  <td bgcolor="#d4edda"><b>Cloud Pub/Sub</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,gcp,docker" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td>002</td>
+  <td>Cloud Pub/Sub</td>
+  <td><img src="https://skillicons.dev/icons?i=py,gcp,docker" height="20"></td>
+  <td>—</td>
 </tr>
 <tr>
   <td>003a</td>
@@ -227,16 +227,16 @@
 </thead>
 <tbody>
 <tr>
-  <td bgcolor="#d4edda"><b>012a</b></td>
-  <td bgcolor="#d4edda"><b>C++17 Features & abseil-cpp</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td>012a</td>
+  <td>C++17 Features & abseil-cpp</td>
+  <td><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
+  <td>—</td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>012b</b></td>
-  <td bgcolor="#d4edda"><b>Boost Deep-Dive</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td>012b</td>
+  <td>Boost Deep-Dive</td>
+  <td><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
+  <td>—</td>
 </tr>
 <tr>
   <td>013</td>
@@ -341,16 +341,16 @@
   <td>—</td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>029a</b></td>
-  <td bgcolor="#d4edda"><b>LangChain Advanced: LCEL, Tools & Structured Output</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td>029a</td>
+  <td>LangChain Advanced: LCEL, Tools & Structured Output</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
+  <td>—</td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>029b</b></td>
-  <td bgcolor="#d4edda"><b>LangGraph: Stateful Agent Graphs</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td>029b</td>
+  <td>LangGraph: Stateful Agent Graphs</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
+  <td>—</td>
 </tr>
 <tr>
   <td>030a</td>
