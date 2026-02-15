@@ -24,14 +24,13 @@ Pattern:
 import operator
 from typing import Annotated
 
-from typing_extensions import TypedDict
-
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
+from typing_extensions import TypedDict
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 
 # ---------------------------------------------------------------------------
@@ -45,6 +44,7 @@ llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0.7)
 # State schemas (provided — study the reducer on 'results')
 # ---------------------------------------------------------------------------
 
+
 class OverallState(TypedDict):
     """Main graph state for the map-reduce workflow.
 
@@ -56,6 +56,7 @@ class OverallState(TypedDict):
       automatically collected.
     - summary: final aggregated answer
     """
+
     question: str
     subtasks: list[str]
     results: Annotated[list[str], operator.add]
@@ -73,6 +74,7 @@ class WorkerState(TypedDict):
     Workers only see what they need (their specific task), not the entire
     graph state. This is good design — each worker is isolated.
     """
+
     task: str
 
 
@@ -171,8 +173,68 @@ class WorkerState(TypedDict):
 #   -> 3 workers run in parallel, each researching one subtask
 #   -> aggregate combines all 3 research results into one comprehensive answer
 
+
+def split_into_subtasks(state: OverallState) -> dict:
+    response = llm.invoke(
+        [
+            "Break this research question into exactly 3 independent"
+            "subtasks that can be researched separately. Return ONLY 3 lines,"
+            "one with each of the subtasks. Each subtask must be a single line"
+            f"\n\n Question:{state['question']}"
+        ]
+    )
+
+    return {
+        "subtasks": list(filter(lambda s: len(s) > 0, response.content.split("\n")))
+    }
+
+
+def route_to_workers(state: OverallState) -> list[Send]:
+    return [Send("worker", {"task": subtask}) for subtask in state["subtasks"]]
+
+
+def worker(state: WorkerState) -> dict:
+    return {
+        "results": [
+            llm.invoke(
+                [
+                    "Research this topic and provide a concise but informative summary (3-5 sentences):\n"
+                    f"Topic: {state['task']}"
+                ]
+            ).content
+        ]
+    }
+
+
+def aggregate(state: OverallState) -> dict:
+    numbered_findings = "\n".join(
+        [f"{i + 1}: {finding}\n" for (i, finding) in enumerate(state["results"])]
+    )
+
+    return {
+        "summary": llm.invoke(
+            "Based on the following research findings, provide a"
+            "comprehensive answer to the original question.\n"
+            f"Original question: {state['question']}\n"
+            "Research findings:\n"
+            f"{numbered_findings}\n"
+            "Synthesize these into a coherent, comprehensive answer."
+        ).content
+    }
+
+
 def build_map_reduce_graph():
-    raise NotImplementedError("TODO(human): Implement the map-reduce graph with Send API")
+    builder = StateGraph(OverallState)
+    builder.add_node("split", split_into_subtasks)
+    builder.add_node("worker", worker)
+    builder.add_node("aggregate", aggregate)
+
+    builder.add_edge(START, "split")
+    builder.add_conditional_edges("split", route_to_workers, ["worker"])
+    builder.add_edge("worker", "aggregate")
+    builder.add_edge("aggregate", END)
+
+    return builder.compile()
 
 
 # ---------------------------------------------------------------------------

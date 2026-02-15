@@ -217,4 +217,4 @@ All commands run from `practice_029b_langgraph/`.
 
 ## State
 
-`not-started`
+`completed`

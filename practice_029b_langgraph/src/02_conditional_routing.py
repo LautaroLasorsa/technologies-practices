@@ -11,13 +11,12 @@ refinement until a quality threshold is met.
 
 from typing import Literal
 
-from typing_extensions import TypedDict
-
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
+from typing_extensions import TypedDict
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 
 # ---------------------------------------------------------------------------
@@ -31,6 +30,7 @@ llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0.7)
 # EXERCISE 1: Quality-Check Loop
 # ===================================================================
 
+
 class QualityState(TypedDict):
     """State for the quality-check loop.
 
@@ -39,6 +39,7 @@ class QualityState(TypedDict):
     - quality_score: numeric score from the evaluator (1-10)
     - iteration: current loop count (for the max-iterations guard)
     """
+
     topic: str
     content: str
     quality_score: int
@@ -102,13 +103,60 @@ QUALITY_THRESHOLD = 7
 #   The graph should iterate 1-3 times. Each iteration prints the
 #   current content and score. It stops when score >= 7 or after 3 tries.
 
+
 def build_quality_loop() -> StateGraph:
-    raise NotImplementedError("TODO(human): Implement the quality-check loop graph")
+
+    def generate(state: QualityState) -> dict:
+
+        if state["iteration"] == 0:
+            response = llm.invoke([f"Write a short paragraph about {state['topic']}"])
+        else:
+            response = llm.invoke(
+                [
+                    f"This text got a {state['quality_score']}/10 quality score.Rewrite it to be better.Focus on clarity and depth:\n\n{state['content']}"
+                ]
+            )
+
+        return {"content": response.content, "iteration": state["iteration"] + 1}
+
+    def evaluate(state: QualityState) -> dict:
+        try:
+            return {
+                "quality_score": int(
+                    llm.invoke(
+                        [
+                            f"Grade this text with a score between 1 (worst) and 10 (best) based on it's clarity and depth:\n\n {state['content']}. Return a single integer number, without any extra text"
+                        ]
+                    ).content
+                )
+            }
+        except Exception:
+            return {"quality_score": 5}
+
+    def should_continue(
+        state: QualityState,
+    ) -> Literal["generate", "__end__"]:
+        if (
+            state["quality_score"] < QUALITY_THRESHOLD
+            and state["iteration"] < MAX_ITERATIONS
+        ):
+            return "generate"
+        return END
+
+    builder = StateGraph(QualityState)
+    builder.add_node("generate", generate)
+    builder.add_node("evaluate", evaluate)
+    builder.add_edge(START, "generate")
+    builder.add_edge("generate", "evaluate")
+    builder.add_conditional_edges("evaluate", should_continue)
+
+    return builder.compile()
 
 
 # ===================================================================
 # EXERCISE 2: Query Router
 # ===================================================================
+
 
 class RouterState(TypedDict):
     """State for the query router.
@@ -117,6 +165,7 @@ class RouterState(TypedDict):
     - category: detected category (math, creative, general)
     - response: the specialist's answer
     """
+
     query: str
     category: str
     response: str
@@ -125,6 +174,7 @@ class RouterState(TypedDict):
 # ---------------------------------------------------------------------------
 # Specialist nodes (provided — these handle each category)
 # ---------------------------------------------------------------------------
+
 
 def math_node(state: RouterState) -> dict:
     """Handle math/logic queries with a focused system prompt."""
@@ -202,8 +252,39 @@ def general_node(state: RouterState) -> dict:
 #   "Write a haiku about rain" -> routes to creative_node
 #   "What is the capital of France?" -> routes to general_node
 
+
 def build_query_router() -> StateGraph:
-    raise NotImplementedError("TODO(human): Implement the query router graph")
+    def classify(state: RouterState) -> dict:
+        return {
+            "category": llm.invoke(
+                [
+                    f"Determine the category of the following question: \n{state['query']}\n. The options are: 'math', 'creative', 'general'. Output only one word, the choosed category"
+                ]
+            ).content
+        }
+
+    def route_by_category(
+        state: RouterState,
+    ) -> Literal["math_node", "creative_node", "general_node"]:
+        match state["category"].strip().lower():
+            case "math":
+                return "math_node"
+            case "creative":
+                return "creative_node"
+            case _:
+                return "general_node"
+
+    builder = StateGraph(RouterState)
+    builder.add_node("classify", classify)
+    builder.add_node("math_node", math_node)
+    builder.add_node("creative_node", creative_node)
+    builder.add_node("general_node", general_node)
+    builder.add_edge(START, "classify")
+    builder.add_conditional_edges("classify", route_by_category)
+    builder.add_edge("math_node", END)
+    builder.add_edge("creative_node", END)
+    builder.add_edge("general_node", END)
+    return builder.compile()
 
 
 # ---------------------------------------------------------------------------
@@ -217,12 +298,14 @@ if __name__ == "__main__":
     print("=" * 60)
 
     quality_graph = build_quality_loop()
-    result = quality_graph.invoke({
-        "topic": "why iterative refinement improves AI output quality",
-        "content": "",
-        "quality_score": 0,
-        "iteration": 0,
-    })
+    result = quality_graph.invoke(
+        {
+            "topic": "why iterative refinement improves AI output quality",
+            "content": "",
+            "quality_score": 0,
+            "iteration": 0,
+        }
+    )
 
     print(f"\nFinal content (after {result['iteration']} iterations):")
     print(f"Score: {result['quality_score']}/10")
@@ -243,11 +326,13 @@ if __name__ == "__main__":
 
     for query in test_queries:
         print(f"\nQuery: {query}")
-        result = router_graph.invoke({
-            "query": query,
-            "category": "",
-            "response": "",
-        })
+        result = router_graph.invoke(
+            {
+                "query": query,
+                "category": "",
+                "response": "",
+            }
+        )
         print(f"Category: {result['category']}")
         print(f"Response: {result['response'][:200]}...")
 

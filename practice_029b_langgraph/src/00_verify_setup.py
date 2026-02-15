@@ -4,18 +4,18 @@ Confirms that Ollama is reachable and LangGraph imports work correctly.
 Builds and runs a trivial 1-node graph as a smoke test.
 """
 
-from typing_extensions import TypedDict
-
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
+from typing_extensions import TypedDict
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 
 # ---------------------------------------------------------------------------
 # 1. Test Ollama connectivity
 # ---------------------------------------------------------------------------
+
 
 def test_ollama_connection() -> None:
     """Send a single prompt to ChatOllama and print the response."""
@@ -29,6 +29,7 @@ def test_ollama_connection() -> None:
 # ---------------------------------------------------------------------------
 # 2. Trivial 1-node graph smoke test
 # ---------------------------------------------------------------------------
+
 
 class TrivialState(TypedDict):
     message: str

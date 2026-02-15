@@ -9,13 +9,12 @@ This exercise teaches the fundamental LangGraph cycle:
     4. Compile and invoke
 """
 
-from typing_extensions import TypedDict
-
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
+from typing_extensions import TypedDict
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 
 # ---------------------------------------------------------------------------
@@ -29,6 +28,7 @@ llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0.7)
 # State schema (provided — study how it defines the shared data)
 # ---------------------------------------------------------------------------
 
+
 class ContentState(TypedDict):
     """Shared state for the generate-refine pipeline.
 
@@ -36,6 +36,7 @@ class ContentState(TypedDict):
     - draft: the initial generated text (written by 'generate' node)
     - refined: the improved text (written by 'refine' node)
     """
+
     topic: str
     draft: str
     refined: str
@@ -82,8 +83,39 @@ class ContentState(TypedDict):
 #   llm.invoke("your prompt") returns an AIMessage.
 #   Access the text with response.content (it's a string).
 
+
 def build_graph() -> StateGraph:
-    raise NotImplementedError("TODO(human): Implement the 2-node graph")
+    def generate(state: ContentState) -> dict:
+        return {
+            "draft": llm.invoke(
+                [
+                    (
+                        "human",
+                        f"Write a short paragraph (3-4 sentences) about:{state['topic']}",
+                    )
+                ]
+            ).content
+        }
+
+    def refine(state: ContentState) -> dict:
+        return {
+            "refined": llm.invoke(
+                [
+                    (
+                        "human",
+                        f"Improve the following text. Make it more engaging and concise:\n\n{state['draft']}",
+                    )
+                ]
+            ).content
+        }
+
+    builder = StateGraph(ContentState)
+    builder.add_node("generate", generate)
+    builder.add_node("refine", refine)
+    builder.add_edge(START, "generate")
+    builder.add_edge("generate", "refine")
+    builder.add_edge("refine", END)
+    return builder.compile()
 
 
 # ---------------------------------------------------------------------------

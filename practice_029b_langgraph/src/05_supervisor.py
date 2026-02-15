@@ -16,13 +16,12 @@ research assistants, coding agents with specialized tools, etc.).
 
 from typing import Literal
 
-from typing_extensions import TypedDict
-
 from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
+from typing_extensions import TypedDict
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +58,7 @@ WRITER_PROMPT = (
 # State schema
 # ---------------------------------------------------------------------------
 
+
 class SupervisorState(TypedDict):
     """State for the supervisor multi-agent graph.
 
@@ -67,6 +67,7 @@ class SupervisorState(TypedDict):
     - agent_output: the specialist's response
     - final_answer: the supervisor's synthesized final answer
     """
+
     query: str
     selected_agent: str
     agent_output: str
@@ -169,8 +170,79 @@ class SupervisorState(TypedDict):
 #   "Write a thank-you email" -> supervisor selects writer
 #   Each specialist responds, then synthesize polishes the final answer.
 
+
+def supervisor(state: SupervisorState) -> dict:
+    return {
+        "selected_agent": llm.invoke(
+            "You are a supervisor coordinating a team of specialists.\n"
+            "Given the user's query, decide which specialist to assign:\n"
+            "- researcher: for factual questions, explanations, 'how does X work\n"
+            "- calculator: for math problems, calculations, logic puzzles\n"
+            "- writer: for creative writing, drafting emails, storytelling\n\n"
+            "Reply with ONLY one word: researcher, calculator, or writer.\n\n"
+            f"Query: {state['query']}"
+        )
+        .content.strip()
+        .lower()
+    }
+
+
+def get_worker_by_prompt(prompt: str):
+    def worker(state: SupervisorState) -> dict:
+        return {
+            "agent_output": llm.invoke(prompt + f"Query : {state['query']}").content
+        }
+
+    return worker
+
+
+def synthesize(state: SupervisorState) -> dict:
+    return {
+        "final_answer": llm.invoke(
+            [
+                f"""You are a supervisor reviewing a specialist's work.
+                      The user asked: {state["query"]}
+                      The {state["selected_agent"]} specialist responded:
+                      {state["agent_output"]}
+
+                      Provide a polished final answer. If the specialist's response
+                      is good, present it cleanly. If it needs improvement, enhance it."""
+            ]
+        ).content
+    }
+
+
+def router_fn(
+    state: SupervisorState,
+) -> Literal["researcher_agent", "calculator_agent", "writer_agent"]:
+    match state["selected_agent"]:
+        case "researcher":
+            return "researcher_agent"
+        case "calculator":
+            return "calculator_agent"
+        case "writer":
+            return "writer_agent"
+        case _:
+            return "researcher_agent"
+
+
 def build_supervisor_graph():
-    raise NotImplementedError("TODO(human): Implement the supervisor graph")
+    builder = StateGraph(SupervisorState)
+
+    builder.add_node("supervisor", supervisor)
+    builder.add_node("researcher_agent", get_worker_by_prompt(RESEARCHER_PROMPT))
+    builder.add_node("calculator_agent", get_worker_by_prompt(CALCULATOR_PROMPT))
+    builder.add_node("writer_agent", get_worker_by_prompt(WRITER_PROMPT))
+    builder.add_node("synthesize", synthesize)
+
+    builder.add_edge(START, "supervisor")
+    builder.add_conditional_edges("supervisor", router_fn)
+    builder.add_edge("researcher_agent", "synthesize")
+    builder.add_edge("calculator_agent", "synthesize")
+    builder.add_edge("writer_agent", "synthesize")
+    builder.add_edge("synthesize", END)
+
+    return builder.compile()
 
 
 # ===================================================================
@@ -260,14 +332,82 @@ def build_supervisor_graph():
 #   runs through 3 internal steps (plan -> execute -> summarize) instead
 #   of a single LLM call. The output should be more structured and thorough.
 
+
+class ResearcherSubState(TypedDict):
+    query: str
+    plan: str
+    raw_research: str
+    summary: str
+
+
 def build_researcher_subgraph():
-    """Build the researcher agent as a self-contained subgraph."""
-    raise NotImplementedError("TODO(human): Implement the researcher subgraph")
+    def plan_research(state: ResearcherSubState) -> dict:
+        return {
+            "plan": llm.invoke(
+                [
+                    f"Create a brief research plan (at most 3 bullet points) for : {state['query']}"
+                ]
+            ).content
+        }
+
+    def execute_research(state: ResearcherSubState) -> dict:
+        return {
+            "raw_research": llm.invoke(
+                [
+                    f"Following this plan:\n{state['plan']}\n. Provide an answer for {state['query']}"
+                ]
+            ).content
+        }
+
+    def summarize_research(state: ResearcherSubState) -> dict:
+        return {
+            "summary": llm.invoke(
+                [
+                    f"Summarize these research finding in 3-5 concise sentences answering : {state['query']}:\n{state['raw_research']}"
+                ]
+            ).content
+        }
+
+    builder = StateGraph(ResearcherSubState)
+    builder.add_node("plan", plan_research)
+    builder.add_node("execute", execute_research)
+    builder.add_node("summarize", summarize_research)
+
+    builder.add_edge(START, "plan")
+    builder.add_edge("plan", "execute")
+    builder.add_edge("execute", "summarize")
+    builder.add_edge("summarize", END)
+
+    return builder.compile()
 
 
 def build_supervisor_with_subgraph():
     """Build the supervisor graph using the researcher subgraph."""
-    raise NotImplementedError("TODO(human): Implement supervisor with researcher subgraph")
+    researcher_subgraph = build_researcher_subgraph()
+
+    def researcher_wrapper(state: SupervisorState) -> dict:
+        return {
+            "agent_output": researcher_subgraph.invoke(
+                {"query": state["query"], "plan": "", "raw_research": "", "summary": ""}
+            )["summary"]
+        }
+
+    builder = StateGraph(SupervisorState)
+
+    builder.add_node("supervisor", supervisor)
+    builder.add_node("researcher_agent", researcher_wrapper)
+    builder.add_node("calculator_agent", get_worker_by_prompt(CALCULATOR_PROMPT))
+    builder.add_node("writer_agent", get_worker_by_prompt(WRITER_PROMPT))
+    builder.add_node("synthesize", synthesize)
+
+    builder.add_edge(START, "supervisor")
+    builder.add_conditional_edges("supervisor", router_fn)
+    builder.add_edge("researcher_agent", "synthesize")
+    builder.add_edge("calculator_agent", "synthesize")
+    builder.add_edge("writer_agent", "synthesize")
+    builder.add_edge("synthesize", END)
+
+    return builder.compile()
 
 
 # ---------------------------------------------------------------------------
@@ -290,12 +430,14 @@ if __name__ == "__main__":
 
     for query in test_queries:
         print(f"\nQuery: {query}")
-        result = supervisor_graph.invoke({
-            "query": query,
-            "selected_agent": "",
-            "agent_output": "",
-            "final_answer": "",
-        })
+        result = supervisor_graph.invoke(
+            {
+                "query": query,
+                "selected_agent": "",
+                "agent_output": "",
+                "final_answer": "",
+            }
+        )
         print(f"  Routed to: {result['selected_agent']}")
         print(f"  Final answer: {result['final_answer'][:300]}...")
         print()
@@ -308,12 +450,14 @@ if __name__ == "__main__":
     # First test the subgraph in isolation
     print("\n--- Testing researcher subgraph in isolation ---\n")
     researcher_sub = build_researcher_subgraph()
-    sub_result = researcher_sub.invoke({
-        "query": "How do distributed consensus algorithms work?",
-        "plan": "",
-        "raw_research": "",
-        "summary": "",
-    })
+    sub_result = researcher_sub.invoke(
+        {
+            "query": "How do distributed consensus algorithms work?",
+            "plan": "",
+            "raw_research": "",
+            "summary": "",
+        }
+    )
     print(f"Plan:\n{sub_result['plan']}\n")
     print(f"Summary:\n{sub_result['summary']}\n")
 
@@ -321,12 +465,14 @@ if __name__ == "__main__":
     print("--- Testing integrated supervisor with subgraph ---\n")
     supervisor_v2 = build_supervisor_with_subgraph()
 
-    result = supervisor_v2.invoke({
-        "query": "Explain how garbage collection works in modern programming languages",
-        "selected_agent": "",
-        "agent_output": "",
-        "final_answer": "",
-    })
+    result = supervisor_v2.invoke(
+        {
+            "query": "Explain how garbage collection works in modern programming languages",
+            "selected_agent": "",
+            "agent_output": "",
+            "final_answer": "",
+        }
+    )
     print(f"Routed to: {result['selected_agent']}")
     print(f"Final answer:\n{result['final_answer']}")
 

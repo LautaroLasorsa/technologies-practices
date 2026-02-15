@@ -17,16 +17,15 @@ threads = isolated conversations.
 import operator
 from typing import Annotated
 
-from typing_extensions import TypedDict
-
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
+from typing_extensions import TypedDict
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+MODEL_NAME = "qwen2.5:3b"
 
 
 # ---------------------------------------------------------------------------
@@ -40,6 +39,7 @@ llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0.7)
 # EXERCISE 1: Conversational Memory with Checkpointing
 # ===================================================================
 
+
 class ConversationState(TypedDict):
     """State for a multi-turn conversation.
 
@@ -49,6 +49,7 @@ class ConversationState(TypedDict):
     history — without the reducer, each node's return would overwrite all
     previous messages.
     """
+
     messages: Annotated[list[BaseMessage], operator.add]
 
 
@@ -98,13 +99,23 @@ class ConversationState(TypedDict):
 #     config = {"configurable": {"thread_id": "user1"}}
 #   Pass it as: graph.invoke({"messages": [HumanMessage(content="...")]}, config)
 
+
 def build_conversational_graph():
-    raise NotImplementedError("TODO(human): Implement conversational graph with checkpointer")
+    def conversation_step(state: ConversationState) -> dict:
+        return {"messages": [llm.invoke(state["messages"])]}
+
+    builder = StateGraph(ConversationState)
+    memory = InMemorySaver()
+    builder.add_node("chatbot", conversation_step)
+    builder.add_edge(START, "chatbot")
+    builder.add_edge("chatbot", END)
+    return builder.compile(checkpointer=memory)
 
 
 # ===================================================================
 # EXERCISE 2: Human-in-the-Loop Approval Gate
 # ===================================================================
+
 
 class ApprovalState(TypedDict):
     """State for the HITL approval workflow.
@@ -114,6 +125,7 @@ class ApprovalState(TypedDict):
     - approval: the human's decision ("approved" or "rejected")
     - result: final outcome message
     """
+
     request: str
     proposed_action: str
     approval: str
@@ -188,8 +200,47 @@ class ApprovalState(TypedDict):
 #     graph.invoke(Command(resume="approved"), config)
 #   The config MUST use the same thread_id as the original invoke.
 
+
 def build_approval_graph():
-    raise NotImplementedError("TODO(human): Implement HITL approval gate graph")
+    def propose_action(state: ApprovalState) -> dict:
+        return {
+            "proposed_action": llm.invoke(
+                [
+                    f"""The user wants {state["request"]}
+                    Propose a specific action to fulfill this request.
+                    Be concrete (e.g., 'Send email to X@Y')
+                    Reply with ONLY the proposed action, nothing else
+                """
+                ]
+            ).content
+        }
+
+    def human_approval(state: ApprovalState) -> dict:
+        return {
+            "approval": interrupt(
+                f"Agent proposes: {state['proposed_action']}\nReply 'approved' or 'rejected'."
+            )
+        }
+
+    def execute_or_abort(state: ApprovalState) -> dict:
+        if state["approval"] == "approved":
+            return {"result": f"Executed: {state['proposed_action']}"}
+        else:
+            return {"result": "Aborted: user rejected the proposed action."}
+
+    builder = StateGraph(ApprovalState)
+    memory = InMemorySaver()
+
+    builder.add_node("propose_action", propose_action)
+    builder.add_node("human_approval", human_approval)
+    builder.add_node("execute_or_abort", execute_or_abort)
+
+    builder.add_edge(START, "propose_action")
+    builder.add_edge("propose_action", "human_approval")
+    builder.add_edge("human_approval", "execute_or_abort")
+    builder.add_edge("execute_or_abort", END)
+
+    return builder.compile(checkpointer=memory)
 
 
 # ---------------------------------------------------------------------------
@@ -210,7 +261,11 @@ if __name__ == "__main__":
     # Turn 1: Tell the model a name (user1)
     print("\n[user1] Turn 1: 'My name is Alice and I work at AutoScheduler.AI'")
     result1 = conv_graph.invoke(
-        {"messages": [HumanMessage(content="My name is Alice and I work at AutoScheduler.AI")]},
+        {
+            "messages": [
+                HumanMessage(content="My name is Alice and I work at AutoScheduler.AI")
+            ]
+        },
         config_user1,
     )
     print(f"Assistant: {result1['messages'][-1].content}\n")

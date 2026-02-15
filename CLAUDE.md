@@ -79,7 +79,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 027 | Advanced System Design Interview | Markdown (design docs, no code) | `not-started` |
 | 028 | LangExtract: Structured Extraction from Text | Python, Docker (Ollama) | `not-started` |
 | 029a | LangChain Advanced: LCEL, Tools & Structured Output | Python, Docker (Ollama) | `completed` |
-| 029b | LangGraph: Stateful Agent Graphs | Python, Docker (Ollama) | `not-started` |
+| 029b | LangGraph: Stateful Agent Graphs | Python, Docker (Ollama) | `completed` |
 | 030a | DSPy Fundamentals: Signatures, Modules & Optimization | Python, Docker (Ollama) | `not-started` |
 | 030b | DSPy Advanced: RAG, Assertions & MIPROv2 | Python, Docker (Ollama, Qdrant) | `not-started` |
 | 030c | DSPy + LangGraph Integration | Python, Docker (Ollama) | `not-started` |
