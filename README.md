@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,solana,fastapi,grafana,prometheus,postgres,gcp&perline=16" />
+  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp&perline=15" />
 </p>
 
 <b> _**This repository is not to show the things that I made, but the things that I have been interested into learning, and my progress learning them**_ </b>
@@ -23,9 +23,9 @@
 
 ## Data Stores & Messaging
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -65,9 +65,9 @@
 
 ## API Design & Protocols
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -101,9 +101,9 @@
 
 ## Infrastructure, DevOps & Observability
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -155,9 +155,9 @@
 
 ## Data Engineering
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -197,9 +197,9 @@
 
 ## Distributed Systems Patterns
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -221,9 +221,9 @@
 
 ## C++ Systems Programming
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -269,9 +269,9 @@
 
 ## GPU Computing & High-Frequency Trading
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -305,21 +305,21 @@
 
 ## Blockchain
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
   <td>021a</td>
   <td>Solana Smart Contracts: Anchor & Accounts Model</td>
-  <td><img src="https://skillicons.dev/icons?i=rust,solana" height="20"></td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=solana" height="20"></td>
   <td>—</td>
 </tr>
 <tr>
   <td>021b</td>
   <td>Solana Tokens: SPL, Escrow & PDA Vaults</td>
-  <td><img src="https://skillicons.dev/icons?i=rust,solana" height="20"></td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=solana" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
@@ -329,9 +329,9 @@
 
 ## AI & LLM Engineering
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -395,9 +395,9 @@
 
 ## Machine Learning Systems
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -461,9 +461,9 @@
 
 ## Software Engineering Practices
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -491,9 +491,9 @@
 
 ## Operations Research: Algorithms (C++ & Rust)
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -581,9 +581,9 @@
 
 ## Operations Research: Applied (Python)
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
