@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,solana,fastapi,grafana,prometheus,postgres,gcp&perline=16" />
+  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp&perline=15" />
 </p>
 
 <b> _**This repository is not to show the things that I made, but the things that I have been interested into learning, and my progress learning them**_ </b>
@@ -23,22 +23,22 @@
 
 ## Data Stores & Messaging
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
-  <td bgcolor="#d4edda"><b>001</b></td>
-  <td bgcolor="#d4edda"><b>LMDB</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,rust" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td><b>001</b></td>
+  <td><b>LMDB</b></td>
+  <td><img src="https://skillicons.dev/icons?i=py,rust" height="20"></td>
+  <td><img src="https://img.shields.io/badge/Completed-brightgreen?style=flat-square" alt="Completed"></td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>002</b></td>
-  <td bgcolor="#d4edda"><b>Cloud Pub/Sub</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,gcp,docker" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td><b>002</b></td>
+  <td><b>Cloud Pub/Sub</b></td>
+  <td><img src="https://skillicons.dev/icons?i=py,gcp,docker" height="20"></td>
+  <td><img src="https://img.shields.io/badge/Completed-brightgreen?style=flat-square" alt="Completed"></td>
 </tr>
 <tr>
   <td>003a</td>
@@ -65,9 +65,9 @@
 
 ## API Design & Protocols
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -101,9 +101,9 @@
 
 ## Infrastructure, DevOps & Observability
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -155,9 +155,9 @@
 
 ## Data Engineering
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -197,9 +197,9 @@
 
 ## Distributed Systems Patterns
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -221,22 +221,22 @@
 
 ## C++ Systems Programming
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
-  <td bgcolor="#d4edda"><b>012a</b></td>
-  <td bgcolor="#d4edda"><b>C++17 Features & abseil-cpp</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td><b>012a</b></td>
+  <td><b>C++17 Features & abseil-cpp</b></td>
+  <td><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
+  <td><img src="https://img.shields.io/badge/Completed-brightgreen?style=flat-square" alt="Completed"></td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>012b</b></td>
-  <td bgcolor="#d4edda"><b>Boost Deep-Dive</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td><b>012b</b></td>
+  <td><b>Boost Deep-Dive</b></td>
+  <td><img src="https://skillicons.dev/icons?i=cpp" height="20"></td>
+  <td><img src="https://img.shields.io/badge/Completed-brightgreen?style=flat-square" alt="Completed"></td>
 </tr>
 <tr>
   <td>013</td>
@@ -269,9 +269,9 @@
 
 ## GPU Computing & High-Frequency Trading
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -305,21 +305,21 @@
 
 ## Blockchain
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
   <td>021a</td>
   <td>Solana Smart Contracts: Anchor & Accounts Model</td>
-  <td><img src="https://skillicons.dev/icons?i=rust,solana" height="20"></td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=solana" height="20"></td>
   <td>—</td>
 </tr>
 <tr>
   <td>021b</td>
   <td>Solana Tokens: SPL, Escrow & PDA Vaults</td>
-  <td><img src="https://skillicons.dev/icons?i=rust,solana" height="20"></td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=solana" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
@@ -329,9 +329,9 @@
 
 ## AI & LLM Engineering
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -341,16 +341,16 @@
   <td>—</td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>029a</b></td>
-  <td bgcolor="#d4edda"><b>LangChain Advanced: LCEL, Tools & Structured Output</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td><b>029a</b></td>
+  <td><b>LangChain Advanced: LCEL, Tools & Structured Output</b></td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
+  <td><img src="https://img.shields.io/badge/Completed-brightgreen?style=flat-square" alt="Completed"></td>
 </tr>
 <tr>
-  <td bgcolor="#d4edda"><b>029b</b></td>
-  <td bgcolor="#d4edda"><b>LangGraph: Stateful Agent Graphs</b></td>
-  <td bgcolor="#d4edda"><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
-  <td bgcolor="#d4edda">✅ Completed</td>
+  <td><b>029b</b></td>
+  <td><b>LangGraph: Stateful Agent Graphs</b></td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=langchain" height="20"></td>
+  <td><img src="https://img.shields.io/badge/Completed-brightgreen?style=flat-square" alt="Completed"></td>
 </tr>
 <tr>
   <td>030a</td>
@@ -395,9 +395,9 @@
 
 ## Machine Learning Systems
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -461,9 +461,9 @@
 
 ## Software Engineering Practices
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -491,9 +491,9 @@
 
 ## Operations Research: Algorithms (C++ & Rust)
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
@@ -581,9 +581,9 @@
 
 ## Operations Research: Applied (Python)
 
-<table>
+<table width="100%">
 <thead>
-<tr><th>#</th><th>Practice</th><th>Stack</th><th>Status</th></tr>
+<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
 </thead>
 <tbody>
 <tr>
