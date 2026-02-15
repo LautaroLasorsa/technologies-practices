@@ -17,6 +17,8 @@
   <img src="https://img.shields.io/badge/Progress-6%20%2F%2081%20practices-blue?style=flat-square" alt="Progress: 6/81">
 </p>
 
+> **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
+
 ---
 
 ## Data Stores & Messaging
