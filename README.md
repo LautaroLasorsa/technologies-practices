@@ -23,9 +23,9 @@
 
 ## Data Stores & Messaging
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -65,9 +65,9 @@
 
 ## API Design & Protocols
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -101,9 +101,9 @@
 
 ## Infrastructure, DevOps & Observability
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -155,9 +155,9 @@
 
 ## Data Engineering
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -197,9 +197,9 @@
 
 ## Distributed Systems Patterns
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -221,9 +221,9 @@
 
 ## C++ Systems Programming
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -269,9 +269,9 @@
 
 ## GPU Computing & High-Frequency Trading
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -305,9 +305,9 @@
 
 ## Blockchain
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -329,9 +329,9 @@
 
 ## AI & LLM Engineering
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -395,9 +395,9 @@
 
 ## Machine Learning Systems
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -461,9 +461,9 @@
 
 ## Software Engineering Practices
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -491,9 +491,9 @@
 
 ## Operations Research: Algorithms (C++ & Rust)
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
@@ -581,9 +581,9 @@
 
 ## Operations Research: Applied (Python)
 
-<table width="100%">
+<table>
 <thead>
-<tr><th width="6%">#</th><th width="54%">Practice</th><th width="25%">Stack</th><th width="15%">Status</th></tr>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
 </thead>
 <tbody>
 <tr>
