@@ -133,6 +133,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 
 - **Use subagents**: When you have to make a task specific for a practice in isolation of the whole context, and speciall if you want to make a similar action in many diferent practices, send a subagent to do the task in each practice (one subagent asigned to one task)
 
+- **Keep README.md in sync**: Whenever a practice is added, removed, renamed, or its state changes (`not-started` → `in-progress` → `completed`), update **both** the Practices table in this file **and** the corresponding section/table in `README.md`. The README groups practices by topic — place new practices in the matching section. For completed practices, apply `bgcolor="#d4edda"` + bold to all `<td>` cells in that row. Update the shields.io progress badge count as well.
+
 ---
 
 ## Practice CLAUDE.md Template
