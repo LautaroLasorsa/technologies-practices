@@ -28,89 +28,89 @@ Each practice lives in `practice_<NNN>_<name>/` with its own `CLAUDE.md` specify
 
 Multi-session topics are split into separate folders (e.g., `003a`, `003b`), each a standalone ~60–120 min guided session.
 
-| # | Name | Stack | State |
-|---|------|-------|-------|
-| 001 | LMDB | Python, Rust | `not-started` |
-| 002 | Cloud Pub/Sub | Python, Docker (emulator) | `not-started` |
-| 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | `not-started` |
-| 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | `not-started` |
-| 004a | gRPC & Protobuf: Python Service | Python | `not-started` |
-| 004b | gRPC: Rust Interop | Rust, Python | `not-started` |
-| 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | `not-started` |
-| 006a | Kubernetes: Core Concepts & Deploy | Docker, minikube/kind | `not-started` |
-| 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | `not-started` |
-| 007a | OpenTelemetry: Instrumentation | Python, Docker (Jaeger) | `not-started` |
-| 007b | OpenTelemetry: Dashboards & Alerting | Python, Docker (Grafana/Prometheus) | `not-started` |
-| 008 | Vector Databases | Python, Docker (Qdrant) | `not-started` |
-| 009 | GraphQL | Python (Strawberry), Docker | `not-started` |
-| 010a | Terraform: Basics & Local Resources | HCL, Docker provider | `not-started` |
-| 010b | Terraform: Multi-Resource Orchestration | HCL, Docker provider | `not-started` |
-| 011a | Spark: Core Transformations | Python, Docker | `not-started` |
-| 011b | Spark: Real Data Pipeline | Python, Docker | `not-started` |
-| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | `not-started` |
-| 012b | Boost Deep-Dive | C++17, Boost | `not-started` |
-| 013 | Financial C++: QuickFIX & QuantLib | C++17, QuickFIX, QuantLib | `not-started` |
-| 014 | SAGA Pattern | Python, Docker Compose, Redpanda | `not-started` |
-| 015 | CQRS & Event Sourcing | Python, Docker Compose, Redpanda | `not-started` |
-| 016 | REST API Design Principles | Python (FastAPI), OpenAPI | `not-started` |
-| 017a | World Model RL: Dyna-Q Basics | Python (PyTorch), Gymnasium | `not-started` |
-| 017b | World Model RL: Neural World Model | Python (PyTorch), Gymnasium | `not-started` |
-| 017c | World Model RL: Latent Imagination (Dreamer) | Python (PyTorch), Gymnasium | `not-started` |
-| 018a | CMake: FetchContent, Targets & Modern Build | C++17, CMake 3.16+ | `not-started` |
-| 018b | CMake: Toolchains, Presets & Cross-Compilation | C++17, CMake 3.21+ | `not-started` |
-| 019a | CUDA: Kernels, Memory Model & Parallel Patterns | C++17, CUDA 12.x, CMake | `not-started` |
-| 019b | CUDA for HPC/HFT: Streams, Pinned Memory & Low-Latency | C++17, CUDA 12.x, CMake | `not-started` |
-| 020a | HFT Low-Latency C++: Lock-Free, Cache & Memory | C++17, CMake | `not-started` |
-| 020b | HFT Systems: Order Book, Matching Engine & Feed Handler | C++17, abseil-cpp, CMake | `not-started` |
-| 021a | Solana Smart Contracts: Anchor & Accounts Model | Rust, Anchor, LiteSVM (WSL) | `not-started` |
-| 021b | Solana Tokens: SPL, Escrow & PDA Vaults | Rust, Anchor, LiteSVM (WSL) | `not-started` |
-| 022 | Concurrent Data Structures: moodycamel & Lock-Free Patterns | C++17, moodycamel, CMake | `not-started` |
-| 023 | Advanced SQL: Window Functions, CTEs & Query Optimization | Python, PostgreSQL, Docker | `not-started` |
-| 024a | Testing Patterns: Python | Python (pytest, Hypothesis) | `not-started` |
-| 024b | Testing Patterns: Rust | Rust (mockall, proptest) | `not-started` |
-| 025a | ML Compilers: Computation Graphs & IR from Scratch | Python (PyTorch) | `not-started` |
-| 025b | ML Compilers: Operator Fusion & Graph Rewrites | Python (PyTorch, torch.fx) | `not-started` |
-| 025c | ML Compilers: XLA & HLO Inspection | Python (JAX) | `not-started` |
-| 025d | ML Compilers: Triton Custom GPU Kernels | Python (Triton, PyTorch) | `not-started` |
-| 025e | ML Compilers: TVM Scheduling & Auto-Tuning | Python (TVM), Docker | `not-started` |
-| 025f | ML Compilers: torch.compile Deep Dive | Python (PyTorch 2.x) | `not-started` |
-| 026a | ETL/ELT Orchestration: Airflow Fundamentals | Python, Docker (Airflow) | `not-started` |
-| 026b | ETL/ELT Orchestration: Dagster Assets & dbt | Python, Docker (Dagster, dbt) | `not-started` |
-| 027 | Advanced System Design Interview | Markdown (design docs, no code) | `not-started` |
-| 028 | LangExtract: Structured Extraction from Text | Python, Docker (Ollama) | `not-started` |
-| 029a | LangChain Advanced: LCEL, Tools & Structured Output | Python, Docker (Ollama) | `not-started` |
-| 029b | LangGraph: Stateful Agent Graphs | Python, Docker (Ollama) | `not-started` |
-| 030a | DSPy Fundamentals: Signatures, Modules & Optimization | Python, Docker (Ollama) | `not-started` |
-| 030b | DSPy Advanced: RAG, Assertions & MIPROv2 | Python, Docker (Ollama, Qdrant) | `not-started` |
-| 030c | DSPy + LangGraph Integration | Python, Docker (Ollama) | `not-started` |
-| 031a | Agentic AI: Single-Agent Design Patterns | Python, Docker (Ollama) | `not-started` |
-| 031b | Agentic AI: Multi-Agent Systems | Python, Docker (Ollama) | `not-started` |
-| 031c | Agentic AI: Production Patterns | Python, Docker (Ollama, Qdrant, Langfuse) | `not-started` |
-| 032a | LP: Simplex Method | C++17, Eigen | `not-started` |
-| 032b | LP: Duality & Interior Point | C++17, Eigen | `not-started` |
-| 033a | Convex Opt: First-Order Methods | C++17, Eigen | `not-started` |
-| 033b | Convex Opt: Proximal & Second-Order | C++17, Eigen | `not-started` |
-| 034a | MIP: Branch & Bound | Rust | `not-started` |
-| 034b | MIP: Cutting Planes & Heuristics | Rust | `not-started` |
-| 035a | Non-convex: Local Search & SA | Rust | `not-started` |
-| 035b | Non-convex: Evolutionary Algorithms | Rust | `not-started` |
-| 036a | Network Opt: Flows & Assignment | C++17 | `not-started` |
-| 036b | Network Opt: TSP & VRP Heuristics | C++17 | `not-started` |
-| 037 | Constraint Programming | Rust | `not-started` |
-| 038 | Multi-Objective: NSGA-II | Rust | `not-started` |
-| 039 | Stochastic DP: MDPs | C++17, Eigen | `not-started` |
-| 040a | LP/MIP: PuLP & HiGHS | Python | `not-started` |
-| 040b | Advanced Modeling: Pyomo | Python | `not-started` |
-| 041a | Convex Opt: CVXPY | Python | `not-started` |
-| 041b | Conic: SOCP & SDP | Python | `not-started` |
-| 042a | CP: OR-Tools CP-SAT | Python | `not-started` |
-| 042b | Routing: OR-Tools | Python | `not-started` |
-| 043 | Global Opt: scipy & Optuna | Python | `not-started` |
-| 044 | Multi-Objective: pymoo | Python | `not-started` |
-| 045 | Stochastic Programming | Python | `not-started` |
-| 046 | Robust Optimization | Python | `not-started` |
-| 047 | Bayesian Optimization | Python | `not-started` |
-| 048 | Integrated OR: Supply Chain | Python | `not-started` |
+| # | Name | Stack | Category | State |
+|---|------|-------|----------|-------|
+| 001 | LMDB | Python, Rust | Data Stores & Messaging | `not-started` |
+| 002 | Cloud Pub/Sub | Python, Docker (emulator) | Data Stores & Messaging | `not-started` |
+| 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | Data Stores & Messaging | `not-started` |
+| 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | Data Stores & Messaging | `not-started` |
+| 004a | gRPC & Protobuf: Python Service | Python | API Design & Protocols | `not-started` |
+| 004b | gRPC: Rust Interop | Rust, Python | API Design & Protocols | `not-started` |
+| 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | Infra DevOps & Observability | `not-started` |
+| 006a | Kubernetes: Core Concepts & Deploy | Docker, minikube/kind | Infra DevOps & Observability | `not-started` |
+| 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | Infra DevOps & Observability | `not-started` |
+| 007a | OpenTelemetry: Instrumentation | Python, Docker (Jaeger) | Infra DevOps & Observability | `not-started` |
+| 007b | OpenTelemetry: Dashboards & Alerting | Python, Docker (Grafana/Prometheus) | Infra DevOps & Observability | `not-started` |
+| 008 | Vector Databases | Python, Docker (Qdrant) | Data Stores & Messaging | `not-started` |
+| 009 | GraphQL | Python (Strawberry), Docker | API Design & Protocols | `not-started` |
+| 010a | Terraform: Basics & Local Resources | HCL, Docker provider | Infra DevOps & Observability | `not-started` |
+| 010b | Terraform: Multi-Resource Orchestration | HCL, Docker provider | Infra DevOps & Observability | `not-started` |
+| 011a | Spark: Core Transformations | Python, Docker | Data Engineering | `not-started` |
+| 011b | Spark: Real Data Pipeline | Python, Docker | Data Engineering | `not-started` |
+| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | C++ Systems Programming | `not-started` |
+| 012b | Boost Deep-Dive | C++17, Boost | C++ Systems Programming | `not-started` |
+| 013 | Financial C++: QuickFIX & QuantLib | C++17, QuickFIX, QuantLib | C++ Systems Programming | `not-started` |
+| 014 | SAGA Pattern | Python, Docker Compose, Redpanda | Distributed Systems Patterns | `not-started` |
+| 015 | CQRS & Event Sourcing | Python, Docker Compose, Redpanda | Distributed Systems Patterns | `not-started` |
+| 016 | REST API Design Principles | Python (FastAPI), OpenAPI | API Design & Protocols | `not-started` |
+| 017a | World Model RL: Dyna-Q Basics | Python (PyTorch), Gymnasium | ML Systems | `not-started` |
+| 017b | World Model RL: Neural World Model | Python (PyTorch), Gymnasium | ML Systems | `not-started` |
+| 017c | World Model RL: Latent Imagination (Dreamer) | Python (PyTorch), Gymnasium | ML Systems | `not-started` |
+| 018a | CMake: FetchContent, Targets & Modern Build | C++17, CMake 3.16+ | C++ Systems Programming | `not-started` |
+| 018b | CMake: Toolchains, Presets & Cross-Compilation | C++17, CMake 3.21+ | C++ Systems Programming | `not-started` |
+| 019a | CUDA: Kernels, Memory Model & Parallel Patterns | C++17, CUDA 12.x, CMake | GPU Computing & HFT | `not-started` |
+| 019b | CUDA for HPC/HFT: Streams, Pinned Memory & Low-Latency | C++17, CUDA 12.x, CMake | GPU Computing & HFT | `not-started` |
+| 020a | HFT Low-Latency C++: Lock-Free, Cache & Memory | C++17, CMake | GPU Computing & HFT | `not-started` |
+| 020b | HFT Systems: Order Book, Matching Engine & Feed Handler | C++17, abseil-cpp, CMake | GPU Computing & HFT | `not-started` |
+| 021a | Solana Smart Contracts: Anchor & Accounts Model | Rust, Anchor, LiteSVM (WSL) | Blockchain | `not-started` |
+| 021b | Solana Tokens: SPL, Escrow & PDA Vaults | Rust, Anchor, LiteSVM (WSL) | Blockchain | `not-started` |
+| 022 | Concurrent Data Structures: moodycamel & Lock-Free Patterns | C++17, moodycamel, CMake | C++ Systems Programming | `not-started` |
+| 023 | Advanced SQL: Window Functions, CTEs & Query Optimization | Python, PostgreSQL, Docker | Data Engineering | `not-started` |
+| 024a | Testing Patterns: Python | Python (pytest, Hypothesis) | Software Engineering | `not-started` |
+| 024b | Testing Patterns: Rust | Rust (mockall, proptest) | Software Engineering | `not-started` |
+| 025a | ML Compilers: Computation Graphs & IR from Scratch | Python (PyTorch) | ML Systems | `not-started` |
+| 025b | ML Compilers: Operator Fusion & Graph Rewrites | Python (PyTorch, torch.fx) | ML Systems | `not-started` |
+| 025c | ML Compilers: XLA & HLO Inspection | Python (JAX) | ML Systems | `not-started` |
+| 025d | ML Compilers: Triton Custom GPU Kernels | Python (Triton, PyTorch) | ML Systems | `not-started` |
+| 025e | ML Compilers: TVM Scheduling & Auto-Tuning | Python (TVM), Docker | ML Systems | `not-started` |
+| 025f | ML Compilers: torch.compile Deep Dive | Python (PyTorch 2.x) | ML Systems | `not-started` |
+| 026a | ETL/ELT Orchestration: Airflow Fundamentals | Python, Docker (Airflow) | Data Engineering | `not-started` |
+| 026b | ETL/ELT Orchestration: Dagster Assets & dbt | Python, Docker (Dagster, dbt) | Data Engineering | `not-started` |
+| 027 | Advanced System Design Interview | Markdown (design docs, no code) | Software Engineering | `not-started` |
+| 028 | LangExtract: Structured Extraction from Text | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 029a | LangChain Advanced: LCEL, Tools & Structured Output | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 029b | LangGraph: Stateful Agent Graphs | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 030a | DSPy Fundamentals: Signatures, Modules & Optimization | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 030b | DSPy Advanced: RAG, Assertions & MIPROv2 | Python, Docker (Ollama, Qdrant) | AI & LLM Engineering | `not-started` |
+| 030c | DSPy + LangGraph Integration | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 031a | Agentic AI: Single-Agent Design Patterns | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 031b | Agentic AI: Multi-Agent Systems | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 031c | Agentic AI: Production Patterns | Python, Docker (Ollama, Qdrant, Langfuse) | AI & LLM Engineering | `not-started` |
+| 032a | LP: Simplex Method | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
+| 032b | LP: Duality & Interior Point | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
+| 033a | Convex Opt: First-Order Methods | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
+| 033b | Convex Opt: Proximal & Second-Order | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
+| 034a | MIP: Branch & Bound | Rust | OR: Algorithms (C++/Rust) | `not-started` |
+| 034b | MIP: Cutting Planes & Heuristics | Rust | OR: Algorithms (C++/Rust) | `not-started` |
+| 035a | Non-convex: Local Search & SA | Rust | OR: Algorithms (C++/Rust) | `not-started` |
+| 035b | Non-convex: Evolutionary Algorithms | Rust | OR: Algorithms (C++/Rust) | `not-started` |
+| 036a | Network Opt: Flows & Assignment | C++17 | OR: Algorithms (C++/Rust) | `not-started` |
+| 036b | Network Opt: TSP & VRP Heuristics | C++17 | OR: Algorithms (C++/Rust) | `not-started` |
+| 037 | Constraint Programming | Rust | OR: Algorithms (C++/Rust) | `not-started` |
+| 038 | Multi-Objective: NSGA-II | Rust | OR: Algorithms (C++/Rust) | `not-started` |
+| 039 | Stochastic DP: MDPs | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
+| 040a | LP/MIP: PuLP & HiGHS | Python | OR: Applied (Python) | `not-started` |
+| 040b | Advanced Modeling: Pyomo | Python | OR: Applied (Python) | `not-started` |
+| 041a | Convex Opt: CVXPY | Python | OR: Applied (Python) | `not-started` |
+| 041b | Conic: SOCP & SDP | Python | OR: Applied (Python) | `not-started` |
+| 042a | CP: OR-Tools CP-SAT | Python | OR: Applied (Python) | `not-started` |
+| 042b | Routing: OR-Tools | Python | OR: Applied (Python) | `not-started` |
+| 043 | Global Opt: scipy & Optuna | Python | OR: Applied (Python) | `not-started` |
+| 044 | Multi-Objective: pymoo | Python | OR: Applied (Python) | `not-started` |
+| 045 | Stochastic Programming | Python | OR: Applied (Python) | `not-started` |
+| 046 | Robust Optimization | Python | OR: Applied (Python) | `not-started` |
+| 047 | Bayesian Optimization | Python | OR: Applied (Python) | `not-started` |
+| 048 | Integrated OR: Supply Chain | Python | OR: Applied (Python) | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
