@@ -39,6 +39,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | Infra DevOps & Observability | `not-started` |
 | 006a | Kubernetes: Core Concepts & Deploy | Docker, minikube/kind | Infra DevOps & Observability | `not-started` |
 | 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | Infra DevOps & Observability | `not-started` |
+| 006c | Service Mesh: Sidecar & Envoy | Docker, minikube/kind, Envoy | Infra DevOps & Observability | `not-started` |
 | 007a | OpenTelemetry: Instrumentation | Python, Docker (Jaeger) | Infra DevOps & Observability | `not-started` |
 | 007b | OpenTelemetry: Dashboards & Alerting | Python, Docker (Grafana/Prometheus) | Infra DevOps & Observability | `not-started` |
 | 008 | Vector Databases | Python, Docker (Qdrant) | Data Stores & Messaging | `not-started` |
@@ -111,6 +112,12 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 046 | Robust Optimization | Python | OR: Applied (Python) | `not-started` |
 | 047 | Bayesian Optimization | Python | OR: Applied (Python) | `not-started` |
 | 048 | Integrated OR: Supply Chain | Python | OR: Applied (Python) | `not-started` |
+| 049a | Raft Consensus: Leader Election & Log Replication | Python | Distributed Systems Patterns | `not-started` |
+| 049b | Raft Consensus: Safety & Failure Recovery | Python | Distributed Systems Patterns | `not-started` |
+| 050 | CRDTs: Conflict-Free Replicated Data Types | Python | Distributed Systems Patterns | `not-started` |
+| 051 | Distributed Coordination: etcd | Python, Docker (etcd) | Distributed Systems Patterns | `not-started` |
+| 052 | Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
+| 053 | Consistent Hashing & DHTs | Python | Distributed Systems Patterns | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
