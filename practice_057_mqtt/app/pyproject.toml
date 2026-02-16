@@ -1,0 +1,14 @@
+[project]
+name = "app"
+version = "0.1.0"
+description = "Practice 057: MQTT -- Lightweight Messaging & Protocol Comparison"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "paho-mqtt>=2.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.38.0",
+]
