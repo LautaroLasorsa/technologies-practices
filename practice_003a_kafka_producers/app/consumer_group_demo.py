@@ -22,7 +22,6 @@ from confluent_kafka import Consumer, KafkaError, KafkaException, TopicPartition
 
 import config
 
-
 # ── Shared state ─────────────────────────────────────────────────────
 
 _running = True
@@ -137,7 +136,54 @@ def run_consumer_worker(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#confluent_kafka.Consumer.subscribe
     """
-    raise NotImplementedError("TODO(human): implement run_consumer_worker")
+
+    consumer = Consumer(
+        {
+            "bootstrap.servers": config.BOOTSTRAP_SERVERS,
+            "group.id": group_id,
+            "auto.offset.reset": "earliest",
+            "enable.auto.commit": False,
+            "client.id": worker_name,
+            "session.timeout.ms": 10000,
+            "heartbeat.interval.ms": 3000,
+        }
+    )
+
+    (on_assign, on_revoke) = make_rebalance_callbacks(worker_name)
+    consumer.subscribe([topic], on_assign=on_assign, on_revoke=on_revoke)
+    start = time.time()
+    events = []
+
+    try:
+        while _running and (time.time() - start) < duration_seconds:
+            msg = consumer.poll(poll=1.0)
+            if msg is None:
+                continue
+
+            error = msg.error()
+            if error:
+                if error.code() == KafkaError._PARTITION_EOF:
+                    print("End of partition")
+                    continue
+                else:
+                    raise KafkaException(error)
+
+            key = msg.key()
+            key = key.decode("utf-8") if key else None
+
+            value = msg.value()
+            value = json.loads(value.decode("utf-8")) if value else None
+            assert value is not None
+
+            print(
+                f"[{worker_name}] partition = {msg.partition()} offset = {msg.offset()} key = {key} event_type = {value['event_type']}"
+            )
+            events.append(value)
+            consumer.commit(message=msg, asynchronous=False)
+    finally:
+        consumer.close()
+
+    return events
 
 
 def demonstrate_rebalancing(topic: str, group_id: str) -> None:
@@ -189,7 +235,32 @@ def demonstrate_rebalancing(topic: str, group_id: str) -> None:
 
     Docs: https://developer.confluent.io/courses/architecture/consumer-group-protocol/
     """
-    raise NotImplementedError("TODO(human): implement demonstrate_rebalancing")
+    print("This will show how rebalancing works")
+
+    t1 = threading.Thread(
+        target=run_consumer_worker, args=("Worker-1", group_id, topic, 30.0)
+    )
+    t1.start()
+
+    time.sleep(8)
+
+    print("Working 2 joining")
+    t2 = threading.Thread(
+        target=run_consumer_worker, args=("Worker-2", group_id, topic, 20.0)
+    )
+    t2.start()
+
+    time.sleep(8)
+
+    print("Working 3 joining")
+    t3 = threading.Thread(
+        target=run_consumer_worker, args=("Worker-3", group_id, topic, 10.0)
+    )
+    t3.start()
+
+    t1.join()
+    t2.join()
+    t3.join()
 
 
 # ── Seed data producer (boilerplate) ─────────────────────────────────
@@ -203,11 +274,13 @@ def produce_seed_data(topic: str, num_messages: int = 40) -> None:
     """
     from confluent_kafka import Producer
 
-    producer = Producer({
-        "bootstrap.servers": config.BOOTSTRAP_SERVERS,
-        "acks": "all",
-        "client.id": "group-demo-seeder",
-    })
+    producer = Producer(
+        {
+            "bootstrap.servers": config.BOOTSTRAP_SERVERS,
+            "acks": "all",
+            "client.id": "group-demo-seeder",
+        }
+    )
 
     users = ["user-001", "user-002", "user-003", "user-004", "user-005"]
     order_types = ["created", "paid", "shipped", "delivered"]

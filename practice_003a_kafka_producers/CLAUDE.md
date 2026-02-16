@@ -189,4 +189,18 @@ All commands are run from `practice_003a_kafka_producers/`.
 
 ## State
 
-`in-progress`
+`completed`
+
+## Notes
+
+### Windows + confluent-kafka: Ctrl+C doesn't work (User observation)
+Zed's integrated terminal on Windows does NOT deliver SIGINT to child processes. Even outside Zed, `confluent_kafka.Consumer.poll()` (C extension) can swallow SIGINT on Windows, preventing both `signal.SIGINT` handlers and `KeyboardInterrupt` from firing. Workaround: use `poll(0)` + `time.sleep(0.2)` so Python handles signals during sleep, or run from an external terminal (Windows Terminal, cmd, PowerShell).
+
+### Consumer constructor: positional arg only (From debugging)
+`Consumer()` takes the config dict as a **positional argument**. `Consumer(config={...})` silently fails — the dict never reaches the parser, causing cryptic "group.id must be set" errors even when it's present.
+
+### Group join delay
+First `poll()` returns `None` for ~3-6 seconds while the consumer joins the group (`FindCoordinator` → `JoinGroup` → `SyncGroup`). A consecutive-None exit threshold of 3 is too aggressive — use 10+ or only start counting after receiving at least one message.
+
+### PARTITION_EOF requires continue
+`_PARTITION_EOF` messages have `None` for key/value. Without `continue` after handling the error, code falls through to decode and crashes.

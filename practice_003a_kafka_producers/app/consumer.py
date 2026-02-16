@@ -12,12 +12,11 @@ Run after producing messages:
 
 import json
 import signal
-import sys
+import time
 
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
 import config
-
 
 # ── Graceful shutdown flag ───────────────────────────────────────────
 
@@ -105,7 +104,38 @@ def consume_events(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#confluent_kafka.Consumer.poll
     """
-    raise NotImplementedError("TODO(human): implement consume_events")
+    consumer.subscribe([topic])
+    events: list[dict] = []
+
+    nones_num = 0
+    while _running:
+        event = consumer.poll(poll=1)
+        if event is None:
+            nones_num += 1
+            if nones_num == 30:
+                break
+            continue
+        nones_num = 0
+
+        error = event.error()
+
+        if error is not None:
+            if error.code() == KafkaError._PARTITION_EOF:
+                print("[INFO] End of partition")
+                continue
+            else:
+                raise KafkaException(event.error())
+        key = event.key()
+        key = key.decode("utf-8") if key else None
+        value = event.value()
+        assert value is not None
+        value = json.loads(value.decode("utf-8"))
+        print(
+            f"{event.topic()} - {event.partition()} - {event.offset()} - {key} - {value['event_type']}"
+        )
+        events.append(value)
+        consumer.commit(message=event, asynchronous=False)
+    return events
 
 
 # ── Orchestration (boilerplate) ──────────────────────────────────────
@@ -122,20 +152,24 @@ def create_consumer(group_id: str) -> Consumer:
       - enable.auto.commit: False = you control when offsets are committed.
       - client.id: Identifies this consumer in broker logs.
     """
-    return Consumer({
-        "bootstrap.servers": config.BOOTSTRAP_SERVERS,
-        "group.id": group_id,
-        "auto.offset.reset": "earliest",
-        "enable.auto.commit": False,
-        "client.id": "practice-003a-consumer",
-    })
+    return Consumer(
+        {
+            "bootstrap.servers": config.BOOTSTRAP_SERVERS,
+            "group.id": group_id,
+            "auto.offset.reset": "earliest",
+            "enable.auto.commit": False,
+            "client.id": "practice-003a-consumer",
+        }
+    )
 
 
 def main() -> None:
     consumer = create_consumer(config.EVENTS_GROUP)
 
     try:
-        print(f"=== Consuming from '{config.EVENTS_TOPIC}' (group: {config.EVENTS_GROUP}) ===\n")
+        print(
+            f"=== Consuming from '{config.EVENTS_TOPIC}' (group: {config.EVENTS_GROUP}) ===\n"
+        )
         events = consume_events(consumer, config.EVENTS_TOPIC)
         print(f"\nConsumed {len(events)} events total.")
     finally:

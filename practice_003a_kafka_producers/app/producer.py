@@ -13,24 +13,48 @@ Run after admin.py has created the topics:
 import json
 import time
 
-from confluent_kafka import Producer, KafkaError
+from confluent_kafka import KafkaError, Producer
 
 import config
-
 
 # ── Sample data ──────────────────────────────────────────────────────
 
 SAMPLE_EVENTS = [
-    {"event_type": "user.signup",    "user_id": "user-001", "email": "alice@example.com"},
-    {"event_type": "order.created",  "user_id": "user-002", "order_id": "ORD-100", "total": 59.99},
-    {"event_type": "user.login",     "user_id": "user-001", "ip": "192.168.1.10"},
-    {"event_type": "order.shipped",  "user_id": "user-002", "order_id": "ORD-100", "carrier": "FedEx"},
-    {"event_type": "user.signup",    "user_id": "user-003", "email": "bob@example.com"},
-    {"event_type": "order.created",  "user_id": "user-001", "order_id": "ORD-101", "total": 124.50},
-    {"event_type": "user.login",     "user_id": "user-003", "ip": "10.0.0.5"},
-    {"event_type": "order.created",  "user_id": "user-003", "order_id": "ORD-102", "total": 29.99},
-    {"event_type": "order.shipped",  "user_id": "user-001", "order_id": "ORD-101", "carrier": "UPS"},
-    {"event_type": "user.login",     "user_id": "user-002", "ip": "172.16.0.1"},
+    {"event_type": "user.signup", "user_id": "user-001", "email": "alice@example.com"},
+    {
+        "event_type": "order.created",
+        "user_id": "user-002",
+        "order_id": "ORD-100",
+        "total": 59.99,
+    },
+    {"event_type": "user.login", "user_id": "user-001", "ip": "192.168.1.10"},
+    {
+        "event_type": "order.shipped",
+        "user_id": "user-002",
+        "order_id": "ORD-100",
+        "carrier": "FedEx",
+    },
+    {"event_type": "user.signup", "user_id": "user-003", "email": "bob@example.com"},
+    {
+        "event_type": "order.created",
+        "user_id": "user-001",
+        "order_id": "ORD-101",
+        "total": 124.50,
+    },
+    {"event_type": "user.login", "user_id": "user-003", "ip": "10.0.0.5"},
+    {
+        "event_type": "order.created",
+        "user_id": "user-003",
+        "order_id": "ORD-102",
+        "total": 29.99,
+    },
+    {
+        "event_type": "order.shipped",
+        "user_id": "user-001",
+        "order_id": "ORD-101",
+        "carrier": "UPS",
+    },
+    {"event_type": "user.login", "user_id": "user-002", "ip": "172.16.0.1"},
 ]
 
 
@@ -98,7 +122,15 @@ def produce_event(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#confluent_kafka.Producer.produce
     """
-    raise NotImplementedError("TODO(human): implement produce_event")
+
+    serialized_v = json.dumps(value).encode("utf-8")
+    serialized_k = key.encode("utf-8")
+
+    producer.produce(
+        topic=topic, key=serialized_k, value=serialized_v, callback=delivery_report
+    )
+
+    producer.poll(0)
 
 
 def produce_events_batch(
@@ -137,7 +169,16 @@ def produce_events_batch(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#confluent_kafka.Producer.flush
     """
-    raise NotImplementedError("TODO(human): implement produce_events_batch")
+
+    successes = 0
+
+    for event in events:
+        event["timestamp"] = time.time()
+        produce_event(producer, topic, event[key_field], event)
+        successes += 1
+
+    print(f"Remaining messages: {producer.flush(timeout=10)}")
+    return successes
 
 
 # ── Orchestration (boilerplate) ──────────────────────────────────────
@@ -152,12 +193,14 @@ def create_producer() -> Producer:
       - client.id: Identifies this producer in broker logs (debugging).
       - linger.ms: How long to wait before sending a batch (0 = send immediately).
     """
-    return Producer({
-        "bootstrap.servers": config.BOOTSTRAP_SERVERS,
-        "acks": "all",
-        "client.id": "practice-003a-producer",
-        "linger.ms": 5,
-    })
+    return Producer(
+        {
+            "bootstrap.servers": config.BOOTSTRAP_SERVERS,
+            "acks": "all",
+            "client.id": "practice-003a-producer",
+            "linger.ms": 5,
+        }
+    )
 
 
 def main() -> None:

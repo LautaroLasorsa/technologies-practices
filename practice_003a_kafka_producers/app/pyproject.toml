@@ -6,4 +6,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "confluent-kafka>=2.13.0",
+    "confluent-kafka-stubs>=0.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.38.0",
 ]
