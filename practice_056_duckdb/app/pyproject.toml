@@ -1,0 +1,16 @@
+[project]
+name = "practice-056-duckdb"
+version = "0.1.0"
+description = "Practice 056: DuckDB — Embedded Analytics & Columnar Queries"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.0.0",
+    "pandas>=2.2.0",
+    "pyarrow>=17.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.38.0",
+]
