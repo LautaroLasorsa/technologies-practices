@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-6%20%2F%2088%20practices-blue?style=flat-square" alt="Progress: 6/88">
+  <img src="https://img.shields.io/badge/Progress-7%20%2F%2094%20practices-blue?style=flat-square" alt="Progress: 7/94">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -41,10 +41,10 @@
   <td>✅ Completed</td>
 </tr>
 <tr>
-  <td>003a</td>
-  <td>Kafka: Producers & Consumers</td>
+  <td><b>003a</b></td>
+  <td><b>Kafka: Producers & Consumers</b></td>
   <td><img src="https://skillicons.dev/icons?i=py,kafka,docker" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>003b</td>
@@ -56,6 +56,18 @@
   <td>008</td>
   <td>Vector Databases (Qdrant)</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>055</td>
+  <td>RabbitMQ: Queues, Exchanges & AMQP</td>
+  <td><img src="https://skillicons.dev/icons?i=py,rabbitmq,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>057</td>
+  <td>MQTT: Lightweight Messaging & Protocol Comparison</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=mqtt" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
@@ -194,6 +206,12 @@
   <td>026b</td>
   <td>ETL/ELT Orchestration: Dagster Assets & dbt</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>056</td>
+  <td>DuckDB: Embedded Analytics & Columnar Queries</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
@@ -428,6 +446,24 @@
   <td>031c</td>
   <td>Agentic AI: Production Patterns</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>054a</td>
+  <td>Google ADK: Agents, Tools & Sessions</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=google" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>054b</td>
+  <td>Google ADK: Multi-Agent Orchestration</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=google" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>054c</td>
+  <td>Google ADK: Callbacks, Evaluation & Streaming</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=google" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
