@@ -1,0 +1,14 @@
+[project]
+name = "rabbitmq-practice"
+version = "0.1.0"
+description = "Practice 055: RabbitMQ — Queues, Exchanges & AMQP"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pika>=1.3.2",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.38.0",
+]

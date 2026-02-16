@@ -1,0 +1,27 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq-practice
+    ports:
+      # AMQP protocol port -- pika connects here
+      - "5672:5672"
+      # Management UI -- browser dashboard at http://localhost:15672
+      - "15672:15672"
+    environment:
+      # Default credentials (management UI + AMQP connections)
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      # Default vhost -- all exercises use "/"
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      # rabbitmq-diagnostics ping checks if the broker is running and responsive
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  rabbitmq_data:
