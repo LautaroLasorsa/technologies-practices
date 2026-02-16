@@ -1,0 +1,13 @@
+[project]
+name = "practice-054a-google-adk"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk>=1.0.0",
+    "litellm>=1.50.0",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.38.0",
+]
