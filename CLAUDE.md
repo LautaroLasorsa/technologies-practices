@@ -87,6 +87,9 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 031a | Agentic AI: Single-Agent Design Patterns | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 031b | Agentic AI: Multi-Agent Systems | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 031c | Agentic AI: Production Patterns | Python, Docker (Ollama, Qdrant, Langfuse) | AI & LLM Engineering | `not-started` |
+| 054a | Google ADK: Agents, Tools & Sessions | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 054b | Google ADK: Multi-Agent Orchestration | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 054c | Google ADK: Callbacks, Evaluation & Streaming | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 032a | LP: Simplex Method | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 032b | LP: Duality & Interior Point | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 033a | Convex Opt: First-Order Methods | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
@@ -118,6 +121,9 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 051 | Distributed Coordination: etcd | Python, Docker (etcd) | Distributed Systems Patterns | `not-started` |
 | 052 | Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
 | 053 | Consistent Hashing & DHTs | Python | Distributed Systems Patterns | `not-started` |
+| 055 | RabbitMQ: Queues, Exchanges & AMQP | Python, Docker (RabbitMQ) | Data Stores & Messaging | `not-started` |
+| 057 | MQTT: Lightweight Messaging & Protocol Comparison | Python, Docker (Mosquitto) | Data Stores & Messaging | `not-started` |
+| 056 | DuckDB: Embedded Analytics & Columnar Queries | Python | Data Engineering | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
