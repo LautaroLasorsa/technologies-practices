@@ -1,10 +1,22 @@
 {
     "tab_size": 4,
     "hard_tabs": false,
+    "inlay_hints": {
+        "enabled": true,
+        "show_type_hints": true,
+        "show_parameter_hints": true,
+        "show_other_hints": true,
+    },
     "languages": {
         "Python": {
             "tab_size": 4,
             "hard_tabs": false,
+            "language_servers": [
+                "basedpyright",
+                "!pyright",
+                "!pylsp",
+                "!pyrefly",
+            ],
         },
         "Rust": {
             "tab_size": 4,
@@ -31,6 +43,21 @@
         "clangd": {
             "binary": {
                 "arguments": [],
+            },
+        },
+        "basedpyright": {
+            "settings": {
+                "basedpyright.analysis": {
+                    "autoSearchPaths": true,
+                    "useLibraryCodeForTypes": true,
+                    "autoImportCompletions": true,
+                    "inlayHints": {
+                        "variableTypes": true,
+                        "callArgumentNames": true,
+                        "functionReturnTypes": true,
+                        "genericTypes": true,
+                    },
+                },
             },
         },
     },
