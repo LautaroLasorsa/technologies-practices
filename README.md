@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-7%20%2F%2094%20practices-blue?style=flat-square" alt="Progress: 7/94">
+  <img src="https://img.shields.io/badge/Progress-7%20%2F%20104%20practices-blue?style=flat-square" alt="Progress: 7/104">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -53,6 +53,24 @@
   <td>—</td>
 </tr>
 <tr>
+  <td>003c</td>
+  <td>Kafka: Schema Registry & Data Contracts</td>
+  <td><img src="https://skillicons.dev/icons?i=py,kafka,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>003d</td>
+  <td>Kafka Connect & Change Data Capture</td>
+  <td><img src="https://skillicons.dev/icons?i=py,kafka,postgres,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>003e</td>
+  <td>Kafka: Internals & Performance Tuning</td>
+  <td><img src="https://skillicons.dev/icons?i=py,kafka,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
   <td>008</td>
   <td>Vector Databases (Qdrant)</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
@@ -68,6 +86,30 @@
   <td>057</td>
   <td>MQTT: Lightweight Messaging & Protocol Comparison</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=mqtt" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>058a</td>
+  <td>SQLModel: FastAPI Integration & Pydantic Models</td>
+  <td><img src="https://skillicons.dev/icons?i=py,fastapi,postgres,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>058b</td>
+  <td>SQLAlchemy 2.0: Async ORM & Advanced Queries</td>
+  <td><img src="https://skillicons.dev/icons?i=py,postgres,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>059a</td>
+  <td>SQLx: Compile-Time Checked SQL</td>
+  <td><img src="https://skillicons.dev/icons?i=rust,postgres,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>059b</td>
+  <td>Diesel: Type-Safe ORM & Migrations</td>
+  <td><img src="https://skillicons.dev/icons?i=rust,postgres,docker" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
