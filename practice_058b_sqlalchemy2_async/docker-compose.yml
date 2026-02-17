@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: sqlalchemy2-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sa_user
+      POSTGRES_PASSWORD: sa_pass
+      POSTGRES_DB: sa_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sa_user -d sa_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
