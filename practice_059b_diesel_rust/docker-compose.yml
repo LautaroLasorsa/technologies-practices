@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: diesel-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: diesel_user
+      POSTGRES_PASSWORD: diesel_pass
+      POSTGRES_DB: diesel_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U diesel_user -d diesel_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
