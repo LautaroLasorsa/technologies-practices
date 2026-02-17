@@ -34,6 +34,9 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 002 | Cloud Pub/Sub | Python, Docker (emulator) | Data Stores & Messaging | `not-started` |
 | 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | Data Stores & Messaging | `not-started` |
 | 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | Data Stores & Messaging | `not-started` |
+| 003c | Kafka: Schema Registry & Data Contracts | Python, Docker (KRaft, Schema Registry) | Data Stores & Messaging | `not-started` |
+| 003d | Kafka Connect & Change Data Capture | Python, Docker (KRaft, Debezium, PostgreSQL) | Data Stores & Messaging | `not-started` |
+| 003e | Kafka: Internals & Performance Tuning | Python, Docker (KRaft, 3-broker) | Data Stores & Messaging | `not-started` |
 | 004a | gRPC & Protobuf: Python Service | Python | API Design & Protocols | `not-started` |
 | 004b | gRPC: Rust Interop | Rust, Python | API Design & Protocols | `not-started` |
 | 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | Infra DevOps & Observability | `not-started` |
@@ -124,6 +127,10 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 055 | RabbitMQ: Queues, Exchanges & AMQP | Python, Docker (RabbitMQ) | Data Stores & Messaging | `not-started` |
 | 057 | MQTT: Lightweight Messaging & Protocol Comparison | Python, Docker (Mosquitto) | Data Stores & Messaging | `not-started` |
 | 056 | DuckDB: Embedded Analytics & Columnar Queries | Python | Data Engineering | `not-started` |
+| 058a | SQLModel: FastAPI Integration & Pydantic Models | Python (SQLModel, FastAPI), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
+| 058b | SQLAlchemy 2.0: Async ORM & Advanced Queries | Python (SQLAlchemy 2.0, asyncpg), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
+| 059a | SQLx: Compile-Time Checked SQL | Rust (SQLx, tokio), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
+| 059b | Diesel: Type-Safe ORM & Migrations | Rust (Diesel), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
