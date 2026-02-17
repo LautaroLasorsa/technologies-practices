@@ -1,0 +1,11 @@
+[project]
+name = "kafka-schema-registry"
+version = "0.1.0"
+description = "Practice 003c: Kafka Schema Registry & Data Contracts"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "confluent-kafka[avro]>=2.6.0",
+    "requests>=2.31.0",
+    "fastavro>=1.9.0",
+]
