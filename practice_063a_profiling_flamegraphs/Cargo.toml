@@ -1,0 +1,32 @@
+[package]
+name = "profiling-flamegraphs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "profiling_flamegraphs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "profiling-flamegraphs"
+path = "src/main.rs"
+
+[dependencies]
+dhat = { version = "0.3", optional = true }
+rand = "0.8"
+
+[features]
+dhat-heap = ["dhat"]
+
+# CRITICAL for profiling: keep debug symbols in release builds.
+# Without this, profilers only see memory addresses (0x7ff6...) instead of
+# function names, file names, and line numbers.
+#
+# `debug = true` embeds full DWARF debug info (Linux/macOS) or generates a
+# .pdb file (Windows) WITHOUT disabling optimizations. The binary runs at
+# full speed but is larger (or has a companion .pdb file).
+#
+# `debug = 1` would give only line tables (smaller, no variable info).
+# `debug = 2` is equivalent to `debug = true`.
+[profile.release]
+debug = true

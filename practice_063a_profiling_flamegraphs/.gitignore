@@ -1,0 +1,6 @@
+/target
+*.svg
+dhat-heap.json
+dhat-ad-hoc.json
+perf.data
+perf.data.old
