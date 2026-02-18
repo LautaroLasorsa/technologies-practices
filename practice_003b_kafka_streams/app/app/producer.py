@@ -71,7 +71,7 @@ def generate_bad_reading() -> dict:
 async def produce_readings(count: int, interval: float, include_bad: bool) -> None:
     """Produce sensor readings to Kafka."""
     producer = AIOKafkaProducer(
-        bootstrap_servers="localhost:9094",
+        bootstrap_servers=config.KAFKA_BROKER.replace("kafka://", ""),
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
     await producer.start()
