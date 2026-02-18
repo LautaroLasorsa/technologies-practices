@@ -1,0 +1,29 @@
+[package]
+name = "unsafe-ffi-practice"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+# Enable bindgen to auto-generate Rust bindings from C headers.
+# Requires LLVM/libclang installed on the system.
+# On Windows: install LLVM from https://releases.llvm.org/ and set
+# LIBCLANG_PATH=C:\Program Files\LLVM\bin (adjust path as needed).
+#
+# Usage: cargo build --features bindgen
+# Without this feature, Exercise 6 uses pre-written fallback bindings.
+bindgen = ["dep:bindgen"]
+
+[dependencies]
+# libc provides raw type definitions for C interop: c_int, c_char, c_void, size_t, etc.
+# Also provides access to POSIX functions (strlen, qsort, free, etc.)
+libc = "0.2"
+
+[build-dependencies]
+# cc compiles C source files into a static library linked into the Rust binary.
+# It auto-detects the system C compiler (MSVC on Windows, gcc/clang on Linux/macOS).
+cc = "1"
+
+# bindgen parses C header files and generates Rust FFI declarations automatically.
+# Optional: requires libclang (LLVM). Set LIBCLANG_PATH if not on PATH.
+# Enable with: cargo build --features bindgen
+bindgen = { version = "0.71", optional = true }
