@@ -84,7 +84,21 @@ def classify_status(reading: SensorReading) -> tuple[str, str]:
         if reading.temperature > config.TEMP_CRITICAL_HIGH:
             return ("critical", f"temperature {reading.temperature} exceeds critical high {config.TEMP_CRITICAL_HIGH}")
     """
-    raise NotImplementedError("TODO(human): implement classify_status")
+    if reading.temperature < config.TEMP_CRITICAL_LOW:
+        return ("critical",f"Temperature {reading.temperature} C is too low")
+    if reading.temperature > config.TEMP_CRITICAL_HIGH:
+        return ("critical",f"Temperature {reading.temperature} C is too high")
+    if reading.humidity > config.HUMIDITY_CRITICAL_HIGH:
+        return ("critical", f"Humidity {reading.humidity} % is too high")
+
+    if reading.temperature < config.TEMP_WARNING_LOW:
+        return ("warning",f"Temperature {reading.temperature} C is too low")
+    if reading.temperature > config.TEMP_WARNING_HIGH:
+        return ("warning",f"Temperature {reading.temperature} C is too high")
+    if reading.humidity > config.HUMIDITY_WARNING_HIGH:
+        return ("warning", f"Humidity {reading.humidity} % is too high")
+
+    return ("normal","all readings within range")
 
 
 @app.agent(raw_readings_topic, sink=[enriched_readings_topic])
@@ -142,4 +156,29 @@ async def enrich_readings(stream):
 
     Docs: https://faust.readthedocs.io/en/latest/userguide/agents.html#the-stream
     """
-    raise NotImplementedError("TODO(human): implement enrich_readings agent")
+
+    async for reading in stream:
+        reading: SensorReading
+
+        error = validate_reading(reading)
+        if error is not None:
+            logger.warning(f"Invalid reading from {reading.sensor_id}: {error}")
+            await dead_letter_topic.send(
+                value = json.dumps({"error":error, "raw":reading.asdict()}).encode("utf-8")
+            )
+            continue
+
+        (status, reason) = classify_status(reading)
+
+        enriched = EnrichedReading(
+            sensor_id = reading.sensor_id,
+            temperature = reading.temperature,
+            humidity = reading.humidity,
+            timestamp = reading.timestamp,
+            location = reading.location,
+            status = status,
+            status_reason = reason
+        )
+
+        logger.info(f"Enriched {reading.sensor_id}: status={status}")
+        yield enriched

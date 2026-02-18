@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-7%20%2F%20115%20practices-blue?style=flat-square" alt="Progress: 7/115">
+  <img src="https://img.shields.io/badge/Progress-8%20%2F%20116%20practices-blue?style=flat-square" alt="Progress: 8/116">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -47,10 +47,10 @@
   <td>✅ Completed</td>
 </tr>
 <tr>
-  <td>003b</td>
-  <td>Kafka: Streams & Processing</td>
+  <td><b>003b</b></td>
+  <td><b>Kafka: Streams & Processing</b></td>
   <td><img src="https://skillicons.dev/icons?i=py,kafka,docker" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>003c</td>
@@ -566,6 +566,12 @@
   <td>054c</td>
   <td>Google ADK: Callbacks, Evaluation & Streaming</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=google" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>067</td>
+  <td>GraphRAG: Knowledge Graph-Enhanced RAG</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>

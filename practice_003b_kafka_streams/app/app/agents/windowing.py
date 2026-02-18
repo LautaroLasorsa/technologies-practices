@@ -68,7 +68,8 @@ window_agg_table = app.Table(
 ).tumbling(
     size=timedelta(seconds=config.WINDOW_SIZE_SECONDS),
     expires=timedelta(seconds=config.WINDOW_EXPIRES_SECONDS),
-)
+    key_index=True,
+).relative_to_now()
 
 
 # ── TODO(human): Implement this agent ────────────────────────────────
@@ -129,7 +130,21 @@ async def aggregate_windows(stream):
 
     Docs: https://faust.readthedocs.io/en/latest/userguide/tables.html#basics
     """
-    raise NotImplementedError("TODO(human): implement aggregate_windows agent")
+    async for reading in stream:
+        agg = window_agg_table[reading.sensor_id].value()
+        agg["count"] += 1
+        agg["sum_temp"] += reading.temperature
+        agg["min_temp"] = min(agg["min_temp"], reading.temperature)
+        agg["max_temp"] = max(agg["max_temp"], reading.temperature)
+        agg["sum_hum"] += reading.humidity
+        if agg["window_start"] == 0.0:
+            agg["window_start"] = reading.timestamp
+
+        window_agg_table[reading.sensor_id] = agg
+        logger.info(
+            f"Window agg {reading.sensor_id}: "
+            f"count={agg['count']}, avg_temp={agg['sum_temp']/agg['count']:.1f}"
+        )
 
 
 @app.timer(interval=float(config.WINDOW_SIZE_SECONDS))
@@ -184,4 +199,27 @@ async def emit_window_snapshots():
 
     Docs: https://faust.readthedocs.io/en/latest/userguide/tables.html#windowing
     """
-    raise NotImplementedError("TODO(human): implement emit_window_snapshots timer")
+    now = time.time()
+
+    for sensor_id in window_agg_table.keys():
+        try:
+            agg = window_agg_table[sensor_id].value()
+        except KeyError:
+            continue
+
+        if agg["count"]==0:
+            continue
+
+        aggregate = WindowAggregate(
+            sensor_id = sensor_id,
+            window_start = agg["window_start"],
+            window_end = now,
+            count = agg["count"],
+            avg_temperature = agg["sum_temp"] / agg["count"],
+            min_temperature=agg["min_temp"],
+            max_temperature=agg["max_temp"],
+            avg_humidity=agg["sum_hum"] / agg["count"],
+        )
+
+        await window_aggregates_topic.send(value = aggregate)
+        logger.info(f"Emitted window aggregate for {sensor_id}: {aggregate}")

@@ -33,7 +33,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 001 | LMDB | Python, Rust | Data Stores & Messaging | `completed` |
 | 002 | Cloud Pub/Sub | Python, Docker (emulator) | Data Stores & Messaging | `completed` |
 | 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | Data Stores & Messaging | `completed` |
-| 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | Data Stores & Messaging | `not-started` |
+| 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | Data Stores & Messaging | `completed` |
 | 003c | Kafka: Schema Registry & Data Contracts | Python, Docker (KRaft, Schema Registry) | Data Stores & Messaging | `not-started` |
 | 003d | Kafka Connect & Change Data Capture | Python, Docker (KRaft, Debezium, PostgreSQL) | Data Stores & Messaging | `not-started` |
 | 003e | Kafka: Internals & Performance Tuning | Python, Docker (KRaft, 3-broker) | Data Stores & Messaging | `not-started` |
@@ -93,6 +93,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 054a | Google ADK: Agents, Tools & Sessions | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 054b | Google ADK: Multi-Agent Orchestration | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 054c | Google ADK: Callbacks, Evaluation & Streaming | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 067 | GraphRAG: Knowledge Graph-Enhanced RAG | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 032a | LP: Simplex Method | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 032b | LP: Duality & Interior Point | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 033a | Convex Opt: First-Order Methods | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |

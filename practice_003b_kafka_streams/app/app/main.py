@@ -29,10 +29,10 @@ app = faust.App(
     store="memory://",
     # Topic configuration
     topic_replication_factor=1,
-    topic_partitions=4,
+    topic_partitions=1,
     # Processing guarantee: start with "at_least_once" (default).
     # Phase 5 will switch to "exactly_once".
-    processing_guarantee="at_least_once",
+    processing_guarantee="exactly_once",
 )
 
 # ── Define topics ────────────────────────────────────────────────────
@@ -101,4 +101,12 @@ async def status_page(self, request):
 
     Docs: https://faust.readthedocs.io/en/latest/userguide/livecheck.html
     """
-    raise NotImplementedError("TODO(human): implement status_page")
+
+    from app.agents.counting import sensor_counts
+    import json
+    from aiohttp.web import Response
+
+    return Response(
+        content_type="application/json",
+        text = json.dumps(dict(sensor_counts.items()))
+    )

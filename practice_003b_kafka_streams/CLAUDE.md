@@ -179,4 +179,4 @@ All commands are run from the practice root (`practice_003b_kafka_streams/`) unl
 
 ## State
 
-`not-started`
+`completed`

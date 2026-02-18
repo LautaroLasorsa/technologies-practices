@@ -80,7 +80,10 @@ async def count_by_sensor(stream):
 
     Docs: https://faust.readthedocs.io/en/latest/userguide/tables.html#basics
     """
-    raise NotImplementedError("TODO(human): implement count_by_sensor agent")
+
+    async for reading in stream:
+        sensor_counts[reading.sensor_id] += 1
+        logger.info(f"Sensor {reading.sensor_id}: count={sensor_counts[reading.sensor_id]}")
 
 
 @app.timer(interval=30.0)
@@ -116,4 +119,16 @@ async def check_high_count_sensors():
 
     Docs: https://faust.readthedocs.io/en/latest/userguide/agents.html#timers
     """
-    raise NotImplementedError("TODO(human): implement check_high_count_sensors timer")
+
+    sensor_exceeded: bool = False
+
+    for sensor_id, count in sensor_counts.items():
+        if count >= config.SENSOR_COUNT_ALERT_THRESHOLD:
+            logger.warning(
+                f"ALERT: Sensor {sensor_id} has {count} readings "
+                f"(threshold={config.SENSOR_COUNT_ALERT_THRESHOLD})"
+            )
+            sensor_exceeded = True
+
+    if not sensor_exceeded:
+        logger.info("Periodic check: no sensors above threshold.")
