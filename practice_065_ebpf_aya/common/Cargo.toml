@@ -1,0 +1,25 @@
+# ============================================================================
+# Common crate: shared types between BPF (kernel) and userspace
+#
+# This crate MUST be #![no_std] compatible because it is compiled both for:
+# - bpfel-unknown-none (kernel BPF programs — no std, no heap, no alloc)
+# - x86_64-unknown-linux-gnu (userspace — full std available)
+#
+# Types defined here are used to communicate via BPF maps (e.g., structs
+# written in kernel and read in userspace via PerfEventArray or RingBuf).
+#
+# IMPORTANT: All types must be #[repr(C)] to ensure consistent memory layout
+# across the two different compilation targets.
+# ============================================================================
+
+[package]
+name = "practice-065-common"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+# Enable the "user" feature in userspace code to get std-dependent impls
+user = []
+
+[dependencies]

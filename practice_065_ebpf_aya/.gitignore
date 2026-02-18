@@ -1,0 +1,13 @@
+# Rust build artifacts
+/target/
+
+# Cargo lock for binary crates (not library crates)
+# Keep it for reproducibility in this practice
+# Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

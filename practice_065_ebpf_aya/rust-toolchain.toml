@@ -1,0 +1,12 @@
+# ============================================================================
+# Rust toolchain configuration
+#
+# The userspace crate uses stable Rust.
+# The eBPF crate uses nightly (specified via the cargo alias in .cargo/config.toml).
+#
+# This file pins the stable toolchain version for the workspace.
+# The nightly toolchain is invoked explicitly via `cargo +nightly`.
+# ============================================================================
+
+[toolchain]
+channel = "stable"

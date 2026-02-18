@@ -1,0 +1,62 @@
+# ============================================================================
+# Userspace crate: BPF program loader, map reader, and display logic
+#
+# This crate compiles for x86_64-unknown-linux-gnu (normal Linux binary).
+# It loads the BPF ELF objects (compiled by cargo build-ebpf), attaches them
+# to kernel hook points, and reads data from BPF maps.
+#
+# Each exercise is a separate binary in src/bin/.
+# ============================================================================
+
+[package]
+name = "practice-065-userspace"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# aya: Userspace eBPF library. Loads BPF ELF files, creates maps, attaches
+# programs. This is the Rust-native alternative to libbpf.
+aya = { version = "0.13", features = ["async_tokio"] }
+
+# aya-log: Receives log messages from BPF programs (sent via aya-log-ebpf's
+# info!()/warn!() macros) and integrates them with the Rust logging ecosystem.
+aya-log = "0.2"
+
+# Shared types with the BPF programs
+practice-065-common = { path = "../common", features = ["user"] }
+
+# Async runtime — needed for async PerfEventArray/RingBuf reading
+tokio = { version = "1", features = ["full"] }
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# CLI argument parsing
+clap = { version = "4", features = ["derive"] }
+
+# Error handling
+anyhow = "1"
+
+# Byte order conversion for network data
+bytes = "1"
+
+[[bin]]
+name = "ex1_kprobe_open"
+path = "src/bin/ex1_kprobe_open.rs"
+
+[[bin]]
+name = "ex2_kprobe_counter"
+path = "src/bin/ex2_kprobe_counter.rs"
+
+[[bin]]
+name = "ex3_tracepoint_exec"
+path = "src/bin/ex3_tracepoint_exec.rs"
+
+[[bin]]
+name = "ex4_xdp_counter"
+path = "src/bin/ex4_xdp_counter.rs"
+
+[[bin]]
+name = "ex5_dashboard"
+path = "src/bin/ex5_dashboard.rs"

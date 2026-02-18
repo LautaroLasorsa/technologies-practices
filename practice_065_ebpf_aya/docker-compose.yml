@@ -1,0 +1,43 @@
+# Docker Compose for eBPF development with aya
+#
+# The 'ebpf' service runs a privileged Ubuntu container with the full aya toolchain.
+# --privileged is required because eBPF programs are loaded into the HOST kernel
+# via the bpf() syscall, which requires CAP_SYS_ADMIN / CAP_BPF / CAP_PERFMON.
+#
+# Volume mounts:
+# - /sys/kernel/debug: debugfs, required for accessing tracepoint definitions
+# - /sys/kernel/btf:   BTF type information for CO-RE (Compile Once, Run Everywhere)
+# - /sys/fs/bpf:       BPF filesystem for pinned maps/programs
+# - /usr/src:          Kernel headers (if available on host)
+# - /lib/modules:      Kernel modules (if available on host)
+
+services:
+  ebpf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    privileged: true
+    pid: host
+    network_mode: host
+    volumes:
+      # debugfs: required for tracepoint format files at
+      # /sys/kernel/debug/tracing/events/
+      - type: bind
+        source: /sys/kernel/debug
+        target: /sys/kernel/debug
+
+      # BTF vmlinux: required for CO-RE relocations
+      # Docker Desktop (WSL2) kernels typically have BTF at this path
+      - type: bind
+        source: /sys/kernel/btf
+        target: /sys/kernel/btf
+        read_only: true
+
+      # BPF filesystem: for pinning maps and programs
+      - type: bind
+        source: /sys/fs/bpf
+        target: /sys/fs/bpf
+
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true

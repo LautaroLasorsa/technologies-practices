@@ -1,0 +1,68 @@
+# ============================================================================
+# eBPF crate: kernel-side BPF programs
+#
+# This crate compiles to bpfel-unknown-none (eBPF little-endian, no OS).
+# It uses nightly Rust with -Zbuild-std=core to rebuild `core` for the BPF
+# target, since there is no pre-built standard library for BPF.
+#
+# Programs in this crate are annotated with #[kprobe], #[xdp], #[tracepoint]
+# etc. and run INSIDE the Linux kernel after being loaded by the userspace binary.
+#
+# Constraints:
+# - #![no_std], #![no_main] — no standard library, no main function
+# - 512 bytes of stack, no heap
+# - No floating point, no SIMD
+# - All loops must have bounded iteration counts (verifier enforces)
+# - Kernel memory must be read via bpf_probe_read_kernel()
+# ============================================================================
+
+[package]
+name = "practice-065-ebpf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# aya-ebpf: the BPF-side library providing macros (#[kprobe], #[xdp], etc.),
+# map types (HashMap, Array, PerfEventArray, RingBuf), and helper wrappers
+# (bpf_probe_read_kernel, bpf_ktime_get_ns, etc.)
+aya-ebpf = "0.1"
+
+# aya-log-ebpf: enables info!(), warn!(), error!() logging from BPF programs.
+# Logs are sent to userspace via a hidden PerfEventArray map and displayed
+# by aya-log on the userspace side. Very useful for debugging.
+aya-log-ebpf = "0.1"
+
+# Shared types with userspace (ExecEvent, ActivityEvent)
+practice-065-common = { path = "../common" }
+
+# network-types: provides Rust definitions for EthHdr, Ipv4Hdr, etc.
+# Used in the XDP packet counter exercise.
+network-types = "0.0.7"
+
+# memoffset: provides offset_of!() macro for reading individual struct fields
+# from packet headers without loading the entire struct onto the BPF stack.
+memoffset = "0.9"
+
+[[bin]]
+name = "kprobe-open"
+path = "src/kprobe_open.rs"
+
+[[bin]]
+name = "kprobe-counter"
+path = "src/kprobe_counter.rs"
+
+[[bin]]
+name = "tracepoint-exec"
+path = "src/tracepoint_exec.rs"
+
+[[bin]]
+name = "xdp-counter"
+path = "src/xdp_counter.rs"
+
+[[bin]]
+name = "dashboard-open"
+path = "src/dashboard_open.rs"
+
+[[bin]]
+name = "dashboard-exec"
+path = "src/dashboard_exec.rs"

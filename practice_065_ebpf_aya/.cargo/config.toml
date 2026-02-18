@@ -1,0 +1,36 @@
+# ============================================================================
+# Cargo configuration for the eBPF practice workspace
+#
+# This defines:
+# - A custom `build-ebpf` alias that compiles the BPF crate with nightly
+#   Rust, targeting bpfel-unknown-none (eBPF little-endian)
+# - A runner configuration that uses sudo (needed to load BPF programs)
+# ============================================================================
+
+[alias]
+# Compile the eBPF programs using nightly Rust with -Zbuild-std.
+#
+# Why nightly + build-std?
+# The bpfel-unknown-none target is a Tier 3 target — Rust doesn't ship pre-built
+# standard library for it. -Zbuild-std=core tells cargo to rebuild `core` from
+# source for the BPF target. This requires the rust-src component.
+#
+# The output BPF ELF files land in:
+#   target/bpfel-unknown-none/release/<program_name>
+build-ebpf = [
+    "+nightly", "build",
+    "--manifest-path", "ebpf/Cargo.toml",
+    "-Z", "build-std=core",
+    "--target", "bpfel-unknown-none",
+    "--release",
+]
+
+[build]
+# Target triple for userspace binaries (standard x86_64 Linux)
+target = "x86_64-unknown-linux-gnu"
+
+[target.x86_64-unknown-linux-gnu]
+# Run userspace binaries with sudo because loading BPF programs requires
+# CAP_BPF / CAP_SYS_ADMIN. The -E flag preserves environment variables
+# (needed for RUST_LOG).
+runner = "sudo -E"

@@ -1,0 +1,17 @@
+# ============================================================================
+# Workspace root for eBPF practice
+#
+# This workspace contains three crates:
+# - common/     : Shared types between BPF and userspace (#![no_std] compatible)
+# - ebpf/       : BPF programs (compiled to bpfel-unknown-none, runs in kernel)
+# - userspace/  : Userspace loader (loads BPF programs, manages maps, displays output)
+#
+# NOTE: The ebpf/ crate is NOT a regular workspace member — it targets a different
+# architecture (bpfel-unknown-none) and uses nightly Rust with -Zbuild-std.
+# It is compiled separately by the build-ebpf alias (see .cargo/config.toml).
+# Only 'common' and 'userspace' are workspace members.
+# ============================================================================
+
+[workspace]
+members = ["common", "userspace"]
+resolver = "2"
