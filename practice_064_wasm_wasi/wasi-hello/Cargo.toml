@@ -1,0 +1,15 @@
+[package]
+name = "wasi-hello"
+version = "0.1.0"
+edition = "2021"
+
+# This crate is a binary targeting wasm32-wasip1.
+# Build with: cargo build -p wasi-hello --target wasm32-wasip1
+#
+# It uses only the Rust standard library, which provides WASI bindings
+# automatically when targeting wasm32-wasip1 (std::fs, std::io, std::env
+# all route through WASI syscalls).
+#
+# No external dependencies needed — the std library handles everything.
+
+[dependencies]

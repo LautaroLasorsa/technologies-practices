@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = [
+    "wasi-hello",
+    "wasm-lib",
+    "wasm-host",
+]
+
+# The workspace contains projects targeting different architectures:
+#
+#   wasi-hello  → wasm32-wasip1         (cargo build -p wasi-hello --target wasm32-wasip1)
+#   wasm-lib    → wasm32-unknown-unknown (cargo build -p wasm-lib --target wasm32-unknown-unknown)
+#   wasm-host   → native                (cargo build -p wasm-host)
+#
+# Running `cargo check` at workspace root checks only the native-compatible
+# projects. Use the target-specific commands above for WASM sub-projects.

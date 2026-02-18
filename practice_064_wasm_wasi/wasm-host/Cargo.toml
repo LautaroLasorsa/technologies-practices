@@ -1,0 +1,28 @@
+[package]
+name = "wasm-host"
+version = "0.1.0"
+edition = "2021"
+
+# This crate is a native binary that embeds the wasmtime WebAssembly runtime.
+# It loads and executes .wasm modules, acting as the "host" that provides
+# capabilities to sandboxed WASM "guest" modules.
+#
+# Build and run with: cargo run -p wasm-host
+#
+# NOTE: wasmtime is a large dependency (~3 min first compile). Subsequent
+# builds are fast due to incremental compilation.
+
+[dependencies]
+# wasmtime: the core embedding API for the Wasmtime WebAssembly runtime.
+# Provides Engine, Store, Module, Linker, Instance, TypedFunc.
+# Default features include cranelift (compiler), wat (text format parsing),
+# and component-model support.
+wasmtime = "29"
+
+# wasmtime-wasi: WASI implementation for wasmtime.
+# Provides WasiCtxBuilder, add_to_linker_sync, and all WASI Preview 1 APIs
+# (filesystem, clocks, random, stdio).
+wasmtime-wasi = "29"
+
+# anyhow: ergonomic error handling (wasmtime returns anyhow-compatible errors)
+anyhow = "1"
