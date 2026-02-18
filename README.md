@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp&perline=15" />
+  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp,wasm,linux&perline=17" />
 </p>
 
 <b> _**This repository is not to show the things that I made, but the things that I have been interested into learning, and my progress learning them**_ </b>
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-7%20%2F%20104%20practices-blue?style=flat-square" alt="Progress: 7/104">
+  <img src="https://img.shields.io/badge/Progress-7%20%2F%20115%20practices-blue?style=flat-square" alt="Progress: 7/115">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -321,7 +321,7 @@
 
 ---
 
-## C++ Systems Programming
+## Systems Programming
 
 <table>
 <thead>
@@ -362,6 +362,66 @@
   <td>022</td>
   <td>Concurrent Data Structures: moodycamel & Lock-Free Patterns</td>
   <td><img src="https://skillicons.dev/icons?i=cpp,cmake" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>060a</td>
+  <td>Unsafe Rust & FFI: Raw Pointers, bindgen & repr(C)</td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>060b</td>
+  <td>Async Runtime Internals: Future, Waker & Tokio Architecture</td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>061a</td>
+  <td>Lock-Free Rust: crossbeam & Epoch-Based Reclamation</td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>061b</td>
+  <td>Custom Allocators: GlobalAlloc, jemalloc & Arena Patterns</td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>062</td>
+  <td>SIMD in Rust: portable_simd & std::arch</td>
+  <td><img src="https://skillicons.dev/icons?i=rust" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>063a</td>
+  <td>Profiling & Flamegraphs</td>
+  <td><img src="https://skillicons.dev/icons?i=rust,cpp" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>063b</td>
+  <td>Memory Safety Verification: Miri & Sanitizers</td>
+  <td><img src="https://skillicons.dev/icons?i=rust,cpp" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>064</td>
+  <td>WebAssembly from Systems Languages: WASM & WASI</td>
+  <td><img src="https://skillicons.dev/icons?i=rust,wasm" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>065</td>
+  <td>eBPF Observability: Kernel Tracing with aya</td>
+  <td><img src="https://skillicons.dev/icons?i=rust,docker,linux" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>066</td>
+  <td>io_uring: Modern Linux Async I/O</td>
+  <td><img src="https://skillicons.dev/icons?i=rust,docker,linux" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>

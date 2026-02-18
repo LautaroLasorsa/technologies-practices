@@ -51,24 +51,24 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 010b | Terraform: Multi-Resource Orchestration | HCL, Docker provider | Infra, DevOps & Observability | `not-started` |
 | 011a | Spark: Core Transformations | Python, Docker | Data Engineering | `not-started` |
 | 011b | Spark: Real Data Pipeline | Python, Docker | Data Engineering | `not-started` |
-| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | C++ Systems Programming | `completed` |
-| 012b | Boost Deep-Dive | C++17, Boost | C++ Systems Programming | `completed` |
-| 013 | Financial C++: QuickFIX & QuantLib | C++17, QuickFIX, QuantLib | C++ Systems Programming | `not-started` |
+| 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | Systems Programming | `completed` |
+| 012b | Boost Deep-Dive | C++17, Boost | Systems Programming | `completed` |
+| 013 | Financial C++: QuickFIX & QuantLib | C++17, QuickFIX, QuantLib | Systems Programming | `not-started` |
 | 014 | SAGA Pattern | Python, Docker Compose, Redpanda | Distributed Systems Patterns | `not-started` |
 | 015 | CQRS & Event Sourcing | Python, Docker Compose, Redpanda | Distributed Systems Patterns | `not-started` |
 | 016 | REST API Design Principles | Python (FastAPI), OpenAPI | API Design & Protocols | `not-started` |
 | 017a | World Model RL: Dyna-Q Basics | Python (PyTorch), Gymnasium | ML Systems | `not-started` |
 | 017b | World Model RL: Neural World Model | Python (PyTorch), Gymnasium | ML Systems | `not-started` |
 | 017c | World Model RL: Latent Imagination (Dreamer) | Python (PyTorch), Gymnasium | ML Systems | `not-started` |
-| 018a | CMake: FetchContent, Targets & Modern Build | C++17, CMake 3.16+ | C++ Systems Programming | `not-started` |
-| 018b | CMake: Toolchains, Presets & Cross-Compilation | C++17, CMake 3.21+ | C++ Systems Programming | `not-started` |
+| 018a | CMake: FetchContent, Targets & Modern Build | C++17, CMake 3.16+ | Systems Programming | `not-started` |
+| 018b | CMake: Toolchains, Presets & Cross-Compilation | C++17, CMake 3.21+ | Systems Programming | `not-started` |
 | 019a | CUDA: Kernels, Memory Model & Parallel Patterns | C++17, CUDA 12.x, CMake | GPU Computing & HFT | `not-started` |
 | 019b | CUDA for HPC/HFT: Streams, Pinned Memory & Low-Latency | C++17, CUDA 12.x, CMake | GPU Computing & HFT | `not-started` |
 | 020a | HFT Low-Latency C++: Lock-Free, Cache & Memory | C++17, CMake | GPU Computing & HFT | `not-started` |
 | 020b | HFT Systems: Order Book, Matching Engine & Feed Handler | C++17, abseil-cpp, CMake | GPU Computing & HFT | `not-started` |
 | 021a | Solana Smart Contracts: Anchor & Accounts Model | Rust, Anchor, LiteSVM (WSL) | Blockchain | `not-started` |
 | 021b | Solana Tokens: SPL, Escrow & PDA Vaults | Rust, Anchor, LiteSVM (WSL) | Blockchain | `not-started` |
-| 022 | Concurrent Data Structures: moodycamel & Lock-Free Patterns | C++17, moodycamel, CMake | C++ Systems Programming | `not-started` |
+| 022 | Concurrent Data Structures: moodycamel & Lock-Free Patterns | C++17, moodycamel, CMake | Systems Programming | `not-started` |
 | 023 | Advanced SQL: Window Functions, CTEs & Query Optimization | Python, PostgreSQL, Docker | Data Engineering | `not-started` |
 | 024a | Testing Patterns: Python | Python (pytest, Hypothesis) | Software Engineering | `not-started` |
 | 024b | Testing Patterns: Rust | Rust (mockall, proptest) | Software Engineering | `not-started` |
@@ -131,6 +131,16 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 058b | SQLAlchemy 2.0: Async ORM & Advanced Queries | Python (SQLAlchemy 2.0, asyncpg), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
 | 059a | SQLx: Compile-Time Checked SQL | Rust (SQLx, tokio), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
 | 059b | Diesel: Type-Safe ORM & Migrations | Rust (Diesel), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
+| 060a | Unsafe Rust & FFI: Raw Pointers, bindgen & repr(C) | Rust (bindgen, libc, cbindgen) | Systems Programming | `not-started` |
+| 060b | Async Runtime Internals: Future, Waker & Tokio Architecture | Rust (tokio) | Systems Programming | `not-started` |
+| 061a | Lock-Free Rust: crossbeam & Epoch-Based Reclamation | Rust (crossbeam, crossbeam-epoch) | Systems Programming | `not-started` |
+| 061b | Custom Allocators: GlobalAlloc, jemalloc & Arena Patterns | Rust (tikv-jemallocator, bumpalo) | Systems Programming | `not-started` |
+| 062 | SIMD in Rust: portable_simd & std::arch | Rust (nightly, std::arch) | Systems Programming | `not-started` |
+| 063a | Profiling & Flamegraphs | Rust, C++ (cargo-flamegraph, samply) | Systems Programming | `not-started` |
+| 063b | Memory Safety Verification: Miri & Sanitizers | Rust, C++ (Miri, ASAN) | Systems Programming | `not-started` |
+| 064 | WebAssembly from Systems Languages: WASM & WASI | Rust (wasm-pack, wasmtime) | Systems Programming | `not-started` |
+| 065 | eBPF Observability: Kernel Tracing with aya | Rust, Docker (Linux) | Systems Programming | `not-started` |
+| 066 | io_uring: Modern Linux Async I/O | Rust (tokio-uring, io-uring), Docker (Linux) | Systems Programming | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
