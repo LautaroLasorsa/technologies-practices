@@ -1,0 +1,12 @@
+[package]
+name = "lock-free-crossbeam"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+crossbeam = "0.8"
+crossbeam-epoch = "0.9"
+crossbeam-queue = "0.3"
+crossbeam-channel = "0.5"
+crossbeam-skiplist = "0.1"
+crossbeam-utils = "0.8"
