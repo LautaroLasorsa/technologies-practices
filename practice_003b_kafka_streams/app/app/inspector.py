@@ -17,12 +17,14 @@ import json
 
 from aiokafka import AIOKafkaConsumer
 
+from app import config
+
 
 async def inspect_topic(topic: str, limit: int, timeout: float) -> None:
     """Consume and print messages from a Kafka topic."""
     consumer = AIOKafkaConsumer(
         topic,
-        bootstrap_servers="localhost:9094",
+        bootstrap_servers=config.KAFKA_BROKER.replace("kafka://", ""),
         auto_offset_reset="earliest",
         group_id=f"inspector-{topic}",
         value_deserializer=lambda v: try_decode(v),

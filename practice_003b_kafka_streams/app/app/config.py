@@ -6,7 +6,7 @@ used across all agents and the producer script.
 
 # ── Kafka connection ─────────────────────────────────────────────────
 
-KAFKA_BROKER = "kafka://localhost:9094"
+KAFKA_BROKER = "kafka://localhost:9092"
 
 # ── Topic names ──────────────────────────────────────────────────────
 
