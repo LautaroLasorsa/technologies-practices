@@ -1,0 +1,20 @@
+[package]
+name = "async-runtime-internals"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# tokio: Production async runtime with work-stealing scheduler, I/O driver, timers, channels.
+# "full" enables all features: rt-multi-thread, macros, sync, time, io-util, net, etc.
+# We need "full" because exercises explore runtime configuration, channels, time, and macros.
+tokio = { version = "1", features = ["full"] }
+
+# futures: Utility traits and combinators for the Future ecosystem.
+# Provides FutureExt, StreamExt, channel primitives, and the core Future re-exports.
+# We use it for the `futures::future::poll_fn` helper and combinator utilities.
+futures = "0.3"
+
+# pin-project-lite: Lightweight declarative macro for safe pinned struct projections.
+# Used in Exercise 4 to build future combinators that wrap inner (pinned) futures.
+# Unlike pin-project (proc-macro), this uses declarative macros — faster compile, no syn dep.
+pin-project-lite = "0.2"
