@@ -1,0 +1,14 @@
+[package]
+name = "custom-allocators"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bumpalo = { version = "3.16", features = ["collections"] }
+rand = "0.8"
+
+# tikv-jemallocator only compiles on non-MSVC targets (Linux, macOS, FreeBSD).
+# On Windows MSVC, this dependency is excluded via cfg and the jemalloc exercise
+# runs a simulated comparison using the System allocator.
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = "0.6"
