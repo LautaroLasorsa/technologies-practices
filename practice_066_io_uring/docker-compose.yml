@@ -1,0 +1,24 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iouring-practice
+    # CRITICAL: io_uring syscalls (io_uring_setup, io_uring_enter, io_uring_register)
+    # are blocked by Docker's default seccomp profile. Without this override,
+    # any io_uring operation will fail with EPERM (Operation not permitted).
+    #
+    # For production, prefer a custom seccomp profile that whitelists only the
+    # three io_uring syscalls instead of disabling seccomp entirely.
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      # Mount the source directory so edits on the host are reflected in the container
+      # without rebuilding. You only need to `cargo build` again after changes.
+      - ./src:/app/src
+      - ./Cargo.toml:/app/Cargo.toml
+    # Keep the container running for interactive use (docker compose exec dev bash)
+    command: sleep infinity
+    # Expose the TCP echo server port (Exercise 5)
+    ports:
+      - "7878:7878"

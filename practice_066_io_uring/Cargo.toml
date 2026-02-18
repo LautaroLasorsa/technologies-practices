@@ -1,0 +1,28 @@
+[package]
+name = "io-uring-practice"
+version = "0.1.0"
+edition = "2021"
+
+# io-uring and tokio-uring are Linux-only. This project is compiled inside
+# a Docker container (see Dockerfile). Do NOT try to build on Windows/macOS.
+
+[dependencies]
+# Low-level io_uring bindings: IoUring, opcode builders, squeue/cqueue entries.
+# This crate wraps liburing and the raw io_uring_setup/io_uring_enter syscalls.
+# Version 0.7.x is the latest stable series.
+io-uring = "0.7"
+
+# Async runtime built on io_uring. Provides tokio-compatible async APIs
+# (File, TcpListener, TcpStream) backed by io_uring instead of epoll.
+# IMPORTANT: tokio-uring has its own runtime (`tokio_uring::start()`),
+# it is NOT a drop-in addition to standard tokio.
+tokio-uring = "0.5"
+
+# Standard tokio runtime — used ONLY in Exercise 6 for benchmarking
+# io_uring vs epoll-based async I/O. The "full" feature enables
+# tokio::fs, tokio::net, macros, and the multi-thread runtime.
+tokio = { version = "1", features = ["full"] }
+
+# libc provides raw type definitions (iovec, sockaddr_in, etc.) needed
+# for low-level io_uring operations with fixed buffers.
+libc = "0.2"
