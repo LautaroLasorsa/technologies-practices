@@ -29,7 +29,7 @@ app = faust.App(
     store="memory://",
     # Topic configuration
     topic_replication_factor=1,
-    topic_partitions=4,
+    topic_partitions=1,
     # Processing guarantee: start with "at_least_once" (default).
     # Phase 5 will switch to "exactly_once".
     processing_guarantee="at_least_once",

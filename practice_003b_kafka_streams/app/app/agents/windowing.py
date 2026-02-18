@@ -68,7 +68,8 @@ window_agg_table = app.Table(
 ).tumbling(
     size=timedelta(seconds=config.WINDOW_SIZE_SECONDS),
     expires=timedelta(seconds=config.WINDOW_EXPIRES_SECONDS),
-)
+    key_index=True,
+).relative_to_now()
 
 
 # ── TODO(human): Implement this agent ────────────────────────────────
