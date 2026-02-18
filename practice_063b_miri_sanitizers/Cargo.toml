@@ -1,0 +1,8 @@
+[package]
+name = "miri-sanitizers"
+version = "0.1.0"
+edition = "2021"
+
+# No external dependencies needed — this practice uses only std and core.
+# Miri works best with pure Rust code (no FFI dependencies).
+[dependencies]
