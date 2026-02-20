@@ -9,7 +9,6 @@ ROOT = Path(__file__).parent
 
 # Practice-specific generated paths (glob patterns relative to ROOT)
 EXTRA = [
-    ".venv/",             # uv virtual environment
     "**/*.db",            # SQLite databases (LangGraph SqliteSaver checkpoints)
 ]
 
@@ -39,6 +38,10 @@ def clean() -> None:
     for pat in ("__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"):
         for m in ROOT.rglob(pat):
             _rm(m)
+
+    # Python virtual environments
+    for m in ROOT.rglob(".venv"):
+        _rm(m)
 
     # Rust target dirs (next to each Cargo.toml)
     for cargo in ROOT.rglob("Cargo.toml"):
