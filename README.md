@@ -19,6 +19,20 @@
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
 
+### Cleanup
+
+Each practice includes a `clean.py` script that removes generated files (build dirs, Docker volumes, caches, virtual environments, etc.). To clean a single practice:
+
+```bash
+cd practice_001_lmdb && python clean.py
+```
+
+To clean all practices at once:
+
+```bash
+python clean_all.py
+```
+
 ---
 
 ## Data Stores & Messaging

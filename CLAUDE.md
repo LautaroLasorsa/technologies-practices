@@ -153,6 +153,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 - **Per-practice stack.** Each practice chooses its own language/framework based on what best fits the technology.
 - **Guided learning format.** Claude Code scaffolds boilerplate (config files, Docker, build systems, glue code) and explains concepts, but leaves critical/interesting/most-educational parts for the user to implement. Each session targets 60–120 minutes. **Important:** Technology setup code (creating databases, topics, subscriptions, indexes, schemas, etc.) is NOT boilerplate — it is part of the exercises. Learning to provision and configure the technology's resources is essential to understanding how it works.
 - **Standalone sessions.** Each practice folder is a self-contained session — no dependency on completing previous practices (unless explicitly noted).
+- **Per-practice `.gitignore`.** Each practice folder must include a `.gitignore` that excludes generated/temporary files specific to that practice (e.g., protobuf stubs, synthetic data, plot images, model checkpoints). If a file needs to be tracked but is excluded by the root `.gitignore`, explicitly include it with `!` negation (e.g., `!Cargo.lock` for Rust practices that need it, `!data/` for practices where `data/` contains source input rather than generated output).
+- **Per-practice `clean.py`.** Each practice folder must include a `clean.py` script that removes all generated/temporary files (Docker volumes, build dirs, caches, virtual environments, synthetic data, etc.). The script should be runnable standalone (`python clean.py` from the practice folder) and is also invoked by the root `clean_all.py`.
 
 ---
 
