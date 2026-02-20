@@ -14,9 +14,9 @@ def main() -> None:
     failed: list[str] = []
     for script in scripts:
         practice = script.parent.name
-        print(f"{'─' * 60}")
+        print(f"{'-' * 60}")
         print(f"  {practice}")
-        print(f"{'─' * 60}")
+        print(f"{'-' * 60}")
         result = subprocess.run(
             [sys.executable, str(script)],
             cwd=script.parent,
@@ -25,7 +25,7 @@ def main() -> None:
             failed.append(practice)
         print()
 
-    print(f"{'═' * 60}")
+    print(f"{'=' * 60}")
     print(f"Cleaned {len(scripts) - len(failed)}/{len(scripts)} practices.")
     if failed:
         print(f"Failed: {', '.join(failed)}")

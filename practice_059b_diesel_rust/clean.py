@@ -22,7 +22,7 @@ def _rm(p: Path) -> None:
         return
     rel = p.relative_to(ROOT)
     print(f"  rm {rel}")
-    shutil.rmtree(p, onexc=_on_rm_error) if p.is_dir() else p.unlink()
+    shutil.rmtree(p, onerror=_on_rm_error) if p.is_dir() else p.unlink()
 
 
 def clean() -> None:
