@@ -9,11 +9,10 @@ __pycache__/
 # DVC local remote storage (simulated "cloud")
 /tmp_remote_storage/
 
-# DVC-tracked data outputs (the actual large files; .dvc pointers are committed)
-/data/raw/*.csv
-/data/prepared/
-/models/
-/metrics/
+# DVC-tracked data outputs are managed by DVC itself.
+# When you run `dvc add <file>`, DVC creates .gitignore entries automatically.
+# Do NOT manually add data/models paths here -- let DVC handle it so you can
+# observe the .gitignore management as a learning exercise.
 
 # DVC internal cache (lives in .dvc/cache, covered by .dvc/.gitignore)
 # Explicitly ignore in case of stray copies
