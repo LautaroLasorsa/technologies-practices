@@ -45,6 +45,10 @@ def clean() -> None:
         for m in ROOT.rglob(pat):
             _rm(m)
 
+    # Python virtual environments
+    for m in ROOT.rglob(".venv"):
+        _rm(m)
+
     # Rust target dirs (next to each Cargo.toml)
     for cargo in ROOT.rglob("Cargo.toml"):
         _rm(cargo.parent / "target")
