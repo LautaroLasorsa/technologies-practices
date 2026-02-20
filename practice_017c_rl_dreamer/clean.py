@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Clean generated and temporary files for this practice."""
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,12 +18,17 @@ EXTRA = [
 ]
 
 
+def _on_rm_error(_func, path, _exc_info):
+    os.chmod(path, 0o777)
+    os.unlink(path)
+
+
 def _rm(p: Path) -> None:
     if not p.exists():
         return
     rel = p.relative_to(ROOT)
     print(f"  rm {rel}")
-    shutil.rmtree(p) if p.is_dir() else p.unlink()
+    shutil.rmtree(p, onexc=_on_rm_error) if p.is_dir() else p.unlink()
 
 
 def clean() -> None:
