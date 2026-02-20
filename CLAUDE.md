@@ -94,6 +94,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 054b | Google ADK: Multi-Agent Orchestration | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 054c | Google ADK: Callbacks, Evaluation & Streaming | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 067 | GraphRAG: Knowledge Graph-Enhanced RAG | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 068 | DVC: Data & Pipeline Versioning | Python (DVC, scikit-learn) | Data Engineering | `not-started` |
+| 069 | Delta Lake: ACID Tables & Time Travel | Python (deltalake, pandas, DuckDB) | Data Engineering | `not-started` |
 | 032a | LP: Simplex Method | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 032b | LP: Duality & Interior Point | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 033a | Convex Opt: First-Order Methods | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
