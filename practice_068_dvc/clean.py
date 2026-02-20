@@ -18,7 +18,6 @@ EXTRA = [
     "params.yaml",          # Hyperparameter file (recreated in exercises)
     ".dvc",                 # DVC internal directory (cache, config, tmp)
     ".dvcignore",           # DVC ignore file
-    "data.csv.dvc",         # Any stray .dvc pointer files in root
     "*.dvc",                # All .dvc pointer files
 ]
 
