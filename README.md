@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-0%20%2F%20104%20practices-blue?style=flat-square" alt="Progress: 0/104">
+  <img src="https://img.shields.io/badge/Progress-0%20%2F%20118%20practices-blue?style=flat-square" alt="Progress: 0/118">
 </p>
 
 > **This is the `template` branch** — all exercises are in `not-started` state, ready for you to implement. Check out [`master`](../../tree/master) to see progress and completed practices.
@@ -267,6 +267,18 @@ python clean_all.py
 <tr>
   <td>056</td>
   <td>DuckDB: Embedded Analytics & Columnar Queries</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>068</td>
+  <td>DVC: Data & Pipeline Versioning</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>069</td>
+  <td>Delta Lake: ACID Tables & Time Travel</td>
   <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
   <td>—</td>
 </tr>

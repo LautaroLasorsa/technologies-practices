@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Delta Lake tables (generated data)
+data/
+
+# uv lock file is tracked
+!uv.lock
