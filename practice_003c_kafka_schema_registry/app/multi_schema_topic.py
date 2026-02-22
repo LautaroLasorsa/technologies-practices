@@ -135,10 +135,12 @@ def configure_record_name_strategy() -> (
                  schema_registry_client=schema_registry,
                  schema_str=json.dumps(schemas.SENSOR_READING),
                  to_dict=identity_to_dict,
-                 conf={"subject.name.strategy": "record_name_strategy"},
+                 conf={"subject.name.strategy": record_subject_name_strategy},
              )
+         Note: import the callable from confluent_kafka.schema_registry:
+             from confluent_kafka.schema_registry import record_subject_name_strategy
          The key configuration is "subject.name.strategy". By setting it
-         to "record_name_strategy", the serializer will use the Avro
+         to record_subject_name_strategy (a callable), the serializer will use the Avro
          record's namespace + name as the subject instead of the topic name.
          For SensorReading, this means the subject will be:
              "com.practice.sensors.SensorReading"
@@ -148,7 +150,7 @@ def configure_record_name_strategy() -> (
                  schema_registry_client=schema_registry,
                  schema_str=json.dumps(schemas.SENSOR_ALERT),
                  to_dict=identity_to_dict,
-                 conf={"subject.name.strategy": "record_name_strategy"},
+                 conf={"subject.name.strategy": record_subject_name_strategy},
              )
 
       4. Create a Producer:
