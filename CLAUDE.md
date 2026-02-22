@@ -34,7 +34,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 002 | Cloud Pub/Sub | Python, Docker (emulator) | Data Stores & Messaging | `completed` |
 | 003a | Kafka: Producers & Consumers | Python, Docker (KRaft) | Data Stores & Messaging | `completed` |
 | 003b | Kafka: Streams & Processing | Python, Docker (KRaft) | Data Stores & Messaging | `completed` |
-| 003c | Kafka: Schema Registry & Data Contracts | Python, Docker (KRaft, Schema Registry) | Data Stores & Messaging | `not-started` |
+| 003c | Kafka: Schema Registry & Data Contracts | Python, Docker (KRaft, Schema Registry) | Data Stores & Messaging | `completed` |
 | 003d | Kafka Connect & Change Data Capture | Python, Docker (KRaft, Debezium, PostgreSQL) | Data Stores & Messaging | `not-started` |
 | 003e | Kafka: Internals & Performance Tuning | Python, Docker (KRaft, 3-broker) | Data Stores & Messaging | `not-started` |
 | 004a | gRPC & Protobuf: Python Service | Python | API Design & Protocols | `not-started` |

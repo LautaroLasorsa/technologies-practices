@@ -163,7 +163,16 @@ def demonstrate_backward_compatibility(registry_url: str) -> None:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html#backward-compatibility
     """
-    raise NotImplementedError("TODO(human)")
+    subject_name = "compat-backward-test-value"
+    delete_subject(registry_url, subject_name)
+    schema_id = register_schema(registry_url, subject_name, schemas.USER_V1)
+
+    is_compat, messages = check_compat(registry_url, subject_name, schemas.USER_V2)
+    print(is_compat, messages)
+    schema_id = register_schema(registry_url, subject_name, schemas.USER_V2)
+
+    is_compat, messages = check_compat(registry_url, subject_name, schemas.USER_BREAKING)
+    print(is_compat, messages)
 
 
 def demonstrate_forward_compatibility(registry_url: str) -> None:
@@ -216,7 +225,18 @@ def demonstrate_forward_compatibility(registry_url: str) -> None:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html#forward-compatibility
     """
-    raise NotImplementedError("TODO(human)")
+    subject = "compat-forward-test-value"
+    delete_subject(registry_url, subject)
+    print( set_subject_compatibility(registry_url, subject, "FORWARD") )
+
+    register_schema(registry_url, subject, schemas.USER_V1)
+    is_compat, messages = check_compat(registry_url, subject, schemas.USER_V2)
+    print(is_compat, messages)
+
+    register_schema(registry_url, subject, schema = schemas.USER_V2)
+    print(* check_compat(registry_url, subject, schemas.USER_V3))
+
+
 
 
 def demonstrate_full_compatibility(registry_url: str) -> None:
@@ -268,7 +288,18 @@ def demonstrate_full_compatibility(registry_url: str) -> None:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html#full-compatibility
     """
-    raise NotImplementedError("TODO(human)")
+    subject = "compat-full-test-value"
+    delete_subject(registry_url, subject)
+
+    print( set_subject_compatibility(registry_url, subject, "FULL") )
+
+    register_schema(registry_url, subject, schemas.USER_V1)
+    print(* check_compat(registry_url, subject, schemas.USER_V2) )
+
+    register_schema(registry_url, subject, schemas.USER_V2)
+    print(* check_compat(registry_url, subject, schemas.USER_BREAKING))
+    print(* check_compat(registry_url, subject, schemas.USER_V3))
+
 
 
 def analyze_wire_format(raw_bytes: bytes) -> dict:
@@ -323,8 +354,23 @@ def analyze_wire_format(raw_bytes: bytes) -> dict:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#wire-format
     """
-    raise NotImplementedError("TODO(human)")
 
+    if len(raw_bytes) < 5:
+        return {"error":"Message too short for wire format"}
+
+    if raw_bytes[0] != 0:
+        return {"error": f"Magic byte is not {raw_bytes[0]} != 0"}
+
+    schema_id = struct.unpack(">I", raw_bytes[1:5])[0]
+    avro_payload = raw_bytes[5:]
+
+    return {
+        "magic_byte": 0,
+        "schema_id": schema_id,
+        "avro_payload_size": len(avro_payload),
+        "total_size": len(raw_bytes),
+        "overhead_bytes": 5
+    }
 
 # ── Orchestration (boilerplate) ──────────────────────────────────────
 

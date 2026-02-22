@@ -266,4 +266,4 @@ All commands are run from `practice_003c_kafka_schema_registry/`.
 
 ## State
 
-`not-started`
+`completed`

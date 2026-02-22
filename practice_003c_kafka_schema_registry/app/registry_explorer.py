@@ -64,7 +64,10 @@ def list_subjects(registry_url: str) -> list[str]:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/develop/api.html#get--subjects
     """
-    raise NotImplementedError("TODO(human)")
+
+    result = requests.get(f"{registry_url}/subjects")
+    result.raise_for_status()
+    return list(result.json())
 
 
 def register_schema(registry_url: str, subject: str, schema: dict) -> int:
@@ -103,8 +106,12 @@ def register_schema(registry_url: str, subject: str, schema: dict) -> int:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/develop/api.html#post--subjects-(string-%20subject)-versions
     """
-    raise NotImplementedError("TODO(human)")
-
+    schema_arg = {"schema":json.dumps(schema)}
+    response = requests.post(f"{registry_url}/subjects/{subject}/versions",
+        headers={"Content-Type":REGISTRY_CONTENT_TYPE},
+        json=schema_arg)
+    response.raise_for_status()
+    return int(response.json().get("id"))
 
 def check_compatibility(
     registry_url: str, subject: str, schema: dict
@@ -145,7 +152,20 @@ def check_compatibility(
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/develop/api.html#post--compatibility-subjects-(string-%20subject)-versions-(versionId-%20version)
     """
-    raise NotImplementedError("TODO(human)")
+
+    schema_arg = {"schema":json.dumps(schema)}
+    response = requests.post(
+        f"{registry_url}/compatibility/subjects/{subject}/versions/latest?verbose=true",
+        headers={"Content-Type":REGISTRY_CONTENT_TYPE},
+        json=schema_arg
+    )
+    response.raise_for_status()
+    rjson = response.json()
+    return (
+        bool(rjson.get("is_compatible")),
+        rjson.get("messages")
+    )
+
 
 
 def get_schema_versions(registry_url: str, subject: str) -> list[dict]:
@@ -187,7 +207,21 @@ def get_schema_versions(registry_url: str, subject: str) -> list[dict]:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/develop/api.html#get--subjects-(string-%20subject)-versions
     """
-    raise NotImplementedError("TODO(human)")
+
+    response = requests.get(f"{registry_url}/subjects/{subject}/versions")
+    response.raise_for_status()
+    versions: list[int] = response.json()
+    schemas_list: list[dict] = []
+
+    for version in sorted(versions):
+        response = requests.get(f"{registry_url}/subjects/{subject}/versions/{version}").json()
+        schemas_list.append({
+            "version": version,
+            "id": int(response["id"]),
+            "schema": json.loads(response["schema"])
+        })
+
+    return schemas_list
 
 
 # ── Orchestration (boilerplate) ──────────────────────────────────────

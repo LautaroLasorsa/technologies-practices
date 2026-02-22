@@ -69,19 +69,27 @@ def user_to_dict(user: dict, ctx: SerializationContext) -> dict:
     return user
 
 
-def delivery_report(err, msg) -> None:
-    """Delivery callback for produced messages."""
-    if err is not None:
-        print(f"  FAILED: {err}")
-    else:
-        # msg.value() contains the raw bytes (wire format + Avro)
-        raw_size = len(msg.value()) if msg.value() else 0
-        print(
-            f"  Delivered: partition={msg.partition()} "
-            f"offset={msg.offset()} "
-            f"key={msg.key()} "
-            f"size={raw_size}B"
-        )
+class DeliveryReporter:
+
+    def __init__(self):
+        self.delivered = 0
+        self.errors = 0
+
+    def __call__(self, err, msg) -> None:
+        """Delivery callback for produced messages."""
+        if err is not None:
+            self.errors += 1
+            print(f"  FAILED: {err}")
+        else:
+            # msg.value() contains the raw bytes (wire format + Avro)
+            self.delivered += 1
+            raw_size = len(msg.value()) if msg.value() else 0
+            print(
+                f"  Delivered: partition={msg.partition()} "
+                f"offset={msg.offset()} "
+                f"key={msg.key()} "
+                f"size={raw_size}B"
+            )
 
 
 # ── TODO(human): Implement these functions ───────────────────────────
@@ -129,8 +137,15 @@ def create_avro_producer(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#avroserializer
     """
-    raise NotImplementedError("TODO(human)")
+    schema_registry = SchemaRegistryClient({"url": config.SCHEMA_REGISTRY_URL})
+    serializer = AvroSerializer(
+        schema_registry_client = schema_registry,
+        schema_str = schema_str,
+        to_dict = user_to_dict
+    )
 
+    producer = Producer({"bootstrap.servers":config.BOOTSTRAP_SERVERS})
+    return (producer, serializer)
 
 def produce_users(
     producer: Producer,
@@ -190,7 +205,24 @@ def produce_users(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#confluent_kafka.serialization.SerializationContext
     """
-    raise NotImplementedError("TODO(human)")
+    key_serializer = StringSerializer("utf-8")
+    ctx = SerializationContext(
+        config.USERS_TOPIC, MessageField.VALUE
+    )
+    delivery_reporter = DeliveryReporter()
+    for user in users:
+        value_bytes = serializer(user,ctx)
+        key_bytes = key_serializer(str(user["id"]))
+        producer.produce(
+            topic = config.USERS_TOPIC,
+            key = key_bytes,
+            value = value_bytes,
+            callback = delivery_reporter
+        )
+        producer.poll(0)
+
+    producer.flush(timeout=10)
+    return delivery_reporter.delivered
 
 
 # ── Orchestration (boilerplate) ──────────────────────────────────────

@@ -111,8 +111,20 @@ def create_avro_consumer(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#avrodeserializer
     """
-    raise NotImplementedError("TODO(human)")
+    schema_registry = SchemaRegistryClient({"url":config.SCHEMA_REGISTRY_URL})
+    deserializer = AvroDeserializer(
+        schema_registry_client = schema_registry,
+        schema_str = schema_str,
+        from_dict = dict_to_user
+    )
+    consumer = Consumer({
+        "bootstrap.servers": config.BOOTSTRAP_SERVERS,
+        "group.id": group_id,
+        "auto.offset.reset": "earliest",
+        "enable.auto.commit": False
+    })
 
+    return (consumer, deserializer)
 
 def consume_users(
     consumer: Consumer,
@@ -184,7 +196,44 @@ def consume_users(
 
     Docs: https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#confluent_kafka.Consumer.poll
     """
-    raise NotImplementedError("TODO(human)")
+    key_deserializer = StringDeserializer("utf-8")
+    results = []
+
+    consumer.subscribe([topic])
+    consecutive_none = 0
+
+    while _running and len(results) < max_messages and consecutive_none < 30:
+        msg = consumer.poll(timeout=1.0)
+        if msg is None:
+            consecutive_none += 1
+            continue
+        consecutive_none = 0
+        error = msg.error()
+
+        if error is not None:
+            if error == KafkaError._PARTITION_EOF:
+                continue
+            else:
+                raise KafkaException(error)
+
+        key = key_deserializer(
+            msg.key(),
+            SerializationContext(
+                topic, MessageField.KEY
+            )
+        )
+
+        user = deserializer(
+            msg.value(),
+            SerializationContext(
+                topic, MessageField.VALUE
+        ))
+
+        print(f"Deserialized:\t{msg.partition()}\t{msg.offset()}\t{key}\t{user}")
+        results.append(user)
+        consumer.commit(message=msg, asynchronous=False)
+
+    return results
 
 
 # ── Orchestration (boilerplate) ──────────────────────────────────────

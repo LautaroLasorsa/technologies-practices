@@ -26,6 +26,7 @@ import signal
 import time
 
 from confluent_kafka import Consumer, KafkaError, KafkaException, Producer
+from confluent_kafka.schema_registry.common import schema_registry_client
 from confluent_kafka.serialization import (
     MessageField,
     SerializationContext,
@@ -165,8 +166,23 @@ def configure_record_name_strategy() -> (
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#subject-name-strategy
     """
-    raise NotImplementedError("TODO(human)")
+    from confluent_kafka.schema_registry import record_subject_name_strategy
 
+    schema_registry = SchemaRegistryClient({"url":config.SCHEMA_REGISTRY_URL})
+    reading_seralizer = AvroSerializer(
+        schema_registry_client = schema_registry,
+        schema_str = json.dumps(schemas.SENSOR_READING),
+        to_dict = identity_to_dict,
+        conf={"subject.name.strategy": record_subject_name_strategy}
+    )
+    alert_serializer = AvroSerializer(
+        schema_registry_client = schema_registry,
+        schema_str = json.dumps(schemas.SENSOR_ALERT),
+        to_dict = identity_to_dict,
+        conf={"subject.name.strategy": record_subject_name_strategy}
+    )
+    producer = Producer({"bootstrap.servers": config.BOOTSTRAP_SERVERS})
+    return (producer, reading_seralizer, alert_serializer)
 
 def produce_mixed_events(
     producer: Producer,
@@ -232,8 +248,26 @@ def produce_mixed_events(
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#how-the-naming-strategies-work
     """
-    raise NotImplementedError("TODO(human)")
 
+    key_serializer = StringSerializer("utf_8")
+    readings = generate_sensor_readings(num_readings)
+    alerts = generate_sensor_alerts(num_alerts)
+    events = [(r, reading_serializer) for r in readings] + [(a, alert_serializer) for a in alerts]
+    random.shuffle(events)
+    for (event, serializer) in events:
+        ctx = SerializationContext(config.SENSOR_READINGS_TOPIC, MessageField.VALUE)
+        value_bytes = serializer(event, ctx)
+        key = key_serializer(event["sensor_id"])
+        producer.produce(
+            topic = config.SENSOR_READINGS_TOPIC,
+            key = key,
+            value = value_bytes,
+            callback=delivery_report
+        )
+        producer.poll(0)
+
+    producer.flush(timeout=10)
+    return len(events)
 
 def consume_mixed_events(max_messages: int = 30) -> list[dict]:
     """Consume mixed event types from a single topic.
@@ -299,9 +333,54 @@ def consume_mixed_events(max_messages: int = 30) -> list[dict]:
 
     Docs: https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#subject-name-strategy
     """
-    raise NotImplementedError("TODO(human)")
 
+    schema_registry = SchemaRegistryClient({"url":config.SCHEMA_REGISTRY_URL})
+    deserializer = AvroDeserializer(
+        schema_registry_client = schema_registry,
+        from_dict = identity_from_dict
+    )
+    key_deserializer = StringDeserializer("utf_8")
+    consumer = Consumer({
+        "bootstrap.servers": config.BOOTSTRAP_SERVERS,
+        "group.id": config.SENSOR_GROUP,
+        "auto.offset.reset": "earliest",
+        "enable.auto.commit": False
+    })
 
+    consumer.subscribe([config.SENSOR_READINGS_TOPIC])
+    responses = []
+    consecutive_none = 0
+
+    while _running and len(responses) < max_messages and consecutive_none < 30:
+        msg = consumer.poll(timeout=1.0)
+
+        if msg is None:
+            consecutive_none += 1
+            continue
+
+        consecutive_none = 0
+
+        error = msg.error()
+        if error is not None:
+            if error == KafkaError._PARTITION_EOF:
+                continue
+            raise KafkaException(error)
+
+        event: dict = deserializer(msg.value(), SerializationContext(
+            config.SENSOR_READINGS_TOPIC,
+            MessageField.VALUE
+        ))
+        key = key_deserializer(msg.key(), SerializationContext(
+          config.SENSOR_READINGS_TOPIC,
+          MessageField.KEY
+        ))
+
+        type = "alert" if "alert_type" in event else "reading"
+        print(type, event)
+        consumer.commit(message = msg, asynchronous=False)
+        responses.append(event)
+
+    return responses
 # ── Orchestration (boilerplate) ──────────────────────────────────────
 
 

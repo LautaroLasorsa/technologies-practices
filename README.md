@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-8%20%2F%20118%20practices-blue?style=flat-square" alt="Progress: 8/118">
+  <img src="https://img.shields.io/badge/Progress-9%20%2F%20118%20practices-blue?style=flat-square" alt="Progress: 9/118">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -67,10 +67,10 @@ python clean_all.py
   <td>✅ Completed</td>
 </tr>
 <tr>
-  <td>003c</td>
-  <td>Kafka: Schema Registry & Data Contracts</td>
+  <td><b>003c</b></td>
+  <td><b>Kafka: Schema Registry & Data Contracts</b></td>
   <td><img src="https://skillicons.dev/icons?i=py,kafka,docker" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>003d</td>
