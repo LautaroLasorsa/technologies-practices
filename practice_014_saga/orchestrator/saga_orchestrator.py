@@ -22,6 +22,7 @@ from shared.events import (
     OrderSaga,
     SagaMessage,
     SagaState,
+    OrderData
 )
 
 logger = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ class SagaOrchestrator:
             or status events to order.status).
         """
         # TODO(human): Implement the state machine
-        raise NotImplementedError("Implement handle_event()")
+        raise NotImplementedError("TODO(human): Implement the saga state machine")
 
     def _create_saga(self, saga_id: str, payload: dict) -> OrderSaga:
         """
@@ -105,8 +106,7 @@ class SagaOrchestrator:
         TODO(human): Instantiate an OrderSaga with the provided saga_id
         and payload, store it in self.sagas, and return it.
         """
-        # TODO(human): Implement saga creation
-        raise NotImplementedError("Implement _create_saga()")
+        raise NotImplementedError("TODO(human): Create and register a new saga instance")
 
     def _transition(self, saga: OrderSaga, new_state: SagaState) -> None:
         """
@@ -116,5 +116,4 @@ class SagaOrchestrator:
         transition to the saga's history for audit trail.
         Log the old state -> new state transition.
         """
-        # TODO(human): Implement state transition
-        raise NotImplementedError("Implement _transition()")
+        raise NotImplementedError("TODO(human): Implement saga state transition")

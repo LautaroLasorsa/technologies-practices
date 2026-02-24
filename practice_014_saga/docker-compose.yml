@@ -82,9 +82,9 @@ services:
     entrypoint: /bin/bash
     command: >
       -c "
-      rpk topic create saga.commands --brokers redpanda:9092 --partitions 1 &&
-      rpk topic create saga.events  --brokers redpanda:9092 --partitions 1 &&
-      rpk topic create order.status --brokers redpanda:9092 --partitions 1 &&
+      (rpk topic create saga.commands --brokers redpanda:9092 --partitions 1 || true) &&
+      (rpk topic create saga.events  --brokers redpanda:9092 --partitions 1 || true) &&
+      (rpk topic create order.status --brokers redpanda:9092 --partitions 1 || true) &&
       echo '--- All topics created ---' &&
       rpk topic list --brokers redpanda:9092
       "

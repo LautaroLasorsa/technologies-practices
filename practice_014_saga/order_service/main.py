@@ -98,8 +98,7 @@ async def status_consumer() -> None:
     """
 
     async def handle_status(message: SagaMessage) -> list[SagaMessage] | None:
-        # TODO(human): Implement status update logic
-        raise NotImplementedError("Implement handle_status()")
+        raise NotImplementedError("TODO(human): Implement status handler")
 
     await consume_loop(
         topic=TOPIC_ORDER_STATUS,
@@ -167,7 +166,12 @@ async def create_order(request: CreateOrderRequest) -> OrderResponse:
           The saga_id is used as the correlation key across all services.
     """
     # TODO(human): Implement order creation and saga start
-    raise NotImplementedError("Implement create_order()")
+    #
+    # Available: request.customer_id, request.item, request.quantity, request.price
+    # Use: uuid.uuid4(), OrderData, SagaMessage.create(), publish(producer, topic, msg)
+    # Store in: orders[order_id] = {order_id, saga_id, status, customer_id, item, quantity, price}
+    # Return: OrderResponse(**orders[order_id])
+    raise NotImplementedError("TODO(human): Implement order creation and saga start")
 
 
 @app.get("/orders/{order_id}", response_model=OrderResponse)

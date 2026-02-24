@@ -91,8 +91,7 @@ def reserve_inventory(saga_id: str, payload: dict) -> SagaMessage:
     Returns:
         SagaMessage with the appropriate event type
     """
-    # TODO(human): Implement inventory reservation
-    raise NotImplementedError("Implement reserve_inventory()")
+    raise NotImplementedError("TODO(human): Implement inventory reservation")
 
 
 def release_inventory(saga_id: str, payload: dict) -> SagaMessage:
@@ -129,8 +128,7 @@ def release_inventory(saga_id: str, payload: dict) -> SagaMessage:
     Returns:
         SagaMessage with INVENTORY_RELEASED event type
     """
-    # TODO(human): Implement inventory release (compensating)
-    raise NotImplementedError("Implement release_inventory()")
+    raise NotImplementedError("TODO(human): Implement inventory release (compensation)")
 
 
 # =============================================================================

@@ -5,4 +5,8 @@ description = "Payment service - processes and refunds payments"
 requires-python = ">=3.12"
 dependencies = [
     "aiokafka>=0.12.0",
+    "shared",
 ]
+
+[tool.uv.sources]
+shared = { path = "../shared" }

@@ -89,7 +89,7 @@ def process_payment(saga_id: str, payload: dict) -> SagaMessage:
         SagaMessage with the appropriate event type
     """
     # TODO(human): Implement payment processing
-    raise NotImplementedError("Implement process_payment()")
+    raise NotImplementedError("TODO(human): Implement payment processing")
 
 
 def refund_payment(saga_id: str, payload: dict) -> SagaMessage:
@@ -123,8 +123,7 @@ def refund_payment(saga_id: str, payload: dict) -> SagaMessage:
     Returns:
         SagaMessage with PAYMENT_REFUNDED event type
     """
-    # TODO(human): Implement payment refund (compensating)
-    raise NotImplementedError("Implement refund_payment()")
+    raise NotImplementedError("TODO(human): Implement payment refund (compensation)")
 
 
 # =============================================================================

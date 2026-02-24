@@ -1,18 +1,19 @@
 FROM python:3.12-slim
 
-WORKDIR /app
-
-# Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy shared library first (changes less often)
-COPY shared/ /app/shared/
+# Mirror local layout so path dependency ../shared resolves
+COPY shared/ /workspace/shared/
+COPY orchestrator/pyproject.toml /workspace/orchestrator/pyproject.toml
 
-# Copy service code and install dependencies
-COPY orchestrator/pyproject.toml /app/pyproject.toml
+# Install deps from service dir (shared resolved via ../shared)
+WORKDIR /workspace/orchestrator
 RUN uv sync --no-dev
 
-# Copy the rest of the service code
-COPY orchestrator/ /app/orchestrator/
+# Copy service source code
+COPY orchestrator/ /workspace/orchestrator/
 
-CMD ["uv", "run", "python", "-m", "orchestrator.main"]
+# Run from /workspace so orchestrator/ is importable as a Python package
+WORKDIR /workspace
+ENV PATH="/workspace/orchestrator/.venv/bin:$PATH"
+CMD ["python", "-m", "orchestrator.main"]
