@@ -91,8 +91,33 @@ def reserve_inventory(saga_id: str, payload: dict) -> SagaMessage:
     Returns:
         SagaMessage with the appropriate event type
     """
-    # TODO(human): Implement inventory reservation
-    raise NotImplementedError("Implement reserve_inventory()")
+    item = payload['item']
+    quantity = payload['quantity']
+    if saga_id in reservations:
+        logger.warning(f"Double reservation {saga_id}")
+        return SagaMessage.create(
+            MessageType.INVENTORY_RESERVED,
+            saga_id,
+            payload
+        )
+
+    if inventory.get(item,0) >= quantity:
+        inventory[item] -= quantity
+        reservations[saga_id] = {item:quantity}
+        return SagaMessage.create(
+            MessageType.INVENTORY_RESERVED,
+            saga_id,
+            payload
+        )
+    else:
+        return SagaMessage.create(
+            MessageType.INVENTORY_RESERVE_FAILED,
+            saga_id,
+            {
+                **payload,
+                "reason": "Not enough stock"
+            }
+        )
 
 
 def release_inventory(saga_id: str, payload: dict) -> SagaMessage:
@@ -129,9 +154,27 @@ def release_inventory(saga_id: str, payload: dict) -> SagaMessage:
     Returns:
         SagaMessage with INVENTORY_RELEASED event type
     """
-    # TODO(human): Implement inventory release (compensating)
-    raise NotImplementedError("Implement release_inventory()")
 
+    reservation = reservations.get(saga_id, None)
+
+    if reservation is None:
+        logger.warning(f"Repetead inventory release {saga_id}")
+        return SagaMessage.create(
+            MessageType.INVENTORY_RELEASED,
+            saga_id,
+            payload
+        )
+
+    for item, quan in reservation.items():
+        inventory[item] += quan
+
+    reservations.pop(saga_id)
+
+    return SagaMessage.create(
+        MessageType.INVENTORY_RELEASED,
+        saga_id,
+        payload
+    )
 
 # =============================================================================
 # Message dispatcher (fully implemented)

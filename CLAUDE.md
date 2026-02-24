@@ -54,7 +54,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 012a | C++17 Features & abseil-cpp | C++17, abseil-cpp | Systems Programming | `completed` |
 | 012b | Boost Deep-Dive | C++17, Boost | Systems Programming | `completed` |
 | 013 | Financial C++: QuickFIX & QuantLib | C++17, QuickFIX, QuantLib | Systems Programming | `not-started` |
-| 014 | SAGA Pattern | Python, Docker Compose, Redpanda | Distributed Systems Patterns | `not-started` |
+| 014 | SAGA Pattern | Python, Docker Compose, Redpanda | Distributed Systems Patterns | `completed` |
 | 015 | CQRS & Event Sourcing | Python, Docker Compose, Redpanda | Distributed Systems Patterns | `not-started` |
 | 016 | REST API Design Principles | Python (FastAPI), OpenAPI | API Design & Protocols | `not-started` |
 | 017a | World Model RL: Dyna-Q Basics | Python (PyTorch), Gymnasium | ML Systems | `not-started` |

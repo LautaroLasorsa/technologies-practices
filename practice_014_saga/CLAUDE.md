@@ -199,4 +199,4 @@ Build an **Order Processing System** with three microservices (Order, Payment, I
 
 ## State
 
-`not-started`
+`completed`

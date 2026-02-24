@@ -1,18 +1,19 @@
 FROM python:3.12-slim
 
-WORKDIR /app
-
-# Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy shared library first (changes less often)
-COPY shared/ /app/shared/
+# Mirror local layout so path dependency ../shared resolves
+COPY shared/ /workspace/shared/
+COPY inventory_service/pyproject.toml /workspace/inventory_service/pyproject.toml
 
-# Copy service code and install dependencies
-COPY inventory_service/pyproject.toml /app/pyproject.toml
+# Install deps from service dir (shared resolved via ../shared)
+WORKDIR /workspace/inventory_service
 RUN uv sync --no-dev
 
-# Copy the rest of the service code
-COPY inventory_service/ /app/inventory_service/
+# Copy service source code
+COPY inventory_service/ /workspace/inventory_service/
 
-CMD ["uv", "run", "python", "-m", "inventory_service.main"]
+# Run from /workspace so inventory_service/ is importable as a Python package
+WORKDIR /workspace
+ENV PATH="/workspace/inventory_service/.venv/bin:$PATH"
+CMD ["python", "-m", "inventory_service.main"]

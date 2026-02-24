@@ -22,8 +22,9 @@ from shared.events import (
     OrderSaga,
     SagaMessage,
     SagaState,
+    OrderData
 )
-
+import datetime
 logger = logging.getLogger(__name__)
 
 
@@ -96,7 +97,38 @@ class SagaOrchestrator:
             or status events to order.status).
         """
         # TODO(human): Implement the state machine
-        raise NotImplementedError("Implement handle_event()")
+        new_state: SagaState
+        next_message : MessageType
+
+        match message.message_type:
+            case MessageType.SAGA_START.value:
+                self._create_saga(message.saga_id,message.payload)
+                new_state = SagaState.INVENTORY_STARTED
+                next_message = MessageType.RESERVE_INVENTORY
+            case MessageType.INVENTORY_RESERVED.value:
+                new_state = SagaState.PAYMENT_STARTED
+                next_message = MessageType.PROCESS_PAYMENT
+
+            case MessageType.INVENTORY_RESERVE_FAILED.value:
+                new_state = SagaState.FAILED
+                next_message = MessageType.SAGA_FAILED
+
+            case MessageType.PAYMENT_PROCESSED.value:
+                new_state = SagaState.COMPLETED
+                next_message = MessageType.SAGA_COMPLETED
+
+            case MessageType.PAYMENT_FAILED.value:
+                new_state = SagaState.INVENTORY_COMPENSATION_STARTED
+                next_message = MessageType.RELEASE_INVENTORY
+
+            case MessageType.INVENTORY_RELEASED.value:
+                new_state = SagaState.FAILED
+                next_message = MessageType.SAGA_FAILED
+
+            case _: raise ValueError(f"Unexpected message: {message.message_type}")
+
+        self._transition(self.sagas[message.saga_id], new_state)
+        return [SagaMessage.create(next_message, message.saga_id, message.payload)]
 
     def _create_saga(self, saga_id: str, payload: dict) -> OrderSaga:
         """
@@ -105,8 +137,13 @@ class SagaOrchestrator:
         TODO(human): Instantiate an OrderSaga with the provided saga_id
         and payload, store it in self.sagas, and return it.
         """
-        # TODO(human): Implement saga creation
-        raise NotImplementedError("Implement _create_saga()")
+        order_saga = OrderSaga(
+            order_details = OrderData(**payload),
+            saga_id=saga_id,
+            timestamp = datetime.datetime.now()
+        )
+        self.sagas[saga_id] = order_saga
+        return order_saga
 
     def _transition(self, saga: OrderSaga, new_state: SagaState) -> None:
         """
@@ -116,5 +153,6 @@ class SagaOrchestrator:
         transition to the saga's history for audit trail.
         Log the old state -> new state transition.
         """
-        # TODO(human): Implement state transition
-        raise NotImplementedError("Implement _transition()")
+        logger.info(f"Saga {saga.saga_id} from {saga.saga_state} to {new_state}")
+        saga.saga_state = new_state
+        saga.states_history.append(new_state)

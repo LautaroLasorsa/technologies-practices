@@ -1,0 +1,12 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shared"
+version = "0.1.0"
+description = "Shared event models and Kafka utilities for saga services"
+requires-python = ">=3.12"
+dependencies = [
+    "aiokafka>=0.12.0",
+]

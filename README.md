@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-9%20%2F%20118%20practices-blue?style=flat-square" alt="Progress: 9/118">
+  <img src="https://img.shields.io/badge/Progress-10%20%2F%20118%20practices-blue?style=flat-square" alt="Progress: 10/118">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -295,10 +295,10 @@ python clean_all.py
 </thead>
 <tbody>
 <tr>
-  <td>014</td>
-  <td>SAGA Pattern</td>
+  <td><b>014</b></td>
+  <td><b>SAGA Pattern</b></td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>015</td>

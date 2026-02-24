@@ -75,7 +75,13 @@ class SagaState(str, Enum):
     - (2 compensation states: one for payment refund, one for inventory release)
     - FAILED: compensation complete, saga is done
     """
-    pass  # TODO(human): Replace with enum members
+    STARTED = "started"
+    INVENTORY_STARTED = "inventory_started"
+    PAYMENT_STARTED = "payment_started"
+    COMPLETED = "completed"
+    INVENTORY_COMPENSATION_STARTED = "inventory_compensation_started"
+    PAYMENT_COMPENSATION_STARTED = "payment_compensation_started"
+    FAILED = "failed"
 
 
 # =============================================================================
@@ -105,7 +111,13 @@ class OrderSaga:
 
     Hint: Use field(default_factory=...) for mutable defaults.
     """
-    pass  # TODO(human): Replace with dataclass fields
+    order_details : OrderData
+    timestamp : datetime
+
+    saga_state: SagaState = field(default=SagaState.STARTED)
+    saga_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    states_history: list[SagaState] = field(default_factory=lambda : [SagaState.STARTED])
+
 
 
 # =============================================================================

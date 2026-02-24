@@ -108,7 +108,10 @@ async def wait_for_redpanda(max_retries: int = 30, delay: float = 2.0) -> None:
                 bootstrap_servers=KAFKA_BOOTSTRAP,
             )
             await consumer.start()
-            await consumer.stop()
+            try:
+                await consumer.stop()
+            except BaseException:
+                pass  # CancelledError during stop is non-critical
             logger.info("Redpanda is ready (attempt %d)", attempt)
             return
         except Exception:

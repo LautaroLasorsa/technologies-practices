@@ -57,8 +57,14 @@ async def main() -> None:
         Hint: This is the "glue" between the state machine and Kafka.
         The orchestrator doesn't know about topics -- this function does.
         """
-        # TODO(human): Implement message routing
-        raise NotImplementedError("Implement handle_message()")
+        next_message = (await orchestrator.handle_event(message))[0]
+        assert isinstance(next_message, SagaMessage)
+
+        if next_message.message_type in STATUS_EVENTS:
+            await publish(producer, TOPIC_ORDER_STATUS, next_message)
+        else:
+            await publish(producer, TOPIC_SAGA_COMMANDS,next_message)
+        return None
 
     logger.info("Saga Orchestrator starting consumer loop...")
     await consume_loop(

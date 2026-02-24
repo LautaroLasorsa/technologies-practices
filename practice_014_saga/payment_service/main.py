@@ -89,8 +89,28 @@ def process_payment(saga_id: str, payload: dict) -> SagaMessage:
         SagaMessage with the appropriate event type
     """
     # TODO(human): Implement payment processing
-    raise NotImplementedError("Implement process_payment()")
+    total = payload['price'] * payload['quantity']
+    if total > MAX_ALLOWED_TOTAL:
+        logger.error(f"Payment declineed: total ${total} exceeds limit ${MAX_ALLOWED_TOTAL}")
+        return SagaMessage.create(
+            MessageType.PAYMENT_FAILED,
+            saga_id,
+            {
+                **payload,
+                "reason":f"Payment declineed: total ${total} exceeds limit ${MAX_ALLOWED_TOTAL}"
+            }
+        )
 
+    if saga_id in payments:
+        logger.warning(f"Retry payment {saga_id}")
+    else:
+        payments[saga_id] = total
+
+    return SagaMessage.create(
+        MessageType.PAYMENT_PROCESSED,
+        saga_id,
+        payload
+    )
 
 def refund_payment(saga_id: str, payload: dict) -> SagaMessage:
     """
@@ -123,8 +143,18 @@ def refund_payment(saga_id: str, payload: dict) -> SagaMessage:
     Returns:
         SagaMessage with PAYMENT_REFUNDED event type
     """
-    # TODO(human): Implement payment refund (compensating)
-    raise NotImplementedError("Implement refund_payment()")
+
+    if saga_id in payments:
+        payments.pop(saga_id)
+        logger.info(f"Payment refunded {saga_id}")
+    else:
+        logger.warning(f"Retry payment refund {saga_id}")
+
+    return SagaMessage.create(
+        MessageType.PAYMENT_REFUNDED,
+        saga_id,
+        payload
+    )
 
 
 # =============================================================================

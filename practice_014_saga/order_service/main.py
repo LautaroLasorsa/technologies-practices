@@ -98,8 +98,15 @@ async def status_consumer() -> None:
     """
 
     async def handle_status(message: SagaMessage) -> list[SagaMessage] | None:
-        # TODO(human): Implement status update logic
-        raise NotImplementedError("Implement handle_status()")
+        if message.message_type == MessageType.SAGA_COMPLETED.value:
+            orders[message.payload['order_id']]["status"] = "completed"
+            logger.info(f"ORDER {message.payload['order_id']} COMPLETED")
+
+        if message.message_type == MessageType.SAGA_FAILED.value:
+            orders[message.payload['order_id']]["status"] = "failed"
+            logger.info(f"ORDER {message.payload['order_id']} FAILED")
+
+
 
     await consume_loop(
         topic=TOPIC_ORDER_STATUS,
@@ -167,7 +174,32 @@ async def create_order(request: CreateOrderRequest) -> OrderResponse:
           The saga_id is used as the correlation key across all services.
     """
     # TODO(human): Implement order creation and saga start
-    raise NotImplementedError("Implement create_order()")
+    #
+    # Available: request.customer_id, request.item, request.quantity, request.price
+    # Use: uuid.uuid4(), OrderData, SagaMessage.create(), publish(producer, topic, msg)
+    # Store in: orders[order_id] = {order_id, saga_id, status, customer_id, item, quantity, price}
+    # Return: OrderResponse(**orders[order_id])
+    order_id = str(uuid.uuid4())
+
+    order_data = OrderData(
+        order_id = order_id,
+        customer_id = request.customer_id,
+        item = request.item,
+        quantity = request.quantity,
+        price = request.price
+    )
+
+    saga_id = str(uuid.uuid4())
+    saga_message = SagaMessage.create(MessageType.SAGA_START, saga_id, order_data.to_dict())
+    orders[order_id] = {
+        "saga_id": saga_id,
+        "status": "pending",
+        **order_data.to_dict()
+    }
+    assert producer is not None
+
+    await publish(producer, TOPIC_SAGA_EVENTS, saga_message)
+    return OrderResponse(**orders[order_id])
 
 
 @app.get("/orders/{order_id}", response_model=OrderResponse)
