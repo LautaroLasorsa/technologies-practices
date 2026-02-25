@@ -1,0 +1,125 @@
+# Feature Flags & Runtime Configuration: OpenFeature & Flagsmith
+#
+# Services:
+#   - flagsmith-postgres: PostgreSQL backend for Flagsmith
+#   - flagsmith: Flagsmith API + dashboard (http://localhost:8000)
+#   - flagsmith-task-processor: Async task processor for Flagsmith
+#   - product-api: FastAPI service with flag-controlled features (port 8001)
+#   - recommendation-service: Downstream service demonstrating flag propagation (port 8002)
+
+networks:
+  flags_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL: Flagsmith's persistent backend
+  # ---------------------------------------------------------------------------
+  flagsmith-postgres:
+    image: postgres:15.5-alpine
+    container_name: flagsmith-postgres
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - flags_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d flagsmith -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # Flagsmith: Feature flag management platform (API + Dashboard)
+  # ---------------------------------------------------------------------------
+  flagsmith:
+    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    container_name: flagsmith
+    environment:
+      DATABASE_URL: postgresql://postgres:password@flagsmith-postgres:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: "true"
+      ENVIRONMENT: production
+      DJANGO_ALLOWED_HOSTS: "*"
+      FLAGSMITH_DOMAIN: localhost:8000
+      DJANGO_SECRET_KEY: practice-080-secret-key-not-for-production
+      TASK_RUN_METHOD: TASK_PROCESSOR
+      ALLOW_REGISTRATION_WITHOUT_INVITE: "true"
+    ports:
+      - "8000:8000"
+    networks:
+      - flags_network
+    depends_on:
+      flagsmith-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Flagsmith Task Processor: handles async tasks (analytics, webhooks)
+  # ---------------------------------------------------------------------------
+  flagsmith-task-processor:
+    image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    container_name: flagsmith-task-processor
+    environment:
+      DATABASE_URL: postgresql://postgres:password@flagsmith-postgres:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: "true"
+      DJANGO_ALLOWED_HOSTS: "*"
+    networks:
+      - flags_network
+    depends_on:
+      flagsmith:
+        condition: service_healthy
+    command: run-task-processor
+
+  # ---------------------------------------------------------------------------
+  # Product API: FastAPI service with flag-controlled features
+  # ---------------------------------------------------------------------------
+  product-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: product_api
+    container_name: product-api
+    networks:
+      - flags_network
+    ports:
+      - "8001:8001"
+    environment:
+      FLAGSMITH_API_URL: http://flagsmith:8000/api/v1/
+      FLAGSMITH_ENVIRONMENT_KEY: ${FLAGSMITH_ENVIRONMENT_KEY:-placeholder}
+      RECOMMENDATION_SERVICE_URL: http://recommendation-service:8002
+    depends_on:
+      flagsmith:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Recommendation Service: downstream service with flag context propagation
+  # ---------------------------------------------------------------------------
+  recommendation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: recommendation_service
+    container_name: recommendation-service
+    networks:
+      - flags_network
+    ports:
+      - "8002:8002"
+    environment:
+      FLAGSMITH_API_URL: http://flagsmith:8000/api/v1/
+      FLAGSMITH_ENVIRONMENT_KEY: ${FLAGSMITH_ENVIRONMENT_KEY:-placeholder}
+    depends_on:
+      flagsmith:
+        condition: service_healthy

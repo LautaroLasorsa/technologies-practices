@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# uv
+uv.lock
+
+# Environment variables (contains Flagsmith API key)
+.env
+
+# Docker volumes (managed by Docker)
+pgdata/

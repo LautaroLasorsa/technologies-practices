@@ -1,0 +1,90 @@
+-- Token Bucket Rate Limiter -- Lua Script for Redis
+--
+-- This script executes atomically inside Redis, ensuring no race conditions
+-- between concurrent requests from different application replicas.
+--
+-- Keys: KEYS[1] = rate limit key (e.g., "ratelimit:tokenbucket:user-123")
+-- Args: ARGV[1] = capacity (max tokens, integer)
+--       ARGV[2] = refill_rate (tokens per second, float)
+--       ARGV[3] = now (current timestamp in seconds, float)
+--       ARGV[4] = cost (tokens to consume, integer, usually 1)
+--
+-- Returns: {allowed (0 or 1), tokens_remaining (float)}
+--
+-- The script stores state in a Redis hash with two fields:
+--   "tokens"      -> current token count (float as string)
+--   "last_refill" -> timestamp of last refill (float as string)
+
+-- TODO(human): Implement the token bucket Lua script.
+--
+-- WHY THIS MATTERS:
+-- This is the most important exercise in the practice. The token bucket is
+-- the industry-standard rate limiting algorithm used by Stripe, Cloudflare,
+-- AWS API Gateway, and most production rate limiters. The Lua script ensures
+-- atomicity -- without it, concurrent requests from multiple replicas could
+-- both read the same token count and both succeed, exceeding the rate limit.
+--
+-- THE ALGORITHM (step by step):
+--
+-- 1. PARSE ARGUMENTS:
+--    local capacity    = tonumber(ARGV[1])
+--    local refill_rate = tonumber(ARGV[2])
+--    local now         = tonumber(ARGV[3])
+--    local cost        = tonumber(ARGV[4])
+--
+-- 2. READ CURRENT STATE from the hash:
+--    local tokens      = tonumber(redis.call('HGET', KEYS[1], 'tokens'))
+--    local last_refill = tonumber(redis.call('HGET', KEYS[1], 'last_refill'))
+--
+--    If the key doesn't exist (first request for this client), HGET returns
+--    false/nil and tonumber() returns nil.
+--
+-- 3. INITIALIZE IF NEW:
+--    if tokens == nil then
+--        tokens = capacity      -- start with a full bucket
+--        last_refill = now
+--    end
+--
+--    Why start full? Because a new user should be able to make requests
+--    immediately. Starting empty would reject their first request.
+--
+-- 4. REFILL TOKENS (lazy refill -- the core insight):
+--    local elapsed = math.max(0, now - last_refill)
+--    tokens = math.min(capacity, tokens + elapsed * refill_rate)
+--    last_refill = now
+--
+--    Instead of a background timer adding tokens periodically, we calculate
+--    how many tokens SHOULD have been added since the last request. This is
+--    called "lazy evaluation" -- no timers, no background processes, just
+--    math on each request. The math.min caps tokens at capacity (the bucket
+--    can't overflow). The math.max protects against clock skew (negative
+--    elapsed time).
+--
+-- 5. TRY TO CONSUME:
+--    local allowed = 0
+--    if tokens >= cost then
+--        tokens = tokens - cost
+--        allowed = 1
+--    end
+--
+-- 6. SAVE STATE:
+--    redis.call('HSET', KEYS[1], 'tokens', tostring(tokens))
+--    redis.call('HSET', KEYS[1], 'last_refill', tostring(last_refill))
+--
+--    Set a TTL so the key auto-deletes if the client disappears. Without
+--    TTL, Redis accumulates stale keys for inactive clients forever.
+--    A good TTL is 2x the time to fully refill the bucket:
+--    local ttl = math.ceil(capacity / refill_rate) * 2
+--    redis.call('EXPIRE', KEYS[1], ttl)
+--
+-- 7. RETURN RESULT:
+--    return {allowed, tostring(tokens)}
+--
+--    We return tokens as a string because Lua-to-Redis only supports
+--    integers and strings. The Python side will parse it with float().
+--
+-- HINT: Use tostring() when writing floats to Redis hash fields (Redis
+-- hash values are strings). Use tonumber() when reading them back.
+-- Lua's math.min() and math.max() work on numbers, not strings.
+
+return {0, "0"}

@@ -1,0 +1,70 @@
+# application-autosync.yaml -- ArgoCD Application with automated sync policies.
+#
+# -- Exercise Context --
+# This is the FULL GitOps experience: ArgoCD automatically syncs the cluster
+# whenever Git changes, reverts manual drift (self-heal), and removes resources
+# deleted from Git (prune). This file replaces the manual-sync Application.
+#
+# Key concepts:
+#   - automated.prune: When you remove a manifest from Git, ArgoCD deletes
+#     the corresponding resource from the cluster. Without prune=true,
+#     removed resources become "orphans" that live forever in the cluster.
+#
+#   - automated.selfHeal: When someone runs `kubectl edit` or `kubectl scale`
+#     to change a resource directly, ArgoCD detects the drift within ~5 seconds
+#     and reverts the resource back to the Git-defined state. This prevents
+#     "configuration drift" -- a common cause of production incidents.
+#
+#   - CreateNamespace=true: ArgoCD creates the target namespace if it doesn't
+#     exist. Without this, sync fails if the namespace is missing.
+#
+# Docs:
+#   - https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/
+#   - https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: http://gitea.gitea.svc.cluster.local:3000/gitops-admin/demo-app.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo-app
+
+  syncPolicy:
+    # TODO(human): Configure automated sync with self-heal and prune.
+    #
+    # The "automated" block enables auto-sync. Within it:
+    #
+    #   prune (bool): Should ArgoCD DELETE cluster resources that no longer
+    #     exist in Git? Default is false (safe -- nothing gets deleted).
+    #     Set to true for full GitOps: Git is the single source of truth,
+    #     so if a manifest is removed from Git, the resource should be removed
+    #     from the cluster too.
+    #
+    #   selfHeal (bool): Should ArgoCD REVERT manual changes made via kubectl?
+    #     Default is false. Set to true to prevent configuration drift.
+    #     When enabled, any manual `kubectl edit`, `kubectl scale`, or
+    #     `kubectl apply` that changes a managed resource is undone within ~5s.
+    #
+    #   allowEmpty (bool): Should ArgoCD sync if Git yields ZERO resources?
+    #     Default is false (safety: prevents accidental deletion of everything
+    #     if the manifest path is wrong or the repo is empty).
+    #
+    # Structure:
+    #   automated:
+    #     prune: ???
+    #     selfHeal: ???
+    #     allowEmpty: false
+    #
+    # Also add syncOptions to auto-create the namespace:
+    #   syncOptions:
+    #     - CreateNamespace=true

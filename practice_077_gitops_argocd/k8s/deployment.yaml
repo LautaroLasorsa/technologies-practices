@@ -1,0 +1,98 @@
+# deployment.yaml -- Declares the desired state for demo-app pods.
+#
+# -- Exercise Context --
+# This Deployment is the primary resource that ArgoCD manages. When you change
+# the image tag, replica count, or environment variables in Git, ArgoCD detects
+# the diff and syncs the cluster. The Deployment controller then performs a
+# rolling update to reach the new desired state.
+#
+# Key concepts:
+#   - imagePullPolicy: Never -- uses the image loaded via `kind load`
+#   - envFrom injects ALL keys from the ConfigMap as environment variables
+#   - readinessProbe tells K8s when the pod is ready to receive traffic
+#   - The labels MUST match the Service selector so traffic routes correctly
+#
+# Docs: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+  namespace: demo-app
+  labels:
+    app: demo-app
+spec:
+  # TODO(human): Set the replica count.
+  #
+  # Start with 2 replicas. This teaches two things:
+  #   1. ArgoCD tracks the replica count as part of desired state --
+  #      if you manually `kubectl scale` to a different number, self-heal reverts it
+  #   2. Multiple replicas demonstrate that the Service load-balances across pods
+  #
+  # replicas: ???
+
+  selector:
+    matchLabels:
+      # TODO(human): Set the label selector that matches the pod template.
+      #
+      # This selector tells the Deployment which Pods it owns.
+      # It MUST exactly match spec.template.metadata.labels below.
+      # Convention: app: demo-app
+      #
+      # Hint:
+      #   app: demo-app
+
+  template:
+    metadata:
+      labels:
+        # TODO(human): Add the label that matches the selector above.
+        #
+        # Every pod created by this Deployment gets these labels.
+        # The Deployment's selector uses these labels to find its pods.
+        # The Service also uses these labels to route traffic to the pods.
+        #
+        # Hint:
+        #   app: demo-app
+
+    spec:
+      containers:
+        - name: demo-app
+          image: demo-app:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: demo-app-config
+          # TODO(human): Add a readiness probe.
+          #
+          # A readiness probe tells Kubernetes when the pod is ready to serve traffic.
+          # Until the probe succeeds, the Service won't route requests to this pod.
+          # This is critical for zero-downtime rolling updates: K8s waits for the
+          # new pod to be ready before terminating the old one.
+          #
+          # Use an HTTP GET probe against the /health endpoint on port 8000.
+          #
+          # Structure:
+          #   readinessProbe:
+          #     httpGet:
+          #       path: /health
+          #       port: 8000
+          #     initialDelaySeconds: 5
+          #     periodSeconds: 10
+
+          # TODO(human): Add a liveness probe.
+          #
+          # A liveness probe tells Kubernetes whether the pod is still alive.
+          # If it fails, Kubernetes restarts the container. This is different from
+          # readiness: readiness controls traffic routing, liveness controls restarts.
+          #
+          # Use the same /health endpoint but with a longer initial delay.
+          #
+          # Structure:
+          #   livenessProbe:
+          #     httpGet:
+          #       path: /health
+          #       port: 8000
+          #     initialDelaySeconds: 10
+          #     periodSeconds: 15

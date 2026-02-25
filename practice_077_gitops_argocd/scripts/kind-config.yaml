@@ -1,0 +1,23 @@
+# kind-config.yaml -- kind cluster configuration with port mappings.
+#
+# Port mappings allow accessing services inside the cluster from the host.
+# Without extraPortMappings, kind's Docker network is isolated from the host.
+#
+# Docs: https://kind.sigs.k8s.io/docs/user/configuration/
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # ArgoCD UI (port-forward target)
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+      # Application access (port-forward target)
+      - containerPort: 30500
+        hostPort: 30500
+        protocol: TCP
+      # Gitea web UI (port-forward target)
+      - containerPort: 30300
+        hostPort: 30300
+        protocol: TCP

@@ -1,0 +1,5 @@
+# namespace.yaml -- Namespace for the Gitea Git server.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitea

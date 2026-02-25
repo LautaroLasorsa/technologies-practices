@@ -1,0 +1,182 @@
+# =============================================================================
+# Docker Compose -- Service Mesh with Envoy Sidecars
+#
+# Services:
+#   - frontend-envoy   : Envoy sidecar for the frontend (inbound + outbound)
+#   - frontend          : FastAPI frontend app (shares network with frontend-envoy)
+#   - backend-envoy    : Envoy sidecar for the backend (inbound only)
+#   - backend           : FastAPI backend app (shares network with backend-envoy)
+#
+# The key concept: each app shares its sidecar's network namespace via
+# network_mode: "service:<sidecar>". This means the app and sidecar
+# communicate over localhost -- exactly like pods in Kubernetes.
+#
+# Work through the TODO(human) markers in order (Phase 4 of CLAUDE.md).
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Backend Envoy Sidecar
+  # ---------------------------------------------------------------------------
+  # The backend sidecar is the simpler one -- it only receives inbound traffic
+  # from other sidecars and forwards to the local backend app. It uses the
+  # config you build in Phase 2.
+  backend-envoy:
+    image: envoyproxy/envoy:v1.32-latest
+    volumes:
+      - ./envoy/backend-envoy.yaml:/etc/envoy/envoy.yaml:ro
+    networks:
+      - mesh
+    expose:
+      - "10000"   # Inbound listener (other sidecars connect here)
+    ports:
+      - "9902:9901"  # Backend Envoy admin -- mapped to host port 9902 for inspection
+
+    # Phase 4 [1/4]: Health check for backend Envoy
+    # -- Exercise Context --
+    # Envoy's admin interface provides a /ready endpoint that returns 200
+    # when Envoy has finished initialization (loaded config, bound listeners,
+    # resolved clusters). Using this as a Docker health check ensures dependent
+    # services (the backend app) don't start until their sidecar is ready.
+    #
+    # Without this health check, the backend app might start before Envoy
+    # binds to port 10000, causing the first few requests to fail. In production,
+    # this startup race condition is a common source of transient errors.
+    #
+    # TODO(human): Add a health check that uses Envoy's admin /ready endpoint.
+    #
+    # Syntax:
+    #   healthcheck:
+    #     test: ["CMD", "sh", "-c", "wget -qO- http://localhost:9901/ready || exit 1"]
+    #     interval: 5s
+    #     timeout: 3s
+    #     retries: 10
+    #     start_period: 10s
+    #
+    # Note: We use wget instead of curl because the Envoy image is based on
+    # Ubuntu/Debian and wget is available by default. The -qO- flag means
+    # quiet mode, output to stdout.
+
+  # ---------------------------------------------------------------------------
+  # Backend Application
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./services/backend
+      dockerfile: Dockerfile
+
+    # Phase 4 [2/4]: Network namespace sharing
+    # -- Exercise Context --
+    # This is the CRITICAL service mesh concept in Docker Compose.
+    # In Kubernetes, all containers in a pod share a network namespace --
+    # they see each other on localhost. Docker Compose doesn't have pods,
+    # but network_mode: "service:<name>" achieves the same effect.
+    #
+    # When backend uses network_mode: "service:backend-envoy":
+    #   - backend and backend-envoy share the SAME IP address
+    #   - backend can reach backend-envoy on localhost:9901 (admin)
+    #   - backend-envoy can reach backend on localhost:8000 (the app)
+    #   - backend does NOT get its own IP on the mesh network
+    #   - backend CANNOT use its own "ports:" or "networks:" directives
+    #
+    # This is exactly how the sidecar pattern works: the proxy and the app
+    # are co-located. The proxy intercepts all network traffic to/from the app.
+    #
+    # IMPORTANT: network_mode: "service:X" replaces the "networks:" directive.
+    # You cannot use both. The backend joins whatever networks backend-envoy
+    # is on (the "mesh" network in this case).
+    #
+    # TODO(human): Set the network mode so backend shares backend-envoy's
+    # network namespace.
+    #
+    # Syntax:
+    #   network_mode: "service:backend-envoy"
+
+    depends_on:
+      backend-envoy:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Frontend Envoy Sidecar
+  # ---------------------------------------------------------------------------
+  # The frontend sidecar is more complex -- it has both inbound and outbound
+  # listeners. It uses the config you build in Phase 3.
+  frontend-envoy:
+    image: envoyproxy/envoy:v1.32-latest
+    volumes:
+      - ./envoy/frontend-envoy.yaml:/etc/envoy/envoy.yaml:ro
+    networks:
+      - mesh
+    ports:
+      - "10000:10000"  # Inbound listener -- exposed to host for client access
+      - "9901:9901"    # Frontend Envoy admin -- exposed for inspection
+
+    # Phase 4 [3/4]: Health check for frontend Envoy
+    # -- Exercise Context --
+    # Same pattern as backend-envoy health check. Every Envoy sidecar
+    # should have a /ready health check. This ensures the frontend app
+    # doesn't start until its sidecar is ready to accept outbound requests.
+    #
+    # TODO(human): Add a health check using Envoy's admin /ready endpoint.
+    #
+    # Syntax:
+    #   healthcheck:
+    #     test: ["CMD", "sh", "-c", "wget -qO- http://localhost:9901/ready || exit 1"]
+    #     interval: 5s
+    #     timeout: 3s
+    #     retries: 10
+    #     start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # Frontend Application
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+
+    # Phase 4 [4/4]: Network namespace sharing + environment
+    # -- Exercise Context --
+    # Same concept as the backend: the frontend app shares its sidecar's
+    # network namespace. This means:
+    #   - The frontend app calls http://localhost:10001 to reach the outbound
+    #     listener -- because localhost IS the sidecar.
+    #   - The BACKEND_URL environment variable is set to http://localhost:10001
+    #     (the sidecar's outbound port, NOT the backend's address).
+    #
+    # Think about this: the frontend code has NO IDEA that a backend service
+    # even exists. It just calls its local sidecar. The sidecar's route config
+    # determines where the traffic goes. This decoupling is the fundamental
+    # value proposition of a service mesh.
+    #
+    # TODO(human): Set network_mode to share frontend-envoy's network,
+    # and set the BACKEND_URL environment variable.
+    #
+    # Syntax:
+    #   network_mode: "service:frontend-envoy"
+    #   environment:
+    #     BACKEND_URL: "http://localhost:10001"
+
+    depends_on:
+      frontend-envoy:
+        condition: service_healthy
+      backend-envoy:
+        condition: service_healthy
+
+# =============================================================================
+# Networks
+# =============================================================================
+# A single "mesh" network connects all Envoy sidecars. The application
+# containers don't join the network directly -- they share their sidecar's
+# network namespace via network_mode.
+#
+# In production, a service mesh network might also include:
+#   - A control plane network (for xDS communication)
+#   - Per-zone or per-region networks (for locality-aware routing)
+#
+# For this practice, a single flat network is sufficient. Envoy handles
+# all the routing logic.
+networks:
+  mesh:
+    driver: bridge

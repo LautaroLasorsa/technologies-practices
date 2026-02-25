@@ -1,0 +1,34 @@
+# service.yaml -- Exposes the demo-app Deployment within the cluster.
+#
+# -- Exercise Context --
+# A Service provides a stable DNS name and IP for a set of Pods selected by labels.
+# ArgoCD manages this resource like any other -- if you delete it manually with
+# self-heal enabled, ArgoCD recreates it within seconds.
+#
+# The Service selector MUST match the labels on the Deployment's pod template.
+# Port 80 on the Service maps to port 8000 on the container (targetPort).
+#
+# Docs: https://kubernetes.io/docs/concepts/services-networking/service/
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app
+  namespace: demo-app
+  labels:
+    app: demo-app
+spec:
+  # TODO(human): Define the Service spec.
+  #
+  # A ClusterIP Service gives the pods a stable internal DNS name (demo-app.demo-app.svc).
+  # The selector tells the Service which pods to route traffic to.
+  # The port mapping exposes port 80 externally and routes to containerPort 8000.
+  #
+  # Structure:
+  #   type: ClusterIP
+  #   selector:
+  #     app: demo-app         <-- must match Deployment pod labels
+  #   ports:
+  #     - port: 80            <-- Service port (what clients connect to)
+  #       targetPort: 8000    <-- Container port (where the app listens)
+  #       protocol: TCP

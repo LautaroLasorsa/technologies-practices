@@ -1,0 +1,125 @@
+networks:
+  taskqueue_network:
+    driver: bridge
+
+volumes:
+  redis-data: null
+
+services:
+  # ---------------------------------------------------------------------------
+  # Redis: message broker + result backend for both Celery and ARQ
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: taskqueue-redis
+    networks:
+      - taskqueue_network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker (default + high_priority + low_priority queues)
+  # Uses solo pool for broad compatibility (prefork is Linux-only in containers)
+  # ---------------------------------------------------------------------------
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery-worker
+    networks:
+      - taskqueue_network
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      celery -A src.celery_app worker
+      --loglevel=info
+      --pool=solo
+      -Q default,high_priority,low_priority
+      -n worker@%h
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat: periodic task scheduler
+  # ---------------------------------------------------------------------------
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery-beat
+    networks:
+      - taskqueue_network
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      celery -A src.celery_app beat
+      --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Flower: real-time Celery monitoring dashboard (http://localhost:5555)
+  # ---------------------------------------------------------------------------
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery-flower
+    networks:
+      - taskqueue_network
+    ports:
+      - "5555:5555"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      celery -A src.celery_app flower
+      --port=5555
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # ARQ Worker: async task worker for comparison exercises
+  # ---------------------------------------------------------------------------
+  arq-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arq-worker
+    networks:
+      - taskqueue_network
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: arq src.arq_tasks.WorkerSettings
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # FastAPI: HTTP API for dispatching tasks (http://localhost:8000)
+  # ---------------------------------------------------------------------------
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskqueue-api
+    networks:
+      - taskqueue_network
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: uvicorn src.api:app --host 0.0.0.0 --port 8000
+    depends_on:
+      redis:
+        condition: service_healthy

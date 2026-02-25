@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Celery
+celerybeat-schedule*
+celeryev.pid
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# uv
+uv.lock

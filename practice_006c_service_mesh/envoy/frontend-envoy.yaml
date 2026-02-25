@@ -1,0 +1,331 @@
+# =============================================================================
+# Frontend Envoy Sidecar Configuration
+#
+# This Envoy proxy sits beside the frontend service. It has TWO listeners:
+#   1. Inbound  (port 10000): Receives external client requests, forwards to
+#      the local frontend application on localhost:8000.
+#   2. Outbound (port 10001): Receives requests FROM the frontend application,
+#      routes them to the appropriate upstream service's sidecar (backend-envoy).
+#
+# Architecture:
+#   client --> frontend-envoy:10000 --> frontend-app:8000
+#                                          |
+#              frontend-envoy:10001 <------+  (app calls backend via sidecar)
+#                   |
+#              backend-envoy:10000 --> backend-app:8000
+#
+# Work through the TODO(human) markers in order (Phases 3 and 5 of CLAUDE.md).
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Admin Interface
+# ---------------------------------------------------------------------------
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+
+static_resources:
+
+  # =========================================================================
+  # LISTENERS
+  # =========================================================================
+  listeners:
+
+    # -----------------------------------------------------------------------
+    # Phase 3 [1/4]: Inbound Listener -- Receives traffic from external clients
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # This listener is structurally identical to the backend's inbound listener.
+    # The repetition is intentional -- in a real service mesh, every sidecar
+    # follows the same inbound pattern. The only difference is the stat_prefix
+    # (for distinguishing metrics) and the target cluster (frontend_app instead
+    # of backend_app). Recognizing this pattern is key: adding a new service
+    # to the mesh means creating another sidecar with the same inbound structure.
+    #
+    # TODO(human): Define the inbound listener on port 10000 that routes all
+    # traffic to the frontend_app cluster.
+    #
+    # Syntax:
+    #   - name: frontend_inbound
+    #     address:
+    #       socket_address:
+    #         address: 0.0.0.0
+    #         port_value: 10000
+    #     filter_chains:
+    #       - filters:
+    #           - name: envoy.filters.network.http_connection_manager
+    #             typed_config:
+    #               "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+    #               stat_prefix: frontend_inbound
+    #               codec_type: AUTO
+    #               access_log:
+    #                 - name: envoy.access_loggers.stdout
+    #                   typed_config:
+    #                     "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+    #               route_config:
+    #                 name: frontend_local_route
+    #                 virtual_hosts:
+    #                   - name: frontend_app
+    #                     domains: ["*"]
+    #                     routes:
+    #                       - match:
+    #                           prefix: "/"
+    #                         route:
+    #                           cluster: frontend_app
+    #               http_filters:
+    #                 - name: envoy.filters.http.router
+    #                   typed_config:
+    #                     "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+    # -----------------------------------------------------------------------
+    # Phase 3 [2/4]: Outbound Listener -- Frontend app's gateway to other services
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # This is the SERVICE MESH differentiator. In a traditional architecture,
+    # the frontend app would call the backend directly (http://backend:8000).
+    # In a service mesh, the app calls its own sidecar's outbound port instead
+    # (http://localhost:10001/api/...). The sidecar then:
+    #   1. Matches the request path to determine the destination cluster
+    #   2. Applies retry policies, timeouts, circuit breaking
+    #   3. Forwards to the destination service's sidecar (NOT directly to the app)
+    #
+    # This indirection gives us:
+    #   - Transparent retries and circuit breaking (app doesn't know)
+    #   - Consistent metrics and access logs for all outbound traffic
+    #   - mTLS between sidecars (in production, with a control plane)
+    #   - The ability to reroute traffic without changing application code
+    #
+    # The outbound listener uses PATH-BASED ROUTING to direct traffic to
+    # different upstream clusters. For example:
+    #   /api/  --> backend_cluster (routes to backend-envoy:10000)
+    #   /auth/ --> auth_cluster    (if we had an auth service)
+    #
+    # This means the frontend app can reach any service in the mesh by
+    # calling http://localhost:10001/<service-prefix>/path. The sidecar
+    # handles service discovery and routing.
+    #
+    # TODO(human): Define the outbound listener on port 10001 with path-based
+    # routing to the backend cluster.
+    #
+    # Syntax:
+    #   - name: frontend_outbound
+    #     address:
+    #       socket_address:
+    #         address: 0.0.0.0
+    #         port_value: 10001
+    #     filter_chains:
+    #       - filters:
+    #           - name: envoy.filters.network.http_connection_manager
+    #             typed_config:
+    #               "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+    #               stat_prefix: frontend_outbound
+    #               codec_type: AUTO
+    #               access_log:
+    #                 - name: envoy.access_loggers.stdout
+    #                   typed_config:
+    #                     "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+    #               route_config:
+    #                 name: outbound_routes
+    #                 virtual_hosts:
+    #                   - name: backend_via_mesh
+    #                     domains: ["*"]
+    #                     routes:
+    #                       - match:
+    #                           prefix: "/"
+    #                         route:
+    #                           cluster: backend_cluster
+    #                           timeout: 5s
+    #               http_filters:
+    #                 - name: envoy.filters.http.router
+    #                   typed_config:
+    #                     "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+    #
+    # Key details:
+    #   - timeout: 5s sets a request-level timeout. If the upstream doesn't
+    #     respond within 5 seconds, Envoy returns 504 Gateway Timeout.
+    #     This is your first line of defense against slow upstreams.
+    #   - We route all paths (prefix: "/") to the backend cluster for simplicity.
+    #     In a real mesh with multiple upstreams, you'd add more routes:
+    #       routes:
+    #         - match: { prefix: "/api/" }
+    #           route: { cluster: backend_cluster }
+    #         - match: { prefix: "/auth/" }
+    #           route: { cluster: auth_cluster }
+
+  # =========================================================================
+  # CLUSTERS
+  # =========================================================================
+  clusters:
+
+    # -----------------------------------------------------------------------
+    # Phase 3 [3/4]: Frontend App Cluster -- The local application
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # Same pattern as the backend_app cluster in backend-envoy.yaml.
+    # Points to 127.0.0.1:8000 because the frontend app shares the sidecar's
+    # network namespace. The inbound listener routes to this cluster.
+    #
+    # TODO(human): Define the frontend_app cluster pointing to 127.0.0.1:8000.
+    #
+    # Syntax:
+    #   - name: frontend_app
+    #     connect_timeout: 0.25s
+    #     type: STATIC
+    #     lb_policy: ROUND_ROBIN
+    #     load_assignment:
+    #       cluster_name: frontend_app
+    #       endpoints:
+    #         - lb_endpoints:
+    #             - endpoint:
+    #                 address:
+    #                   socket_address:
+    #                     address: 127.0.0.1
+    #                     port_value: 8000
+
+    # -----------------------------------------------------------------------
+    # Phase 3 [4/4]: Backend Cluster -- The remote backend service's sidecar
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # This is where the service mesh routing happens. Unlike the local app
+    # clusters (STATIC, 127.0.0.1), the backend cluster points to a REMOTE
+    # host: backend-envoy:10000 -- the backend service's sidecar.
+    #
+    # Key differences from local clusters:
+    #   - type: STRICT_DNS -- Envoy resolves "backend-envoy" using DNS
+    #     (Docker Compose provides DNS resolution for service names).
+    #     STRICT_DNS means Envoy respects DNS TTL and re-resolves periodically.
+    #   - address: backend-envoy -- Docker's internal DNS name, NOT an IP.
+    #   - port: 10000 -- The backend sidecar's INBOUND port, not the app's 8000.
+    #     We never talk directly to the backend app -- always through its sidecar.
+    #
+    # In production with a control plane (Istio/Consul), clusters are populated
+    # dynamically via EDS (Endpoint Discovery Service) instead of static DNS.
+    # The control plane pushes endpoint updates as services scale up/down.
+    #
+    # TODO(human): Define the backend_cluster pointing to backend-envoy:10000.
+    #
+    # Syntax:
+    #   - name: backend_cluster
+    #     connect_timeout: 0.5s
+    #     type: STRICT_DNS
+    #     lb_policy: ROUND_ROBIN
+    #     load_assignment:
+    #       cluster_name: backend_cluster
+    #       endpoints:
+    #         - lb_endpoints:
+    #             - endpoint:
+    #                 address:
+    #                   socket_address:
+    #                     address: backend-envoy
+    #                     port_value: 10000
+
+    # -----------------------------------------------------------------------
+    # Phase 5 [1/2]: Circuit Breaking -- Protect against backend overload
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # Envoy's circuit breakers are CONCURRENCY-BASED, not failure-rate-based.
+    # They limit the number of simultaneous connections, pending requests,
+    # and active requests to an upstream cluster. When any limit is exceeded,
+    # Envoy immediately returns 503 (Service Unavailable) without forwarding
+    # the request -- this is "fail fast" at the infrastructure level.
+    #
+    # This differs from the application-level circuit breaker in practice 052:
+    #   - Practice 052: Tracks failure RATE (e.g., 5 failures -> trip open)
+    #   - Envoy: Tracks CONCURRENCY (e.g., >64 active requests -> reject new ones)
+    #
+    # Both prevent cascading failures, but from different angles:
+    #   - Failure-rate breakers detect when a service IS broken
+    #   - Concurrency breakers prevent a service from BECOMING broken (overload)
+    #
+    # The circuit_breakers config goes INSIDE the backend_cluster definition
+    # (add it after lb_policy or after load_assignment).
+    #
+    # Fields explained:
+    #   - max_connections: Maximum TCP connections to the cluster. If the backend
+    #     can handle 64 concurrent connections, set this to 64. Excess connections
+    #     are queued (up to max_pending_requests) or rejected.
+    #   - max_pending_requests: Maximum requests waiting for a connection from
+    #     the pool. When this overflows, new requests get 503 immediately.
+    #   - max_requests: Maximum active requests (HTTP/2 can multiplex multiple
+    #     requests on one connection). For HTTP/1.1, this equals max_connections.
+    #   - max_retries: Maximum concurrent retry attempts. This PREVENTS RETRY
+    #     STORMS -- if 100 requests are retrying simultaneously, only this many
+    #     retries are allowed; the rest fail immediately.
+    #
+    # TODO(human): Add circuit_breakers to the backend_cluster definition above.
+    # Place this block inside the backend_cluster (after load_assignment).
+    #
+    # Syntax (to add INSIDE the backend_cluster):
+    #     circuit_breakers:
+    #       thresholds:
+    #         - priority: DEFAULT
+    #           max_connections: 64
+    #           max_pending_requests: 128
+    #           max_requests: 128
+    #           max_retries: 3
+    #
+    # After adding this, restart Envoy and check:
+    #   curl "http://localhost:9901/stats?filter=circuit_breaker"
+    # You should see stats like:
+    #   cluster.backend_cluster.circuit_breakers.default.cx_open: 0
+    #   cluster.backend_cluster.circuit_breakers.default.rq_pending_open: 0
+
+    # -----------------------------------------------------------------------
+    # Phase 5 [2/2]: Retry Policy -- Automatic retries on failure
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # Envoy can automatically retry failed requests without the application
+    # knowing. This is configured on the ROUTE, not the cluster. The retry
+    # policy specifies:
+    #   - WHAT to retry: which HTTP status codes or error conditions trigger a retry
+    #   - HOW MANY times: maximum number of retry attempts
+    #   - HOW LONG per retry: timeout for each individual retry attempt
+    #
+    # Retries interact with circuit breakers: the circuit_breakers.max_retries
+    # limits how many concurrent retries are in-flight across all requests.
+    # If max_retries is 3 and 3 retries are already in progress, new retry
+    # attempts are suppressed -- this prevents retry storms where every
+    # client retries simultaneously, overwhelming the recovering service.
+    #
+    # The retry_policy goes INSIDE the outbound listener's route definition
+    # (alongside the existing "cluster" and "timeout" fields).
+    #
+    # Fields explained:
+    #   - retry_on: Comma-separated list of retry conditions:
+    #       "5xx"             -- Retry on any 5xx response (500, 502, 503, 504)
+    #       "connect-failure" -- Retry when TCP connection to upstream fails
+    #       "gateway-error"   -- Retry on 502, 503, 504 specifically
+    #       "reset"           -- Retry when upstream resets the connection
+    #       "retriable-status-codes" -- Retry on specific codes (listed separately)
+    #   - num_retries: Maximum retry attempts (in addition to the original request).
+    #     num_retries: 3 means up to 4 total attempts (1 original + 3 retries).
+    #   - per_try_timeout: Timeout for EACH attempt (including retries).
+    #     Must be <= the route timeout. If route timeout is 5s and per_try_timeout
+    #     is 2s, Envoy can fit 2 retries within the total timeout budget.
+    #
+    # TODO(human): Add a retry_policy to the outbound route (the one that
+    # routes to backend_cluster in the frontend_outbound listener above).
+    # Place it inside the "route:" block, alongside "cluster:" and "timeout:".
+    #
+    # Syntax (to add INSIDE the route block):
+    #                         route:
+    #                           cluster: backend_cluster
+    #                           timeout: 5s
+    #                           retry_policy:
+    #                             retry_on: "5xx,connect-failure,gateway-error"
+    #                             num_retries: 3
+    #                             per_try_timeout: 2s
+    #
+    # After adding this, restart Envoy and check retry stats:
+    #   curl "http://localhost:9901/stats?filter=retry"
+    # You should see:
+    #   cluster.backend_cluster.upstream_rq_retry: 0
+    #   cluster.backend_cluster.upstream_rq_retry_success: 0
+    #   cluster.backend_cluster.upstream_rq_retry_overflow: 0
+    #
+    # Set backend to degraded mode and send requests:
+    #   curl -X POST http://localhost:10000/api/admin/mode/degraded
+    #   curl http://localhost:10000/api/data
+    # Then check stats again -- retry counts should increase.

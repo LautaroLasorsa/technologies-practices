@@ -152,7 +152,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 074 | ML-guided Chaos Engineering | Python (networkx, scikit-learn) | ML for Distributed Systems | `not-started` |
 | 075 | Federated Learning | Python (flwr, torch) | ML for Distributed Systems | `not-started` |
 | 076a | Redis Fundamentals: Data Structures, Pub/Sub & Persistence | Python, Docker (Redis) | Data Stores & Messaging | `not-started` |
-| 076b | Redis Advanced: Distributed Locking, Cache Patterns & Lua Scripts | Python, Docker (Redis Cluster) | Data Stores & Messaging | `not-started` |
+| 076b | Redis Advanced: Distributed Locking, Cache Patterns & Lua Scripts | Python, Docker (Redis) | Data Stores & Messaging | `not-started` |
 | 077 | GitOps with ArgoCD: Declarative Continuous Delivery | Docker (kind), ArgoCD | Infra, DevOps & Observability | `not-started` |
 | 078 | Distributed Rate Limiting: Token Bucket, Sliding Window & Redis Lua | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
 | 079 | Distributed Task Queues: Celery & ARQ Worker Patterns | Python, Docker (Redis) | Data Stores & Messaging | `not-started` |

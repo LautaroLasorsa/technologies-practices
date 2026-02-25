@@ -1,0 +1,177 @@
+# =============================================================================
+# Backend Envoy Sidecar Configuration
+#
+# This Envoy proxy sits beside the backend service. It receives inbound
+# requests from other services' sidecars and forwards them to the local
+# backend application on localhost:8000.
+#
+# Architecture:
+#   frontend-envoy:10001 --> backend-envoy:10000 --> backend-app:8000
+#                              (this config)          (localhost)
+#
+# Work through the TODO(human) markers in order (Phase 2 of CLAUDE.md).
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Admin Interface
+# ---------------------------------------------------------------------------
+# The admin block enables Envoy's built-in management API. This gives you
+# a web interface and REST API to inspect Envoy's runtime state: statistics,
+# cluster health, active configuration, memory usage, and more. In production,
+# the admin interface is typically bound to localhost only for security.
+# Here we bind to 0.0.0.0 so it's accessible from the Docker host.
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+
+# ---------------------------------------------------------------------------
+# Static Resources
+# ---------------------------------------------------------------------------
+# Envoy can load configuration statically (from this YAML file at startup)
+# or dynamically (from a control plane via xDS APIs at runtime). Static
+# configuration is simpler and ideal for learning -- you define all listeners,
+# routes, and clusters upfront. Dynamic configuration (xDS) is used in
+# production service meshes like Istio, where the control plane pushes
+# updated routes, endpoints, and certificates without restarting Envoy.
+static_resources:
+
+  # =========================================================================
+  # LISTENERS
+  # =========================================================================
+  # A listener is a named network location (IP:port) where Envoy accepts
+  # incoming connections. Each listener has one or more filter chains that
+  # process the connection. For a backend sidecar, we need ONE listener:
+  #
+  #   - Inbound (port 10000): Receives requests FROM other services' sidecars
+  #     and forwards them to the local backend application.
+  #
+  # In contrast, a frontend sidecar also needs an outbound listener for the
+  # app to send requests through (see frontend-envoy.yaml).
+  listeners:
+
+    # -----------------------------------------------------------------------
+    # Phase 2 [1/2]: Inbound Listener -- Receives traffic from other sidecars
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # This is the most fundamental Envoy building block. Every sidecar proxy
+    # needs at least one listener. The inbound listener accepts connections
+    # from the network (other sidecars send traffic here) and routes them to
+    # the local application. Understanding listeners is the foundation for
+    # all Envoy configuration.
+    #
+    # The listener needs:
+    #   1. A name (for logging and stats -- e.g., "backend_inbound")
+    #   2. A socket address (0.0.0.0:10000 to accept from any source)
+    #   3. A filter chain containing an HTTP Connection Manager (HCM)
+    #
+    # The HCM is Envoy's core HTTP filter. It:
+    #   - Parses raw TCP bytes into HTTP/1.1 or HTTP/2 requests
+    #   - Applies HTTP-level filters (router, rate limit, CORS, etc.)
+    #   - Matches requests to routes via the route_config
+    #   - Forwards matched requests to the appropriate cluster
+    #
+    # TODO(human): Define the inbound listener with an HTTP Connection Manager.
+    #
+    # Syntax:
+    #   - name: backend_inbound
+    #     address:
+    #       socket_address:
+    #         address: 0.0.0.0
+    #         port_value: 10000
+    #     filter_chains:
+    #       - filters:
+    #           - name: envoy.filters.network.http_connection_manager
+    #             typed_config:
+    #               "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+    #               stat_prefix: backend_inbound
+    #               codec_type: AUTO
+    #               access_log:
+    #                 - name: envoy.access_loggers.stdout
+    #                   typed_config:
+    #                     "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+    #               route_config:
+    #                 name: backend_local_route
+    #                 virtual_hosts:
+    #                   - name: backend_app
+    #                     domains: ["*"]
+    #                     routes:
+    #                       - match:
+    #                           prefix: "/"
+    #                         route:
+    #                           cluster: backend_app
+    #               http_filters:
+    #                 - name: envoy.filters.http.router
+    #                   typed_config:
+    #                     "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+    #
+    # Key details:
+    #   - "@type" is a protobuf type URL that tells Envoy which config schema to use.
+    #     The HCM type is always: type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+    #   - stat_prefix: A string prefix for all stats emitted by this HCM. You'll see
+    #     stats like "http.backend_inbound.downstream_rq_total" in the admin interface.
+    #   - codec_type: AUTO detects HTTP/1.1 vs HTTP/2 automatically.
+    #   - access_log: Logs every request to stdout. In Docker, this means `docker compose logs`.
+    #   - route_config: Inline route configuration (as opposed to RDS -- Route Discovery Service).
+    #   - virtual_hosts: Groups of routes by domain. domains: ["*"] matches all hostnames.
+    #   - routes: The actual routing rules. prefix: "/" matches everything.
+    #   - http_filters: Must include envoy.filters.http.router as the LAST filter -- this
+    #     is the filter that actually forwards the request to the matched cluster.
+
+  # =========================================================================
+  # CLUSTERS
+  # =========================================================================
+  # A cluster is a group of upstream hosts (endpoints) that Envoy can send
+  # traffic to. Each cluster defines:
+  #   - How to discover endpoints (static, DNS, EDS from control plane)
+  #   - Connection parameters (timeouts, keepalive)
+  #   - Load balancing policy (round-robin, least-request, etc.)
+  #   - Health checking and circuit breaking
+  #
+  # For the backend sidecar, we need ONE cluster:
+  #   - backend_app: The local backend application on 127.0.0.1:8000
+  #
+  # The backend app runs on localhost because in a service mesh, each sidecar
+  # shares a network namespace with its application (in Docker Compose, we
+  # achieve this with network_mode: "service:backend-envoy").
+  clusters:
+
+    # -----------------------------------------------------------------------
+    # Phase 2 [2/2]: Backend App Cluster -- The local application
+    # -----------------------------------------------------------------------
+    # -- Exercise Context --
+    # Clusters define where Envoy sends traffic after route matching. This
+    # cluster points to the backend application running on localhost. The
+    # key insight is that the app and its sidecar share a network namespace,
+    # so they communicate over 127.0.0.1 (loopback). This is exactly how
+    # sidecars work in Kubernetes pods.
+    #
+    # Important fields:
+    #   - name: Referenced by routes (route.cluster must match cluster.name)
+    #   - connect_timeout: Max time to establish TCP connection. If the app
+    #     is local, this should be very short (0.25s).
+    #   - type: STATIC means endpoints are hardcoded (no DNS lookup needed).
+    #     Use STRICT_DNS when the endpoint is a hostname (like another sidecar).
+    #   - lb_policy: ROUND_ROBIN distributes requests evenly across endpoints.
+    #     With a single endpoint, the policy doesn't matter, but it's good
+    #     practice to always specify it.
+    #   - load_assignment: Defines the actual endpoints (IP:port pairs).
+    #     The endpoint address is 127.0.0.1 because the app is on localhost.
+    #
+    # TODO(human): Define the backend_app cluster pointing to 127.0.0.1:8000.
+    #
+    # Syntax:
+    #   - name: backend_app
+    #     connect_timeout: 0.25s
+    #     type: STATIC
+    #     lb_policy: ROUND_ROBIN
+    #     load_assignment:
+    #       cluster_name: backend_app
+    #       endpoints:
+    #         - lb_endpoints:
+    #             - endpoint:
+    #                 address:
+    #                   socket_address:
+    #                     address: 127.0.0.1
+    #                     port_value: 8000
