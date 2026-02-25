@@ -1,0 +1,11 @@
+# namespace.yaml -- Target namespace for the demo application.
+#
+# ArgoCD can auto-create namespaces with syncOptions CreateNamespace=true,
+# but defining it explicitly teaches how namespaces work and lets you
+# apply labels/annotations for policy enforcement.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-app
+  labels:
+    managed-by: argocd

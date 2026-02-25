@@ -1,0 +1,81 @@
+# applicationset.yaml -- ArgoCD ApplicationSet with List generator.
+#
+# -- Exercise Context --
+# ApplicationSet is a controller that generates multiple Application CRDs from
+# a template + generator. This is how teams manage multi-environment deployments
+# (staging, production) or multi-cluster setups from a single definition.
+#
+# The List generator is the simplest: you provide an explicit list of key-value
+# pairs, and each element generates one Application from the template.
+# Other generators include:
+#   - Git Directory: one Application per directory in a Git repo
+#   - Git File: reads config from JSON/YAML files in Git
+#   - Cluster: one Application per registered ArgoCD cluster
+#   - Matrix: Cartesian product of two generators
+#   - Pull Request: one Application per open PR (for preview environments)
+#
+# In this exercise, we use List generator to create "staging" and "production"
+# Applications that deploy to different namespaces within the same cluster.
+# In production, these would typically target different clusters.
+#
+# Docs:
+#   - https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/
+#   - https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-List/
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-app-environments
+  namespace: argocd
+spec:
+  # TODO(human): Define the List generator with two environments.
+  #
+  # The generators field is a list of generator configurations.
+  # Each element in the List generator's "elements" array produces one Application.
+  # The keys you define become template variables accessible via {{env}} and {{namespace}}.
+  #
+  # Create two elements:
+  #   1. env: staging,    namespace: demo-app-staging
+  #   2. env: production, namespace: demo-app-production
+  #
+  # Structure:
+  #   generators:
+  #     - list:
+  #         elements:
+  #           - env: staging
+  #             namespace: demo-app-staging
+  #           - env: production
+  #             namespace: demo-app-production
+
+  template:
+    metadata:
+      # TODO(human): Set the Application name using a template variable.
+      #
+      # ApplicationSet uses Go templates (or simple {{variable}} syntax).
+      # The name should include the environment to make each Application unique.
+      # Example: demo-app-{{env}} produces "demo-app-staging" and "demo-app-production".
+      #
+      # name: ???
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: http://gitea.gitea.svc.cluster.local:3000/gitops-admin/demo-app.git
+        targetRevision: main
+        path: k8s
+      destination:
+        # TODO(human): Set the destination using template variables.
+        #
+        # The server is the same for both (same cluster), but the namespace
+        # should differ per environment. Use the {{namespace}} variable from
+        # the generator elements.
+        #
+        # server: https://kubernetes.default.svc
+        # namespace: ???
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

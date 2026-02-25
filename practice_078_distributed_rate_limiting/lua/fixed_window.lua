@@ -1,0 +1,64 @@
+-- Fixed Window Rate Limiter -- Lua Script for Redis
+--
+-- This script atomically increments a counter and sets its TTL.
+-- Without atomicity, a race condition exists between INCR and EXPIRE:
+-- two concurrent requests could both see count=0, both INCR to 1,
+-- and both set EXPIRE, allowing double the intended rate.
+--
+-- Keys: KEYS[1] = rate limit key (e.g., "ratelimit:fixedwindow:user-123:1706745600")
+-- Args: ARGV[1] = max_requests (integer, the limit per window)
+--       ARGV[2] = window_seconds (integer, the window size in seconds)
+--
+-- Returns: {allowed (0 or 1), current_count (integer)}
+
+-- TODO(human): Implement the fixed window Lua script.
+--
+-- WHY THIS MATTERS:
+-- The fixed window counter is the simplest rate limiting algorithm, making
+-- it the ideal starting point for understanding atomic Redis operations.
+-- Even though it has the boundary spike problem, many production systems
+-- use it for simplicity when exact precision is not required.
+--
+-- THE ALGORITHM:
+--
+-- 1. PARSE ARGUMENTS:
+--    local max_requests   = tonumber(ARGV[1])
+--    local window_seconds = tonumber(ARGV[2])
+--
+-- 2. INCREMENT THE COUNTER:
+--    local current = redis.call('INCR', KEYS[1])
+--
+--    INCR atomically increments a key and returns the new value.
+--    If the key doesn't exist, Redis creates it with value 0 first,
+--    then increments to 1. This means "first request in a window"
+--    always gets current=1.
+--
+-- 3. SET TTL ON FIRST REQUEST ONLY:
+--    if current == 1 then
+--        redis.call('EXPIRE', KEYS[1], window_seconds)
+--    end
+--
+--    We only set the TTL when the counter is 1 (first request).
+--    If we set it on every request, we'd keep extending the window,
+--    which defeats the purpose of fixed windows.
+--
+--    WHY THIS MUST BE ATOMIC: Without a Lua script, you'd do:
+--      count = INCR key       -- Step 1
+--      if count == 1:
+--          EXPIRE key ttl     -- Step 2
+--    But between Step 1 and Step 2, another request could INCR the
+--    key to 2. Now neither request sets the EXPIRE (both see count>1),
+--    and the key persists forever. The Lua script prevents this.
+--
+-- 4. CHECK AGAINST LIMIT:
+--    if current <= max_requests then
+--        return {1, current}   -- allowed
+--    else
+--        return {0, current}   -- rejected
+--    end
+--
+-- HINT: The key should already include the window timestamp in its name
+-- (the Python side appends it), so you don't need to calculate windows
+-- inside Lua. Each window gets its own key that auto-expires.
+
+return {0, 0}

@@ -1,0 +1,78 @@
+# application.yaml -- ArgoCD Application CRD (manual sync).
+#
+# -- Exercise Context --
+# This is the heart of ArgoCD: the Application CRD. It tells ArgoCD:
+#   1. WHERE to find the desired state (Git repo + path)
+#   2. WHERE to deploy it (which cluster + namespace)
+#   3. HOW to sync (manual vs automated, prune, self-heal)
+#
+# This first Application uses MANUAL sync -- you must explicitly trigger a sync
+# via the UI or CLI. This teaches the sync workflow before enabling automation.
+#
+# The Application itself is deployed to the "argocd" namespace (where ArgoCD lives),
+# but it manages resources in the "demo-app" namespace. This separation is important:
+# ArgoCD Applications are metadata (control plane), the deployed resources are data plane.
+#
+# Docs:
+#   - https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
+#   - https://argo-cd.readthedocs.io/en/stable/getting_started/
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # TODO(human): Set the Application name and namespace.
+  #
+  # The name is how you reference this Application in the ArgoCD UI and CLI
+  # (e.g., `argocd app sync demo-app`).
+  # The namespace MUST be "argocd" -- ArgoCD only watches for Applications in its own namespace.
+  #
+  # name: ???
+  # namespace: ???
+
+  # Optional: add a finalizer so ArgoCD deletes managed resources when the Application is deleted.
+  # Without this, deleting the Application CRD leaves the deployed resources orphaned in the cluster.
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # TODO(human): Set the ArgoCD project.
+  #
+  # Projects are RBAC boundaries in ArgoCD. They control which repos, clusters,
+  # and namespaces an Application can access. The "default" project allows everything.
+  # In production, you'd create restricted projects per team.
+  #
+  # project: ???
+
+  source:
+    # TODO(human): Configure the Git source.
+    #
+    # repoURL: The Gitea repository URL as seen from INSIDE the cluster.
+    #   Since ArgoCD's Repo Server runs inside the cluster, it uses the Kubernetes
+    #   internal DNS name for Gitea: http://gitea.gitea.svc.cluster.local:3000/gitops-admin/demo-app.git
+    #
+    # targetRevision: The Git branch to track. Use "main" (Gitea's default branch).
+    #   ArgoCD polls this branch for changes. You can also specify a tag or commit SHA
+    #   for pinned deployments.
+    #
+    # path: The directory within the repo containing K8s manifests.
+    #   ArgoCD only watches this directory -- changes to files outside it are ignored.
+    #   Use "k8s" since that's where push_to_gitea.sh places the manifests.
+    #
+    # repoURL: ???
+    # targetRevision: ???
+    # path: ???
+
+  destination:
+    # TODO(human): Configure the deployment target.
+    #
+    # server: The Kubernetes API URL of the target cluster.
+    #   For deploying to the same cluster where ArgoCD runs, use the in-cluster URL:
+    #   https://kubernetes.default.svc
+    #
+    # namespace: The target namespace where resources will be created.
+    #   Use "demo-app" -- matching the namespace in our K8s manifests.
+    #
+    # server: ???
+    # namespace: ???
+
+  # No syncPolicy here = manual sync only.
+  # You must run `argocd app sync demo-app` or click Sync in the UI.

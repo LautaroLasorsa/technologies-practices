@@ -1,0 +1,62 @@
+# deployment.yaml -- Gitea lightweight Git server deployment.
+#
+# Gitea is a self-hosted Git service written in Go. We run it inside the kind
+# cluster so that ArgoCD can access the Git repo via Kubernetes internal DNS
+# (gitea.gitea.svc.cluster.local:3000) without any network tricks.
+#
+# This is a single-replica deployment with ephemeral storage (data lost on restart).
+# For the practice this is fine -- we push manifests fresh each time.
+#
+# Docs: https://docs.gitea.com/
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  namespace: gitea
+  labels:
+    app: gitea
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitea
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      containers:
+        - name: gitea
+          image: gitea/gitea:1.22-rootless
+          ports:
+            - containerPort: 3000
+              name: http
+            - containerPort: 2222
+              name: ssh
+          env:
+            # Disable SSH (we only need HTTP for this practice)
+            - name: GITEA__server__DISABLE_SSH
+              value: "true"
+            # Set the root URL so Gitea generates correct clone URLs
+            - name: GITEA__server__ROOT_URL
+              value: "http://gitea.gitea.svc.cluster.local:3000/"
+            # Use SQLite (default, no external DB needed)
+            - name: GITEA__database__DB_TYPE
+              value: "sqlite3"
+            # Allow creating the first user via the web UI
+            - name: GITEA__service__DISABLE_REGISTRATION
+              value: "false"
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"

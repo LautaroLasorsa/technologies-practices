@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis-practice
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # Enable AOF persistence with everysec fsync for the practice.
+    # The default redis.conf has RDB enabled and AOF disabled --
+    # we enable both so users can explore both persistence modes.
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --save 3600 1
+      --save 300 100
+      --save 60 10000
+      --loglevel notice
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  redis_data:

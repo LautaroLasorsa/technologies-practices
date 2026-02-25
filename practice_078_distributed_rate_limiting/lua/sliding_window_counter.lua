@@ -1,0 +1,78 @@
+-- Sliding Window Counter Rate Limiter -- Lua Script for Redis
+--
+-- A hybrid approach: maintains two fixed-window counters (current and
+-- previous) and computes a weighted estimate of the request count in
+-- the sliding window.
+--
+-- Keys: KEYS[1] = current window key  (e.g., "ratelimit:swcounter:user-123:174000")
+--       KEYS[2] = previous window key (e.g., "ratelimit:swcounter:user-123:173940")
+-- Args: ARGV[1] = max_requests (integer, the limit per window)
+--       ARGV[2] = window_seconds (integer, the window size in seconds)
+--       ARGV[3] = elapsed_fraction (float, 0.0-1.0, how far into current window)
+--
+-- Returns: {allowed (0 or 1), estimated_count (string, float as string)}
+
+-- TODO(human): Implement the sliding window counter Lua script.
+--
+-- WHY THIS MATTERS:
+-- The sliding window counter is the BEST BALANCE between accuracy and
+-- memory. It uses only two counters (O(1) memory per client, like fixed
+-- window) but eliminates most of the boundary spike problem (like
+-- sliding window log). This is what most production rate limiters
+-- actually use internally.
+--
+-- THE APPROXIMATION:
+-- Instead of tracking every request timestamp (expensive), we assume
+-- requests in the previous window were evenly distributed. We weight
+-- the previous window's count by the fraction of it that overlaps with
+-- our sliding window, and add the full current window count.
+--
+-- Example:
+--   Window size = 60 seconds
+--   Previous window (0s-60s) had 80 requests
+--   Current window (60s-120s) has 30 requests so far
+--   Current time is 75s (we're 25% into current window)
+--   elapsed_fraction = 0.25
+--
+--   estimated = prev_count * (1 - elapsed_fraction) + current_count
+--             = 80 * (1 - 0.25) + 30
+--             = 80 * 0.75 + 30
+--             = 60 + 30 = 90
+--
+--   If max_requests = 100, this request is allowed (90 < 100).
+--
+-- THE ALGORITHM:
+--
+-- 1. PARSE ARGUMENTS:
+--    local max_requests     = tonumber(ARGV[1])
+--    local window_seconds   = tonumber(ARGV[2])
+--    local elapsed_fraction = tonumber(ARGV[3])
+--
+-- 2. READ BOTH COUNTERS:
+--    local prev_count = tonumber(redis.call('GET', KEYS[2])) or 0
+--    local curr_count = tonumber(redis.call('GET', KEYS[1])) or 0
+--
+--    If the key doesn't exist (no requests in that window), GET returns
+--    false/nil, and `or 0` defaults to zero.
+--
+-- 3. COMPUTE WEIGHTED ESTIMATE:
+--    local estimated = prev_count * (1 - elapsed_fraction) + curr_count
+--
+-- 4. CHECK AND INCREMENT:
+--    if estimated < max_requests then
+--        redis.call('INCR', KEYS[1])
+--        redis.call('EXPIRE', KEYS[1], window_seconds * 2)
+--        return {1, tostring(estimated + 1)}  -- allowed
+--    else
+--        return {0, tostring(estimated)}       -- rejected
+--    end
+--
+--    We set TTL to 2x window_seconds so the "previous" window key is
+--    still available when the next window needs to reference it.
+--
+-- WORST CASE: The approximation is worst when traffic in the previous
+-- window was concentrated at one end (all at the start or all at the end)
+-- rather than evenly distributed. In practice, this is rare enough that
+-- the approximation is excellent for rate limiting purposes.
+
+return {0, "0"}

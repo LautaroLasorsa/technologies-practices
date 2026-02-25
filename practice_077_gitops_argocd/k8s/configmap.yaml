@@ -1,0 +1,20 @@
+# configmap.yaml -- Application configuration injected as environment variables.
+#
+# -- Exercise Context --
+# ConfigMaps decouple configuration from container images. In a GitOps workflow,
+# changing a ConfigMap value in Git triggers ArgoCD to sync the updated config
+# to the cluster -- no image rebuild needed. This is how you update feature flags,
+# version strings, or environment names through Git alone.
+#
+# Docs: https://kubernetes.io/docs/concepts/configuration/configmap/
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-app-config
+  namespace: demo-app
+  labels:
+    app: demo-app
+data:
+  APP_VERSION: "1.0.0"
+  APP_ENV: "development"

@@ -1,0 +1,16 @@
+[project]
+name = "practice-080-feature-flags"
+version = "0.1.0"
+description = "Feature Flags & Runtime Configuration: OpenFeature & Flagsmith"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.34",
+    "httpx>=0.28",
+    "flagsmith>=3.7",
+    "openfeature-sdk>=0.7",
+    "openfeature-provider-flagsmith>=0.2",
+]
+
+[tool.uv]
+dev-dependencies = []

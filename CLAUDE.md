@@ -42,7 +42,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | Infra DevOps & Observability | `not-started` |
 | 006a | Kubernetes: Core Concepts & Deploy | Docker, minikube/kind | Infra DevOps & Observability | `not-started` |
 | 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | Infra DevOps & Observability | `not-started` |
-| 006c | Service Mesh: Sidecar & Envoy | Docker, minikube/kind, Envoy | Infra DevOps & Observability | `not-started` |
+| 006c | Service Mesh: Sidecar & Envoy | Docker Compose, Envoy, Python | Infra, DevOps & Observability | `not-started` |
 | 007a | OpenTelemetry: Instrumentation | Python, Docker (Jaeger) | Infra DevOps & Observability | `not-started` |
 | 007b | OpenTelemetry: Dashboards & Alerting | Python, Docker (Grafana/Prometheus) | Infra DevOps & Observability | `not-started` |
 | 008 | Vector Databases | Python, Docker (Qdrant) | Data Stores & Messaging | `not-started` |
@@ -151,6 +151,12 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 073 | Log Clustering & Analysis with NLP | Python (drain3, sentence-transformers) | ML for Distributed Systems | `not-started` |
 | 074 | ML-guided Chaos Engineering | Python (networkx, scikit-learn) | ML for Distributed Systems | `not-started` |
 | 075 | Federated Learning | Python (flwr, torch) | ML for Distributed Systems | `not-started` |
+| 076a | Redis Fundamentals: Data Structures, Pub/Sub & Persistence | Python, Docker (Redis) | Data Stores & Messaging | `not-started` |
+| 076b | Redis Advanced: Distributed Locking, Cache Patterns & Lua Scripts | Python, Docker (Redis) | Data Stores & Messaging | `not-started` |
+| 077 | GitOps with ArgoCD: Declarative Continuous Delivery | Docker (kind), ArgoCD | Infra, DevOps & Observability | `not-started` |
+| 078 | Distributed Rate Limiting: Token Bucket, Sliding Window & Redis Lua | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
+| 079 | Distributed Task Queues: Celery & ARQ Worker Patterns | Python, Docker (Redis) | Data Stores & Messaging | `not-started` |
+| 080 | Feature Flags & Runtime Configuration: OpenFeature & Flagsmith | Python, Docker (Flagsmith) | Infra, DevOps & Observability | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 

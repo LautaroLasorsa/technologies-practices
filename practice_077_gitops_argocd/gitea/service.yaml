@@ -1,0 +1,24 @@
+# service.yaml -- ClusterIP Service for Gitea.
+#
+# This Service gives Gitea a stable DNS name inside the cluster:
+#   gitea.gitea.svc.cluster.local:3000
+#
+# ArgoCD's Repo Server uses this DNS name to clone the Git repository.
+# We also port-forward this service to localhost:3000 for the web UI.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea
+  namespace: gitea
+  labels:
+    app: gitea
+spec:
+  type: ClusterIP
+  selector:
+    app: gitea
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP

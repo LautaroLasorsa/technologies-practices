@@ -1,0 +1,75 @@
+-- Sliding Window Log Rate Limiter -- Lua Script for Redis
+--
+-- Uses a sorted set where each member is a unique request ID and the
+-- score is the request timestamp. To check if a request is allowed:
+-- prune old entries, count remaining, and conditionally add.
+--
+-- Keys: KEYS[1] = rate limit key (e.g., "ratelimit:slidinglog:user-123")
+-- Args: ARGV[1] = max_requests (integer, the limit per window)
+--       ARGV[2] = window_seconds (float, the window size in seconds)
+--       ARGV[3] = now (float, current timestamp in seconds)
+--       ARGV[4] = member (string, unique request ID)
+--
+-- Returns: {allowed (0 or 1), current_count (integer)}
+
+-- TODO(human): Implement the sliding window log Lua script.
+--
+-- WHY THIS MATTERS:
+-- The sliding window log provides PERFECT accuracy -- no boundary spike
+-- problem, no approximation. It is the "gold standard" of rate limiting
+-- accuracy. The trade-off is memory: each request stored as a sorted set
+-- member. Understanding this trade-off is crucial for system design
+-- interviews ("why not just use a sorted set?").
+--
+-- WHY LUA INSTEAD OF MULTI/EXEC:
+-- This algorithm requires CONDITIONAL logic: "IF count < limit THEN add
+-- the request." Redis MULTI/EXEC executes a fixed sequence of commands
+-- without branching. You cannot read the ZCARD result and decide whether
+-- to ZADD inside a MULTI block. Lua scripts CAN branch on intermediate
+-- results, making them essential for any rate limiting algorithm that
+-- needs conditional writes.
+--
+-- THE ALGORITHM:
+--
+-- 1. PARSE ARGUMENTS:
+--    local max_requests   = tonumber(ARGV[1])
+--    local window_seconds = tonumber(ARGV[2])
+--    local now            = tonumber(ARGV[3])
+--    local member         = ARGV[4]
+--
+-- 2. CALCULATE WINDOW START:
+--    local window_start = now - window_seconds
+--
+-- 3. PRUNE EXPIRED ENTRIES:
+--    redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', tostring(window_start))
+--
+--    This removes all entries with timestamps older than (now - window).
+--    Without pruning, the sorted set grows unboundedly. The pruning cost
+--    is O(log(N) + M) where M is the number of removed entries.
+--
+-- 4. COUNT CURRENT ENTRIES:
+--    local current_count = redis.call('ZCARD', KEYS[1])
+--
+-- 5. CONDITIONALLY ADD:
+--    if current_count < max_requests then
+--        redis.call('ZADD', KEYS[1], now, member)
+--        redis.call('EXPIRE', KEYS[1], math.ceil(window_seconds) + 1)
+--        return {1, current_count + 1}  -- allowed
+--    else
+--        redis.call('EXPIRE', KEYS[1], math.ceil(window_seconds) + 1)
+--        return {0, current_count}       -- rejected
+--    end
+--
+--    The EXPIRE ensures cleanup if the client goes idle. We set it to
+--    window_seconds + 1 to guarantee the key survives the full window
+--    but doesn't linger forever.
+--
+--    NOTE: We ZADD only if under the limit. This avoids the "optimistic
+--    add then remove" pattern used in pipeline-based approaches, making
+--    the operation cleaner. Since we're in a Lua script, the entire
+--    sequence is atomic -- no other client can interleave.
+--
+-- HINT: The member must be unique per request. The Python side generates
+-- it (e.g., f"{timestamp}:{process_id}:{counter}"). You just use ARGV[4].
+
+return {0, 0}
