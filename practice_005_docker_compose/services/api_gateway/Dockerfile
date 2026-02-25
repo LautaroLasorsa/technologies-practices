@@ -13,11 +13,13 @@
 # Hint: Use python:3.12-slim for a small image with Python pre-installed.
 # Syntax: FROM <image>:<tag>
 
+FROM python:3.12-slim
 
 # TODO(human) [2/4]: Set the working directory inside the container.
 # Hint: Use /app as the convention.
 # Syntax: WORKDIR <path>
 
+WORKDIR /app
 
 # TODO(human) [3/4]: Copy requirements.txt and install dependencies.
 # Hint: Copy requirements.txt first (before source code) so Docker caches
@@ -26,6 +28,8 @@
 #   COPY requirements.txt .
 #   RUN pip install --no-cache-dir -r requirements.txt
 
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # TODO(human) [4/4]: Copy the application source and define the startup command.
 # Hint: Copy main.py (or the whole directory with COPY . .), expose port 8000,
@@ -34,3 +38,7 @@
 #   COPY . .
 #   EXPOSE 8000
 #   CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn","main:app","--host","0.0.0.0","--port","8000"]

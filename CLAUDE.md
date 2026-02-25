@@ -39,7 +39,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 003e | Kafka: Internals & Performance Tuning | Python, Docker (KRaft, 3-broker) | Data Stores & Messaging | `not-started` |
 | 004a | gRPC & Protobuf: Python Service | Python | API Design & Protocols | `not-started` |
 | 004b | gRPC: Rust Interop | Rust, Python | API Design & Protocols | `not-started` |
-| 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | Infra, DevOps & Observability | `not-started` |
+| 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | Infra, DevOps & Observability | `completed` |
 | 006a | Kubernetes: Core Concepts & Deploy | Docker, minikube/kind | Infra, DevOps & Observability | `not-started` |
 | 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | Infra, DevOps & Observability | `not-started` |
 | 006c | Service Mesh: Sidecar & Envoy | Docker, minikube/kind, Envoy | Infra, DevOps & Observability | `not-started` |

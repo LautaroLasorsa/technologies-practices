@@ -12,11 +12,16 @@
 # TODO(human) [1/4]: Choose a base image.
 # Hint: Same as the other services -- python:3.12-slim.
 
+FROM python:3.12-slim
 
 # TODO(human) [2/4]: Set the working directory.
 
+WORKDIR /app
 
 # TODO(human) [3/4]: Copy requirements.txt and install dependencies.
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 
 # TODO(human) [4/4]: Copy source and define the startup command.
@@ -25,3 +30,7 @@
 #   COPY . .
 #   EXPOSE 8001
 #   CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+
+COPY . .
+EXPOSE 8001
+CMD ["uvicorn","main:app","--host","0.0.0.0","--port","8001"]

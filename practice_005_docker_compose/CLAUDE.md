@@ -249,4 +249,4 @@ All commands are run from the `practice_005_docker_compose/` folder root.
 
 ## State
 
-`not-started`
+`completed`
