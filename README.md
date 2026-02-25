@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-11%20%2F%20121%20practices-blue?style=flat-square" alt="Progress: 10/121">
+  <img src="https://img.shields.io/badge/Progress-11%20%2F%20127%20practices-blue?style=flat-square" alt="Progress: 10/121">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -126,6 +126,24 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=rust,postgres,docker" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>076a</td>
+  <td>Redis Fundamentals: Data Structures, Pub/Sub & Persistence</td>
+  <td><img src="https://skillicons.dev/icons?i=py,redis,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>076b</td>
+  <td>Redis Advanced: Distributed Locking, Cache Patterns & Lua Scripts</td>
+  <td><img src="https://skillicons.dev/icons?i=py,redis,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>079</td>
+  <td>Distributed Task Queues: Celery & ARQ Worker Patterns</td>
+  <td><img src="https://skillicons.dev/icons?i=py,redis,docker" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 
@@ -195,7 +213,7 @@ python clean_all.py
 <tr>
   <td>006c</td>
   <td>Service Mesh: Sidecar & Envoy</td>
-  <td><img src="https://skillicons.dev/icons?i=docker,kubernetes" height="20"></td>
+  <td><img src="https://skillicons.dev/icons?i=docker,python" height="20"></td>
   <td>—</td>
 </tr>
 <tr>
@@ -220,6 +238,18 @@ python clean_all.py
   <td>010b</td>
   <td>Terraform: Multi-Resource Orchestration</td>
   <td><img src="https://skillicons.dev/icons?i=terraform,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>077</td>
+  <td>GitOps with ArgoCD: Declarative Continuous Delivery</td>
+  <td><img src="https://skillicons.dev/icons?i=docker,kubernetes" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>080</td>
+  <td>Feature Flags & Runtime Configuration: OpenFeature & Flagsmith</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
@@ -340,6 +370,12 @@ python clean_all.py
   <td>053</td>
   <td>Consistent Hashing & DHTs</td>
   <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>078</td>
+  <td>Distributed Rate Limiting: Token Bucket, Sliding Window & Redis Lua</td>
+  <td><img src="https://skillicons.dev/icons?i=py,redis,docker" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
