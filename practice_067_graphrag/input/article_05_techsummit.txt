@@ -1,0 +1,15 @@
+Meridian TechSummit 2025: A City Showcases Its Innovation
+
+The fourth annual Meridian TechSummit drew a record 5,000 attendees to the Cedar River Convention Center, cementing the event's status as the Pacific Northwest's premier technology conference. Organized by the Meridian Tech Council, with founding sponsor QuantumCore Technologies and lead sponsors NeuralPath Systems and Cascade Robotics, the three-day event featured over 120 speakers and 50 exhibiting companies.
+
+The opening keynote by Dr. James Chen, founder of QuantumCore, electrified the audience with a live demonstration of the company's 127-qubit Meridian-Q processor solving an optimization problem in real-time. "Three years ago, this computation would have taken a classical supercomputer weeks. Today, it takes our quantum processor 47 seconds," Chen told the crowd.
+
+Day two's highlight was a panel on "AI Ethics and Enterprise Responsibility," moderated by Dr. Sarah Kim of NeuralPath Systems. Panelists included Professor Amanda Torres from Meridian University, venture capitalist Rachel Torres of Meridian Capital Partners, and GreenGrid Analytics co-founder Tomás Herrera. The discussion focused on ensuring AI systems remain transparent and accountable as they are deployed in critical industries like healthcare and finance.
+
+Cascade Robotics CEO Priya Sharma delivered a keynote on the future of human-robot collaboration in logistics. She announced a new partnership with the Port of Meridian to deploy autonomous cargo handling systems, a project projected to reduce port processing times by 40%. "This is what happens when robotics meets real-world infrastructure challenges," Sharma said.
+
+The MSA Demo Day, held on the conference's final afternoon, showcased 15 new startups from the accelerator's latest cohort. Standouts included Meridian Biotech, which uses AI to accelerate protein folding simulations, and SecureChain Labs, which builds quantum-resistant cryptographic protocols. Both companies received offers from multiple investors, with Horizon Ventures leading a $10 million seed round for SecureChain Labs.
+
+Mayor Elena Vasquez closed the conference by announcing the Meridian Digital Infrastructure Initiative, a $200 million public-private investment to deploy city-wide 5G networks, expand the Innovation District, and establish a new quantum computing research center in partnership with QuantumCore and Meridian University. "Meridian's story is just beginning," Vasquez declared.
+
+The Meridian Tech Council announced that TechSummit 2026 will expand to four days and include a dedicated track on quantum computing applications, co-curated by Dr. James Chen and Professor Lisa Park.
