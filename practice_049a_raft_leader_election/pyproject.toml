@@ -1,0 +1,6 @@
+[project]
+name = "practice-049a-raft-leader-election"
+version = "0.1.0"
+description = "Raft Consensus: Leader Election & Log Replication"
+requires-python = ">=3.12"
+dependencies = []
