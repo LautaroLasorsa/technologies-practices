@@ -1,10 +1,13 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["httpx>=0.28"]
+# ///
 """End-to-end test for the Task Processing Pipeline.
 
 Run this after `docker compose up --build` to verify the full pipeline works.
 
 Usage:
-    pip install httpx   (or: pip install -r scripts/requirements.txt)
-    python scripts/test_pipeline.py
+    uv run scripts/test_pipeline.py
 """
 
 from __future__ import annotations

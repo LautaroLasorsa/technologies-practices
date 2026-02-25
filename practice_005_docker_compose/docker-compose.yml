@@ -315,6 +315,22 @@ services:
 # Phase 5: Network definitions
 # =============================================================================
 # TODO(human): Define the two custom networks used above.
+#
+# Top-level "networks:" declares virtual networks that Compose creates on
+# `docker compose up` and removes on `docker compose down`.
+# Services opt in via their own "networks:" list; only services sharing
+# a network can reach each other by service name (Docker's built-in DNS).
+#
+# Network name (e.g., "frontend") is referenced by services as "networks: [frontend]".
+# Compose prefixes it with the project name: "practice_005_docker_compose_frontend".
+#
+# "driver:" determines the network implementation:
+#   bridge  -- isolated virtual network on a single host (default, most common)
+#   host    -- container shares the host's network stack (no isolation)
+#   overlay -- spans multiple Docker hosts (Swarm mode)
+#   none    -- no networking at all
+# "bridge" is the default, so omitting the driver line would produce the same result.
+#
 # Syntax:
 #   networks:
 #     frontend:
