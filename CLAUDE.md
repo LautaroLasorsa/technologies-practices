@@ -90,12 +90,6 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 031a | Agentic AI: Single-Agent Design Patterns | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 031b | Agentic AI: Multi-Agent Systems | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 031c | Agentic AI: Production Patterns | Python, Docker (Ollama, Qdrant, Langfuse) | AI & LLM Engineering | `not-started` |
-| 054a | Google ADK: Agents, Tools & Sessions | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
-| 054b | Google ADK: Multi-Agent Orchestration | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
-| 054c | Google ADK: Callbacks, Evaluation & Streaming | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
-| 067 | GraphRAG: Knowledge Graph-Enhanced RAG | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
-| 068 | DVC: Data & Pipeline Versioning | Python (DVC, scikit-learn) | Data Engineering | `not-started` |
-| 069 | Delta Lake: ACID Tables & Time Travel | Python (deltalake, pandas, DuckDB) | Data Engineering | `not-started` |
 | 032a | LP: Simplex Method | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 032b | LP: Duality & Interior Point | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
 | 033a | Convex Opt: First-Order Methods | C++17, Eigen | OR: Algorithms (C++/Rust) | `not-started` |
@@ -127,13 +121,36 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 051 | Distributed Coordination: etcd | Python, Docker (etcd) | Distributed Systems Patterns | `not-started` |
 | 052 | Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
 | 053 | Consistent Hashing & DHTs | Python | Distributed Systems Patterns | `not-started` |
+| 054a | Google ADK: Agents, Tools & Sessions | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 054b | Google ADK: Multi-Agent Orchestration | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 054c | Google ADK: Callbacks, Evaluation & Streaming | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 055 | RabbitMQ: Queues, Exchanges & AMQP | Python, Docker (RabbitMQ) | Data Stores & Messaging | `not-started` |
-| 057 | MQTT: Lightweight Messaging & Protocol Comparison | Python, Docker (Mosquitto) | Data Stores & Messaging | `not-started` |
 | 056 | DuckDB: Embedded Analytics & Columnar Queries | Python | Data Engineering | `not-started` |
+| 057 | MQTT: Lightweight Messaging & Protocol Comparison | Python, Docker (Mosquitto) | Data Stores & Messaging | `not-started` |
 | 058a | SQLModel: FastAPI Integration & Pydantic Models | Python (SQLModel, FastAPI), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
 | 058b | SQLAlchemy 2.0: Async ORM & Advanced Queries | Python (SQLAlchemy 2.0, asyncpg), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
 | 059a | SQLx: Compile-Time Checked SQL | Rust (SQLx, tokio), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
 | 059b | Diesel: Type-Safe ORM & Migrations | Rust (Diesel), Docker (PostgreSQL) | Data Stores & Messaging | `not-started` |
+| 060a | Unsafe Rust & FFI: Raw Pointers, bindgen & repr(C) | Rust (bindgen, libc, cbindgen) | Systems Programming | `not-started` |
+| 060b | Async Runtime Internals: Future, Waker & Tokio Architecture | Rust (tokio) | Systems Programming | `not-started` |
+| 061a | Lock-Free Rust: crossbeam & Epoch-Based Reclamation | Rust (crossbeam, crossbeam-epoch) | Systems Programming | `not-started` |
+| 061b | Custom Allocators: GlobalAlloc, jemalloc & Arena Patterns | Rust (tikv-jemallocator, bumpalo) | Systems Programming | `not-started` |
+| 062 | SIMD in Rust: portable_simd & std::arch | Rust (nightly, std::arch) | Systems Programming | `not-started` |
+| 063a | Profiling & Flamegraphs | Rust, C++ (cargo-flamegraph, samply) | Systems Programming | `not-started` |
+| 063b | Memory Safety Verification: Miri & Sanitizers | Rust, C++ (Miri, ASAN) | Systems Programming | `not-started` |
+| 064 | WebAssembly from Systems Languages: WASM & WASI | Rust (wasm-pack, wasmtime) | Systems Programming | `not-started` |
+| 065 | eBPF Observability: Kernel Tracing with aya | Rust, Docker (Linux) | Systems Programming | `not-started` |
+| 066 | io_uring: Modern Linux Async I/O | Rust (tokio-uring, io-uring), Docker (Linux) | Systems Programming | `not-started` |
+| 067 | GraphRAG: Knowledge Graph-Enhanced RAG | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 068 | DVC: Data & Pipeline Versioning | Python (DVC, scikit-learn) | Data Engineering | `not-started` |
+| 069 | Delta Lake: ACID Tables & Time Travel | Python (deltalake, pandas, DuckDB) | Data Engineering | `not-started` |
+| 070a | AIOps: Anomaly Detection on Distributed Metrics | Python (pyod, scikit-learn) | ML for Distributed Systems | `not-started` |
+| 070b | AIOps: Root Cause Analysis with Service Graphs | Python (networkx, pyod) | ML for Distributed Systems | `not-started` |
+| 071 | Learned Query Optimization | Python (torch, sqlglot), Docker (PostgreSQL) | ML for Distributed Systems | `not-started` |
+| 072 | RL-based Adaptive Load Balancing | Python (gymnasium, stable-baselines3) | ML for Distributed Systems | `not-started` |
+| 073 | Log Clustering & Analysis with NLP | Python (drain3, sentence-transformers) | ML for Distributed Systems | `not-started` |
+| 074 | ML-guided Chaos Engineering | Python (networkx, scikit-learn) | ML for Distributed Systems | `not-started` |
+| 075 | Federated Learning | Python (flwr, torch) | ML for Distributed Systems | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 

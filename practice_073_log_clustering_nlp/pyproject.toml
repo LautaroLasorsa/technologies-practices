@@ -1,0 +1,15 @@
+[project]
+name = "practice-073-log-clustering-nlp"
+version = "0.1.0"
+description = "Log Clustering & Analysis with NLP"
+requires-python = ">=3.12"
+dependencies = [
+    "drain3>=0.9",
+    "sentence-transformers>=2.2",
+    "scikit-learn>=1.3",
+    "umap-learn>=0.5",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "matplotlib>=3.7",
+    "hdbscan>=0.8",
+]

@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-0%20%2F%20118%20practices-blue?style=flat-square" alt="Progress: 0/118">
+  <img src="https://img.shields.io/badge/Progress-0%20%2F%20121%20practices-blue?style=flat-square" alt="Progress: 0/121">
 </p>
 
 > **This is the `template` branch** — all exercises are in `not-started` state, ready for you to implement. Check out [`master`](../../tree/master) to see progress and completed practices.
@@ -597,6 +597,60 @@ python clean_all.py
 <tr>
   <td>025f</td>
   <td>ML Compilers: torch.compile Deep Dive</td>
+  <td><img src="https://skillicons.dev/icons?i=py,pytorch" height="20"></td>
+  <td>—</td>
+</tr>
+</tbody>
+</table>
+
+---
+
+## ML for Distributed Systems
+
+<table>
+<thead>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>070a</td>
+  <td>AIOps: Anomaly Detection on Distributed Metrics</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>070b</td>
+  <td>AIOps: Root Cause Analysis with Service Graphs</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>071</td>
+  <td>Learned Query Optimization</td>
+  <td><img src="https://skillicons.dev/icons?i=py,pytorch,postgres,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>072</td>
+  <td>RL-based Adaptive Load Balancing</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>073</td>
+  <td>Log Clustering & Analysis with NLP</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>074</td>
+  <td>ML-guided Chaos Engineering</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>075</td>
+  <td>Federated Learning</td>
   <td><img src="https://skillicons.dev/icons?i=py,pytorch" height="20"></td>
   <td>—</td>
 </tr>
