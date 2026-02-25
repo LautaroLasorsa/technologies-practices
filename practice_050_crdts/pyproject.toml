@@ -1,0 +1,6 @@
+[project]
+name = "practice-050-crdts"
+version = "0.1.0"
+description = "CRDTs: Conflict-Free Replicated Data Types"
+requires-python = ">=3.12"
+dependencies = []

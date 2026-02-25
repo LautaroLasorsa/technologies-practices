@@ -1,0 +1,62 @@
+services:
+  etcd1:
+    image: quay.io/coreos/etcd:v3.5.12
+    container_name: practice_051-etcd1
+    command:
+      - etcd
+      - --name=etcd1
+      - --data-dir=/etcd-data
+      - --initial-advertise-peer-urls=http://etcd1:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://etcd1:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --initial-cluster=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - --initial-cluster-state=new
+      - --initial-cluster-token=practice-051-cluster
+    ports:
+      - "2379:2379"
+    volumes:
+      - etcd1-data:/etcd-data
+
+  etcd2:
+    image: quay.io/coreos/etcd:v3.5.12
+    container_name: practice_051-etcd2
+    command:
+      - etcd
+      - --name=etcd2
+      - --data-dir=/etcd-data
+      - --initial-advertise-peer-urls=http://etcd2:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://etcd2:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --initial-cluster=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - --initial-cluster-state=new
+      - --initial-cluster-token=practice-051-cluster
+    ports:
+      - "2381:2379"
+    volumes:
+      - etcd2-data:/etcd-data
+
+  etcd3:
+    image: quay.io/coreos/etcd:v3.5.12
+    container_name: practice_051-etcd3
+    command:
+      - etcd
+      - --name=etcd3
+      - --data-dir=/etcd-data
+      - --initial-advertise-peer-urls=http://etcd3:2380
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://etcd3:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --initial-cluster=etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+      - --initial-cluster-state=new
+      - --initial-cluster-token=practice-051-cluster
+    ports:
+      - "2383:2379"
+    volumes:
+      - etcd3-data:/etcd-data
+
+volumes:
+  etcd1-data:
+  etcd2-data:
+  etcd3-data:

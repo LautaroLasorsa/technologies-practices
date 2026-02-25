@@ -1,0 +1,8 @@
+version = 1
+revision = 1
+requires-python = ">=3.12"
+
+[[package]]
+name = "practice-049a-raft-leader-election"
+version = "0.1.0"
+source = { virtual = "." }

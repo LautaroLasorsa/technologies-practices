@@ -1,0 +1,10 @@
+[project]
+name = "practice-051-distributed-coordination-etcd"
+version = "0.1.0"
+description = "Distributed Coordination: etcd"
+requires-python = ">=3.12"
+dependencies = [
+    "etcd3>=0.12",
+    "grpcio>=1.60",
+    "protobuf>=4.0",
+]

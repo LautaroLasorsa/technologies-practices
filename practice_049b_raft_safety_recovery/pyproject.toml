@@ -1,0 +1,6 @@
+[project]
+name = "practice-049b-raft-safety-recovery"
+version = "0.1.0"
+description = "Raft Consensus: Safety & Failure Recovery"
+requires-python = ">=3.12"
+dependencies = []
