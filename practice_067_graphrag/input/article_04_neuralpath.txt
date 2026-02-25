@@ -1,0 +1,15 @@
+NeuralPath Systems: Building the Future of Enterprise AI
+
+NeuralPath Systems, Meridian City's leading AI company, has unveiled its next-generation enterprise platform, NeuralPath Cortex 3.0, which integrates large language models with proprietary knowledge graph technology to deliver domain-specific AI assistants for Fortune 500 companies.
+
+Co-founders Dr. Sarah Kim and Marcus Rivera launched NeuralPath in 2017 with a focus on solving a fundamental problem in enterprise AI: generic language models hallucinate when applied to specialized business domains. "Companies need AI that understands their specific terminology, processes, and data relationships," Kim said at the product launch event. "Cortex achieves this by grounding language model outputs in structured knowledge graphs built from the company's own documentation and data."
+
+The Cortex platform uses a technique NeuralPath calls Grounded Generation, which constructs domain-specific knowledge graphs from enterprise documents and databases, then uses those graphs to constrain and verify LLM outputs. The technology bears similarities to Microsoft's GraphRAG approach but is optimized for real-time enterprise queries rather than offline analysis.
+
+NeuralPath's research team, led by Chief AI Officer Dr. Kenji Watanabe, has published extensively on knowledge-grounded generation. Their paper at NeurIPS 2024, co-authored with Meridian University's NLP Research Group led by Professor Amanda Torres, introduced the concept of "dynamic graph augmentation" — updating knowledge graphs in real-time as new documents are ingested.
+
+Major customers include three of the top five U.S. banks, two major healthcare systems, and several defense contractors. Revenue has grown 300% year-over-year, reaching $85 million in 2024. The company employs 350 people, with 200 based in Meridian's Innovation District.
+
+NeuralPath recently expanded its partnership with Cascade Robotics to integrate AI-driven natural language interfaces into warehouse management systems. "Warehouse operators can now query system status and issue commands in plain English," said Priya Sharma, CEO of Cascade Robotics. Marcus Rivera, NeuralPath's CEO, added: "This partnership shows how Meridian companies collaborate to create solutions none of us could build alone."
+
+The company's Series C round, led by Andreessen Horowitz with participation from Meridian Capital Partners, raised $150 million at a $1.8 billion valuation. Dr. Kim stated that the funds will be used to open a research lab in partnership with Meridian University and to expand into the European market.

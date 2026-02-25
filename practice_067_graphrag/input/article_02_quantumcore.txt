@@ -1,0 +1,13 @@
+QuantumCore Technologies Announces Breakthrough in Error Correction
+
+QuantumCore Technologies, the Meridian City-based quantum computing company, has announced a major breakthrough in quantum error correction that could accelerate the timeline for practical quantum computing by several years.
+
+Dr. James Chen, founder and Chief Scientist of QuantumCore, presented the findings at the International Quantum Computing Conference in Geneva. The new technique, called Adaptive Surface Coding (ASC), reduces the overhead required for error correction by 60% compared to existing methods. "This means we can achieve fault-tolerant computation with fewer physical qubits, bringing useful quantum computing closer to reality," Chen explained.
+
+The breakthrough builds on three years of collaboration between QuantumCore's research division and Meridian University's Quantum Information Lab, directed by Professor Lisa Park. Park's team provided the theoretical foundations, while QuantumCore's engineers implemented the protocols on their 127-qubit Meridian-Q processor.
+
+The discovery has attracted significant attention from the defense and pharmaceutical sectors. Vertex Pharmaceuticals signed a $45 million partnership agreement with QuantumCore to apply quantum simulation to drug discovery. The U.S. Department of Energy also awarded QuantumCore a $30 million grant to explore quantum optimization for power grid management.
+
+QuantumCore's Chief Operating Officer, David Nakamura, noted that the company plans to double its engineering team from 200 to 400 by the end of next year. "We're hiring aggressively from Meridian University and beyond. The talent pipeline that Dean Okafor has built is exceptional," Nakamura said.
+
+Investors have responded enthusiastically. QuantumCore's Series D round, led by Horizon Ventures with participation from Sequoia Capital and Meridian Capital Partners, raised $280 million at a $3.2 billion valuation — making it the most valuable private company in Meridian City.
