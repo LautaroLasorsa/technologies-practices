@@ -13,6 +13,10 @@
 #
 # Docs: https://kubernetes.io/docs/concepts/workloads/pods/
 
+# apiVersion: which API group + version to use. "v1" = core group (stable).
+#   Core (v1): Pod, Service, ConfigMap, Secret, Namespace
+#   Apps (apps/v1): Deployment, ReplicaSet, StatefulSet
+#   Pattern: <group>/<version> — core omits the group name, so "v1" means "core/v1"
 apiVersion: v1
 kind: Pod
 metadata:
@@ -28,7 +32,15 @@ spec:
     #   - name: task-tracker
     #   - image: task-tracker:v1
     #   - imagePullPolicy: Never   (use the local image, don't pull from a registry)
+    #       Options: Always       — pull from registry every time (default for :latest tag)
+    #                IfNotPresent — pull only if not cached on the node (default for versioned tags like :v1)
+    #                Never        — only use local images, error if not found (minikube/kind dev workflow)
     #   - containerPort: 5000      (inside the "ports" list)
+    #       containerPort is purely DOCUMENTATION — it tells K8s and humans which port
+    #       the container listens on. It does NOT open, expose, or restrict the port.
+    #       The container is reachable on port 5000 whether you declare it or not.
+    #       Compare with Docker's EXPOSE: same idea, informational only.
+    #       Actual external access requires a Service (006b) or port-forward.
     #
     # Structure:
     #   - name: <container-name>

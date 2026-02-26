@@ -32,6 +32,10 @@ spec:
     matchLabels:
       # TODO(human): This selector tells the Deployment which Pods to manage.
       # It MUST match the labels in spec.template.metadata.labels below.
+      # selector.matchLabels is a QUERY ("find pods with these labels"),
+      # while template.metadata.labels is a STAMP ("apply these labels to new pods").
+      # If they don't match, K8s rejects the manifest — otherwise the Deployment
+      # would create pods it can't find, causing infinite pod creation.
       # Hint: app: task-tracker
 
   template:

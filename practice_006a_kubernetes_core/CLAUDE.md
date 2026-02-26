@@ -57,12 +57,27 @@ The Python app and its Dockerfile are fully implemented. **You write the Kuberne
 
 ### Phase 1: Setup & Cluster (~10 min)
 
-1. Install minikube and kubectl (see `setup.bat`)
-2. Start a local cluster: `minikube start --driver=docker`
-3. Point your shell to minikube's Docker daemon so images built locally are available to the cluster
-4. Build the app image: `docker build -t task-tracker:v1 ./app`
-5. Verify: `docker images | findstr task-tracker`
-6. Key question: Why do we build inside minikube's Docker daemon instead of our host's?
+1. **Install minikube** — local single-node K8s cluster tool:
+   - Windows: `winget install Kubernetes.minikube` (or `choco install minikube`)
+   - macOS: `brew install minikube`
+   - Linux: download binary from https://minikube.sigs.k8s.io/docs/start/
+   - Verify: `minikube version`
+2. **Install kubectl** — CLI to interact with the K8s API server:
+   - Windows: `winget install Kubernetes.kubectl` (or `choco install kubernetes-cli`)
+   - macOS: `brew install kubectl`
+   - Linux: `sudo snap install kubectl --classic`
+   - Verify: `kubectl version --client`
+3. **Start a local cluster**: `minikube start --driver=docker`
+   - This runs a K8s node as a Docker container (~1-3 min on first run)
+   - Verify: `kubectl cluster-info` and `kubectl get nodes`
+4. **Point Docker CLI to minikube's internal daemon** — so images built locally are available to the cluster:
+   - Git Bash: `eval $(minikube docker-env)`
+   - PowerShell: `& minikube -p minikube docker-env --shell powershell | Invoke-Expression`
+   - CMD: `@FOR /f "tokens=*" %i IN ('minikube -p minikube docker-env --shell cmd') DO @%i`
+   - Without this step, `docker build` targets your host's Docker and K8s can't find the image
+5. **Build the app image** (from the practice folder): `docker build -t task-tracker:v1 ./app`
+6. **Verify**: `docker images | grep task-tracker` (Bash), `docker images | findstr task-tracker` (CMD), `docker images | Select-String task-tracker` (PowerShell)
+7. Key question: Why do we build inside minikube's Docker daemon instead of our host's?
 
 ### Phase 2: Bare Pod (~15 min)
 
@@ -70,6 +85,7 @@ The Python app and its Dockerfile are fully implemented. **You write the Kuberne
 2. Apply: `kubectl apply -f k8s/pod.yaml`
 3. Verify: `kubectl get pods`, `kubectl describe pod task-tracker`
 4. Port-forward: `kubectl port-forward pod/task-tracker 5000:5000`
+   - Pods live in K8s' internal network (unreachable from your host). This creates a temporary tunnel: `localhost:5000 → pod:5000`. It's a dev/debug shortcut — for production access, use a Service (006b).
 5. Test: `curl http://localhost:5000/health`
 6. Delete the pod: `kubectl delete -f k8s/pod.yaml`
 7. Key question: If the pod crashes, does anything restart it? Why or why not?
@@ -79,7 +95,7 @@ The Python app and its Dockerfile are fully implemented. **You write the Kuberne
 1. Open `k8s/namespace.yaml` — fill in the `TODO(human)` section
 2. Apply: `kubectl apply -f k8s/namespace.yaml`
 3. Verify: `kubectl get namespaces`
-4. Re-deploy the pod into the new namespace (add `namespace` to metadata)
+4. Re-deploy the pod into the `practice` namespace: add `namespace: practice` to `metadata:` in `pod.yaml`, then `kubectl apply -f k8s/pod.yaml`. Without this, pods go to the `default` namespace. You can also use `-n practice` on the CLI, but declaring it in the YAML makes the manifest self-contained.
 5. Verify: `kubectl get pods -n practice`
 6. Key question: What happens if two teams deploy a pod named `task-tracker` in different namespaces?
 
@@ -99,7 +115,13 @@ The Python app and its Dockerfile are fully implemented. **You write the Kuberne
 4. Scale: `kubectl scale deployment task-tracker --replicas=5 -n practice`
 5. Delete a pod and watch self-healing: `kubectl delete pod <pod-name> -n practice`
 6. Port-forward to the deployment: `kubectl port-forward deployment/task-tracker 5000:5000 -n practice`
-7. Test all endpoints: `/health`, `GET /tasks`, `POST /tasks`
+7. Test all endpoints (in a separate terminal while port-forward runs):
+   - `curl.exe http://localhost:5000/health` — should return status, version, environment
+   - `curl.exe http://localhost:5000/config` — verify ConfigMap/Secret injection (secrets appear masked)
+   - `curl.exe http://localhost:5000/tasks` — should return `{"tasks": [], "count": 0}`
+   - `curl.exe -X POST http://localhost:5000/tasks -H "Content-Type: application/json" -d '{"title": "Learn K8s"}'` — creates a task
+   - `curl.exe http://localhost:5000/tasks` — should now show count: 1
+   - Note: use `curl.exe` (not `curl`) on PowerShell — `curl` is aliased to `Invoke-WebRequest` which handles quotes differently
 8. Key question: When you scaled to 5 replicas, what happened to the ReplicaSet? What is the relationship between Deployment -> ReplicaSet -> Pods?
 
 ### Phase 6: Rolling Update & Rollback (~15 min)
