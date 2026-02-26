@@ -16,8 +16,11 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  # TODO(human): Give this namespace the name "practice".
-  # name: ???
-  labels:
-    # TODO(human): Add a label "project: k8s-learning" for identification.
-    # Hint: project: k8s-learning
+    # TODO(human): Give this namespace the name "practice".
+    # name: ???
+    name: "practice"
+
+    labels:
+        # TODO(human): Add a label "project: k8s-learning" for identification.
+        # Hint: project: k8s-learning
+        project: k8s-learning

@@ -19,42 +19,64 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  # TODO(human): Set the name to "task-tracker".
-  # name: ???
-  namespace: practice
-  labels:
-    app: task-tracker
+    # TODO(human): Set the name to "task-tracker".
+    # name: ???
+
+    name: "task-tracker"
+    namespace: practice
+    labels:
+        app: task-tracker
 spec:
-  # TODO(human): Set replicas to 3 (K8s will ensure exactly 3 pods run).
-  # replicas: ???
+    # TODO(human): Set replicas to 3 (K8s will ensure exactly 3 pods run).
+    # replicas: ???
 
-  selector:
-    matchLabels:
-      # TODO(human): This selector tells the Deployment which Pods to manage.
-      # It MUST match the labels in spec.template.metadata.labels below.
-      # Hint: app: task-tracker
+    replicas: 3
 
-  template:
-    # This is the Pod template — every replica is created from this spec.
-    metadata:
-      labels:
-        # TODO(human): Add the label that matches the selector above.
-        # Hint: app: task-tracker
-    spec:
-      containers:
-        # TODO(human): Define the container with:
-        #   - name: task-tracker
-        #   - image: task-tracker:v1
-        #   - imagePullPolicy: Never
-        #   - ports:
-        #       - containerPort: 5000
-        #
-        # Then inject ConfigMap and Secret as environment variables using envFrom:
-        #   envFrom:
-        #     - configMapRef:
-        #         name: task-tracker-config
-        #     - secretRef:
-        #         name: task-tracker-secrets
-        #
-        # envFrom imports ALL keys from the referenced ConfigMap/Secret as env vars.
-        # This is simpler than mapping each key individually with valueFrom.
+    selector:
+        matchLabels:
+            # TODO(human): This selector tells the Deployment which Pods to manage.
+            # It MUST match the labels in spec.template.metadata.labels below.
+            # selector.matchLabels is a QUERY ("find pods with these labels"),
+            # while template.metadata.labels is a STAMP ("apply these labels to new pods").
+            # If they don't match, K8s rejects the manifest — otherwise the Deployment
+            # would create pods it can't find, causing infinite pod creation.
+            # Hint: app: task-tracker
+
+            app: task-tracker
+
+    template:
+        # This is the Pod template — every replica is created from this spec.
+        metadata:
+            labels:
+                # TODO(human): Add the label that matches the selector above.
+                # Hint: app: task-tracker
+                app: task-tracker
+        spec:
+            containers:
+                # TODO(human): Define the container with:
+                #   - name: task-tracker
+                #   - image: task-tracker:v1
+                #   - imagePullPolicy: Never
+                #   - ports:
+                #       - containerPort: 5000
+                #
+                # Then inject ConfigMap and Secret as environment variables using envFrom:
+                #   envFrom:
+                #     - configMapRef:
+                #         name: task-tracker-config
+                #     - secretRef:
+                #         name: task-tracker-secrets
+                #
+                # envFrom imports ALL keys from the referenced ConfigMap/Secret as env vars.
+                # This is simpler than mapping each key individually with valueFrom.
+
+                - name: task-tracker
+                  image: task-tracker:v1
+                  imagePullPolicy: Never
+                  ports:
+                      - containerPort: 5000
+                  envFrom:
+                      - configMapRef:
+                            name: task-tracker-config
+                      - secretRef:
+                            name: task-tracker-secrets
