@@ -317,4 +317,4 @@ Build and deploy a **two-service microservice system** (frontend gateway + backe
 
 ## State
 
-`not-started`
+`completed`

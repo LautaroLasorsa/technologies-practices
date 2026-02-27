@@ -19,34 +19,39 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-svc
-  labels:
-    app: frontend
+    name: frontend-svc
+    labels:
+        app: frontend
 spec:
+    # TODO(human): Define the NodePort service spec.
+    #
+    #   1. Set the type to NodePort
+    #   2. Define the selector to match frontend pods (app: frontend)
+    #   3. Map port 8000 -> targetPort 8000
+    #   4. Optionally set nodePort: 30080 (or let K8s auto-assign)
+    #
+    # Hint:
+    #   type: NodePort
+    #   selector:
+    #     app: ...
+    #   ports:
+    #     - port: ...
+    #       targetPort: ...
+    #       nodePort: 30080    # optional: fixed external port
+    #       protocol: TCP
+    #
+    # After applying, test external access:
+    #   minikube service frontend-svc --url
+    #   curl <URL>/proxy/items
+    #
+    # Key question: NodePort opens a port on ALL nodes. In a multi-node
+    # cluster, you'd need a load balancer in front. That's exactly what
+    # the LoadBalancer service type does (on cloud providers).
 
-  # TODO(human): Define the NodePort service spec.
-  #
-  #   1. Set the type to NodePort
-  #   2. Define the selector to match frontend pods (app: frontend)
-  #   3. Map port 8000 -> targetPort 8000
-  #   4. Optionally set nodePort: 30080 (or let K8s auto-assign)
-  #
-  # Hint:
-  #   type: NodePort
-  #   selector:
-  #     app: ...
-  #   ports:
-  #     - port: ...
-  #       targetPort: ...
-  #       nodePort: 30080    # optional: fixed external port
-  #       protocol: TCP
-  #
-  # After applying, test external access:
-  #   minikube service frontend-svc --url
-  #   curl <URL>/proxy/items
-  #
-  # Key question: NodePort opens a port on ALL nodes. In a multi-node
-  # cluster, you'd need a load balancer in front. That's exactly what
-  # the LoadBalancer service type does (on cloud providers).
-
-  {}  # <-- Remove this empty object when you add the spec fields
+    type: NodePort
+    selector:
+        app: frontend
+    ports:
+        - port: 8000
+          targetPort: 8000
+          protocol: TCP

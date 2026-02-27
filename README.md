@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-12%20%2F%20127%20practices-blue?style=flat-square" alt="Progress: 12/127">
+  <img src="https://img.shields.io/badge/Progress-13%20%2F%20127%20practices-blue?style=flat-square" alt="Progress: 12/127">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -205,10 +205,10 @@ python clean_all.py
   <td>✅ Completed</td>
 </tr>
 <tr>
-  <td>006b</td>
-  <td>Kubernetes: Services, Scaling & Ingress</td>
+  <td><b>006b</b></td>
+  <td><b>Kubernetes: Services, Scaling & Ingress</b></td>
   <td><img src="https://skillicons.dev/icons?i=docker,kubernetes" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>006c</td>

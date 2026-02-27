@@ -41,7 +41,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 004b | gRPC: Rust Interop | Rust, Python | API Design & Protocols | `not-started` |
 | 005 | Docker Compose: Multi-Service Orchestration & Limits | Python, Docker Compose | Infra, DevOps & Observability | `completed` |
 | 006a | Kubernetes: Core Concepts & Deploy | Docker, minikube/kind | Infra, DevOps & Observability | `completed` |
-| 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | Infra, DevOps & Observability | `not-started` |
+| 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | Infra, DevOps & Observability | `completed` |
 | 006c | Service Mesh: Sidecar & Envoy | Docker Compose, Envoy, Python | Infra, DevOps & Observability | `not-started` |
 | 007a | OpenTelemetry: Instrumentation | Python, Docker (Jaeger) | Infra, DevOps & Observability | `not-started` |
 | 007b | OpenTelemetry: Dashboards & Alerting | Python, Docker (Grafana/Prometheus) | Infra, DevOps & Observability | `not-started` |
