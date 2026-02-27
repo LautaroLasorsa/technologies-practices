@@ -90,7 +90,11 @@ Build and deploy a **two-service microservice system** (frontend gateway + backe
    docker build -t backend:v1 apps/backend/
    docker build -t frontend:v1 apps/frontend/
    ```
-4. Verify images: `docker images | grep -E "backend|frontend"`
+4. Verify images:
+   ```bash
+   docker images | grep -E "backend|frontend"          # Linux/Mac/Git Bash
+   docker images | findstr "backend frontend"           # PowerShell/CMD
+   ```
 
 ### Phase 2: Deployments with Probes & Resources (~20 min)
 
@@ -113,11 +117,18 @@ Build and deploy a **two-service microservice system** (frontend gateway + backe
 3. Apply: `kubectl apply -f k8s/backend-service.yaml -f k8s/frontend-service.yaml`
 4. Test internal connectivity:
    ```bash
+   # Exec into a frontend pod and make an HTTP request to the backend
+   # using its Service DNS name — proves ClusterIP + CoreDNS resolution works
    kubectl exec deploy/frontend -- python -c "import httpx; print(httpx.get('http://backend-svc:8000/api/items').json())"
    ```
 5. Test external access via NodePort:
    ```bash
+   # NOTE (Windows/Docker driver): This command creates a tunnel that must
+   # stay open. Run it in a SEPARATE terminal — it blocks while the tunnel
+   # is active. Then use the printed URL from another terminal.
    minikube service frontend-svc --url
+
+   # In another terminal:
    curl <URL>/proxy/items
    ```
 6. Key question: Why can the frontend reach `backend-svc` by name? What DNS record does Kubernetes create?
@@ -129,16 +140,23 @@ Build and deploy a **two-service microservice system** (frontend gateway + backe
    - Path `/` routes to `frontend-svc:8000`
    - Use `pathType: Prefix` and `ingressClassName: nginx`
 2. Apply: `kubectl apply -f k8s/ingress.yaml`
-3. Get the ingress IP:
+3. Start `minikube tunnel` in a separate terminal (keep it open):
    ```bash
-   minikube ip   # or: kubectl get ingress
+   minikube tunnel
    ```
+   **NOTE (Windows/Docker driver):** `minikube ip` returns an IP (e.g., 192.168.49.2)
+   that is NOT directly reachable from the host because Docker runs inside WSL2.
+   `minikube tunnel` bridges this gap and maps Ingress to `127.0.0.1`.
 4. Test routing:
    ```bash
+   # On Windows/Docker driver, use 127.0.0.1 (not minikube ip)
+   curl http://127.0.0.1/api/items
+   curl http://127.0.0.1/
+
+   # On Linux (where minikube ip is directly reachable):
    curl http://$(minikube ip)/api/items
    curl http://$(minikube ip)/
    ```
-   (On Windows, you may need to add the IP to your hosts file or use `minikube tunnel`)
 5. Key question: How does the Ingress controller differ from a NodePort? What layer does each operate at?
 
 ### Phase 5: Horizontal Pod Autoscaler (~20 min)
