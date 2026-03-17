@@ -74,7 +74,13 @@ Build a **two-service order system** (Order API + Payment Service) that demonstr
 1. Open `tracing.py` — the TracerProvider setup is scaffolded
 2. **User implements:** `init_tracer()` — configure a `TracerProvider` with a `Resource`, attach a `BatchSpanProcessor` with the OTLP exporter, and set it as the global provider
 3. **User implements:** `get_tracer()` — return a named tracer from the global provider
-4. Run `order_api.py`, hit http://localhost:8000/health, check Jaeger UI for the "order-api" service
+4. Verify tracing works end-to-end:
+   - Start the Order API: `uv run uvicorn order_api:app --port 8000 --reload`
+   - Hit the health endpoint: `curl http://localhost:8000/health` (expect `{"status":"ok","service":"order-api"}`)
+   - Open the Jaeger UI at http://localhost:16686 in your browser
+   - In the **Service** dropdown (top-left), select `order-api`, then click **Find Traces**
+   - Click the trace to open the waterfall view — you should see a single `health-check` span with its timing and span ID
+   - Note: if `order-api` doesn't appear in the dropdown, wait a few seconds and refresh — `BatchSpanProcessor` buffers spans before exporting
 5. Key question: Why does OpenTelemetry use a `BatchSpanProcessor` instead of exporting each span immediately?
 
 ### Phase 3: Manual Spans & Attributes (~20 min)
@@ -82,7 +88,20 @@ Build a **two-service order system** (Order API + Payment Service) that demonstr
 1. Open `order_api.py` — the `/orders` endpoint is scaffolded with TODO markers
 2. **User implements:** Create a span around the order validation logic, add attributes (`order.customer_id`, `order.item`, `order.amount`)
 3. **User implements:** Create a child span for the "database save" simulation, add an event marking completion
-4. Test: `POST /orders` with sample data, verify spans appear in Jaeger with attributes
+4. Test and verify in Jaeger:
+   - With the Order API still running (`uv run uvicorn order_api:app --port 8000 --reload`), send a valid order:
+     ```bash
+     # Bash / Git Bash
+     curl -X POST http://localhost:8000/orders -H "Content-Type: application/json" -d "{\"customer_id\":\"CUST-42\",\"item\":\"Keyboard\",\"quantity\":2,\"amount\":149.99}"
+     ```
+     ```powershell
+     # PowerShell
+     Invoke-RestMethod -Method Post -Uri http://localhost:8000/orders -ContentType "application/json" -Body '{"customer_id":"CUST-42","item":"Keyboard","quantity":2,"amount":149.99}'
+     ```
+   - The response will include an error from the payment service (it's not running yet) — that's expected. The validation and DB spans are still exported.
+   - Open Jaeger UI at http://localhost:16686, select `order-api`, click **Find Traces**
+   - Click the latest trace — you should see a waterfall with `create-order` as parent, and `validate-order` + `save-order-db` as children
+   - Click on `validate-order` to expand it — verify your attributes (`order.customer_id`, `order.item`, etc.) and the `validation-passed` event appear
 5. Key question: When should you use span attributes vs span events? What's the difference?
 
 ### Phase 4: Exception Recording (~15 min)
@@ -94,14 +113,15 @@ Build a **two-service order system** (Order API + Payment Service) that demonstr
 
 ### Phase 5: Context Propagation Across Services (~25 min)
 
-1. Open `payment_service.py` — a second FastAPI app running on port 8001
-2. Open `propagation.py` — helpers for injecting/extracting trace context into HTTP headers
-3. **User implements:** `inject_context()` — inject the current span's context into a carrier dict
-4. **User implements:** `extract_context()` — extract context from incoming HTTP headers
-5. **User implements:** In `order_api.py`, propagate context when calling the payment service
-6. **User implements:** In `payment_service.py`, extract context from the incoming request and create a child span
-7. Test: `POST /orders` and see a single trace spanning both services in Jaeger
-8. Key question: What HTTP header carries the trace context? What happens if a service doesn't propagate it?
+1. Start the Payment Service in a **separate terminal**: `uv run uvicorn payment_service:app --port 8001 --reload`
+2. Open `payment_service.py` — a second FastAPI app now running on port 8001
+3. Open `propagation.py` — helpers for injecting/extracting trace context into HTTP headers
+4. **User implements:** `inject_context()` — inject the current span's context into a carrier dict
+5. **User implements:** `extract_context()` — extract context from incoming HTTP headers
+6. **User implements:** In `order_api.py`, propagate context when calling the payment service
+7. **User implements:** In `payment_service.py`, extract context from the incoming request and create a child span
+8. Test: `POST /orders` and see a single trace spanning both services in Jaeger
+9. Key question: What HTTP header carries the trace context? What happens if a service doesn't propagate it?
 
 ### Phase 6: Exploration & Review (~10 min)
 
