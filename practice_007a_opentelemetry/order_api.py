@@ -151,10 +151,23 @@ def validate_order(order: OrderRequest, parent_span: trace.Span) -> None:
     """
     # TODO(human): Wrap the validation below in a span with attributes.
     # For now this just validates without tracing:
-    if order.amount <= 0:
-        raise HTTPException(status_code=400, detail=f"Invalid amount: {order.amount}")
-    if order.quantity <= 0:
-        raise HTTPException(status_code=400, detail=f"Invalid quantity: {order.quantity}")
+
+    with tracer.start_as_current_span("validate-order") as span:
+        span.set_attribute("order.customer_id", order.customer_id)
+        span.set_attribute("order.item",order.item)
+        span.set_attribute("order.amount", order.amount)
+        span.set_attribute("order.quantity",order.quantity)
+        try:
+            if order.amount <= 0:
+                raise HTTPException(status_code=400, detail=f"Invalid amount: {order.amount}")
+            if order.quantity <= 0:
+                raise HTTPException(status_code=400, detail=f"Invalid quantity: {order.quantity}")
+            span.add_event("validation-passed")
+        except Exception as e:
+            span.record_exception(e)
+            span.set_status(StatusCode.ERROR, str(e))
+            raise e
+
 
 
 # ── Phase 3: Database simulation span ────────────────────────────────
@@ -188,8 +201,13 @@ def save_order_to_db(order_id: str, order: OrderRequest) -> None:
 
     Docs: https://opentelemetry.io/docs/languages/python/instrumentation/#creating-spans
     """
-    # TODO(human): Wrap this in a span with DB semantic attributes.
-    time.sleep(0.05)  # simulate DB latency
+
+    with tracer.start_as_current_span("save-order-db") as span:
+        span.set_attribute("db.system","postgresql")
+        span.set_attribute("db.operation","INSERT")
+        span.set_attribute("order.id",order_id)
+        time.sleep(0.05)  # simulate DB latency
+        span.add_event("order-saved")
 
 
 # ── Phase 5: Payment call with context propagation ───────────────────
@@ -255,16 +273,26 @@ async def request_payment(order_id: str, order: OrderRequest) -> PaymentResponse
     Docs: https://opentelemetry.io/docs/languages/python/instrumentation/#creating-spans
     """
     # TODO(human): Add a CLIENT span and inject trace context into headers.
-    payload = PaymentRequest(
-        order_id=order_id,
-        customer_id=order.customer_id,
-        amount=order.amount,
-    )
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            PAYMENT_SERVICE_URL,
-            json=payload.model_dump(),
-            timeout=5.0,
+    with tracer.start_as_current_span("request-payment",kind=trace.SpanKind.CLIENT) as span:
+        span.set_attribute("http.method","POST")
+        span.set_attribute("http.url",PAYMENT_SERVICE_URL)
+        span.set_attribute("payment.order_id",order_id)
+        headers = inject_context({})
+
+        payload = PaymentRequest(
+            order_id=order_id,
+            customer_id=order.customer_id,
+            amount=order.amount,
         )
-    response.raise_for_status()
-    return PaymentResponse(**response.json())
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                PAYMENT_SERVICE_URL,
+                json=payload.model_dump(),
+                timeout=5.0,
+                headers=headers
+            )
+            span.set_attribute("http.status_code",response.status_code)
+            if response.status_code >= 400:
+                span.set_status(StatusCode.ERROR)
+        response.raise_for_status()
+        return PaymentResponse(**response.json())

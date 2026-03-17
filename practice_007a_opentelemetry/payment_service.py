@@ -96,14 +96,25 @@ async def process_payment(payment: PaymentRequest, request: Request) -> PaymentR
     """
     # TODO(human): Extract context and wrap in a SERVER span.
     # For now, this works without tracing:
-    fraud_ok = check_fraud(payment)
-    if not fraud_ok:
-        return PaymentResponse(
-            order_id=payment.order_id,
-            status="declined",
-            transaction_id="",
-        )
-    return charge_payment(payment)
+
+    ctx = extract_context(dict(request.headers))
+    with tracer.start_as_current_span(
+        "process-payment",
+        context=ctx,
+        kind=trace.SpanKind.SERVER,
+    ) as span:
+        span.set_attribute("payment.order_id", payment.order_id)
+        span.set_attribute("payment.customer_id", payment.customer_id)
+        span.set_attribute("payment.amount", payment.amount)
+        fraud_ok = check_fraud(payment)
+        if not fraud_ok:
+            span.set_status(StatusCode.ERROR,"Fraud check failed")
+            return PaymentResponse(
+                order_id=payment.order_id,
+                status="declined",
+                transaction_id="",
+            )
+        return charge_payment(payment)
 
 
 # ── Internal helpers (already traced) ────────────────────────────────

@@ -70,7 +70,21 @@ def init_tracer(service_name: str, service_version: str = "0.1.0") -> None:
 
     Docs: https://opentelemetry.io/docs/languages/python/instrumentation/#initialize-tracing
     """
-    raise NotImplementedError("TODO(human): implement init_tracer")
+    resource = Resource.create(
+        {
+            "service.name":service_name,
+            "service.version":service_version
+        }
+    )
+
+    provider = TracerProvider(resource=resource)
+
+    exporter = OTLPSpanExporter(endpoint=JAEGER_OTLP_ENDPOINT, insecure = True)
+
+    processor = BatchSpanProcessor(exporter)
+
+    provider.add_span_processor(processor)
+    trace.set_tracer_provider(provider)
 
 # ── Exercise Context ──────────────────────────────────────────────────
 # This exercise teaches how to obtain a named Tracer from the global provider.
@@ -91,4 +105,5 @@ def get_tracer(name: str) -> trace.Tracer:
 
     Docs: https://opentelemetry.io/docs/languages/python/instrumentation/#acquiring-a-tracer
     """
-    raise NotImplementedError("TODO(human): implement get_tracer")
+
+    return trace.get_tracer(name)

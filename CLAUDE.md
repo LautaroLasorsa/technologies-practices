@@ -43,7 +43,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 006a | Kubernetes: Core Concepts & Deploy | Docker, minikube/kind | Infra, DevOps & Observability | `completed` |
 | 006b | Kubernetes: Services, Scaling & Ingress | Docker, minikube/kind | Infra, DevOps & Observability | `completed` |
 | 006c | Service Mesh: Sidecar & Envoy | Docker Compose, Envoy, Python | Infra, DevOps & Observability | `not-started` |
-| 007a | OpenTelemetry: Instrumentation | Python, Docker (Jaeger) | Infra, DevOps & Observability | `not-started` |
+| 007a | OpenTelemetry: Instrumentation | Python, Docker (Jaeger) | Infra, DevOps & Observability | `completed` |
 | 007b | OpenTelemetry: Dashboards & Alerting | Python, Docker (Grafana/Prometheus) | Infra, DevOps & Observability | `not-started` |
 | 008 | Vector Databases | Python, Docker (Qdrant) | Data Stores & Messaging | `not-started` |
 | 009 | GraphQL | Python (Strawberry), Docker | API Design & Protocols | `not-started` |

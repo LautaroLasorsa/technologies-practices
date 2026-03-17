@@ -180,4 +180,4 @@ Build a **two-service order system** (Order API + Payment Service) that demonstr
 
 ## State
 
-`not-started`
+`completed`

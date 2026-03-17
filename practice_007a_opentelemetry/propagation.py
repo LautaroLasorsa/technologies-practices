@@ -59,7 +59,8 @@ def inject_context(carrier: dict[str, str]) -> dict[str, str]:
 
     Docs: https://opentelemetry.io/docs/languages/python/propagation/#injecting-context
     """
-    raise NotImplementedError("TODO(human): implement inject_context")
+    inject(carrier)
+    return carrier
 
 # ── Exercise Context ──────────────────────────────────────────────────
 # This exercise teaches context extraction, the second half of distributed tracing.
@@ -90,4 +91,5 @@ def extract_context(headers: dict[str, str]) -> Context:
 
     Docs: https://opentelemetry.io/docs/languages/python/propagation/#extracting-context
     """
-    raise NotImplementedError("TODO(human): implement extract_context")
+
+    return extract(carrier=headers)
