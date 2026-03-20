@@ -19,7 +19,7 @@ from typing import Any
 # Ensure sibling modules are importable when running as a script
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
+from _00_crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +142,12 @@ class LWWRegister(StateCRDT[Any]):
 #     Maps each element to a set of unique tag strings.
 #     An element with an empty set (or not in the dict) is not in the set.
 #     An element with one or more tags IS in the set.
+#   self._tombstones: set[str]
+#     Tags that have been explicitly removed. This is necessary to prevent
+#     the "resurrection bug": without tombstones, a removed tag can reappear
+#     when a stale replica (that still has the tag) merges back.
+#     Example: R1 adds X(tag=T1) -> merges to R2 -> R1 removes X ->
+#     R2 merges back to R1 -> naive union resurrects T1. Tombstones prevent this.
 #
 # Operations:
 #   add(element):
@@ -149,32 +155,31 @@ class LWWRegister(StateCRDT[Any]):
 #     Now the element has a new tag that no other replica has seen.
 #
 #   remove(element):
-#     Remove ALL tags currently associated with element at THIS replica.
-#     Set self._elements[element] = empty set (or delete the key).
-#     CRITICAL: this only removes tags that THIS replica has observed.
-#     If another replica concurrently added the same element (generating a
-#     NEW tag), that tag is NOT in our removal set and will survive merge.
-#     This is why it's called "Observed-Remove" -- you can only remove
-#     what you've observed.
+#     Move ALL tags currently associated with element into self._tombstones.
+#     Clear self._elements[element] (empty set or delete the key).
+#     Tombstoned tags are subtracted during merge, preventing resurrection.
+#     Only tags present at THIS replica are tombstoned — a concurrent add
+#     on another replica generates a fresh tag that is NOT in our tombstones,
+#     so it survives merge (add-wins semantics).
 #
 #   merge(other):
 #     For each element, the merged tag set should contain tags that are
-#     "alive" in at least one replica:
-#       - Tags in BOTH replicas -> keep (both replicas have it)
-#       - Tags in self ONLY -> keep (other never saw it, so other didn't remove it)
-#       - Tags in other ONLY -> keep (self never saw it, so self didn't remove it)
-#       - Tags that WERE in one replica but got removed -> gone (the remove was observed)
+#     "alive" — present in at least one replica AND not tombstoned by either:
 #
-#     The simplest correct implementation: for each element, take the UNION
-#     of tags from both replicas. This works because:
-#       - When a replica removes an element, it clears the element's tags locally.
-#       - So after remove, the element's tags in that replica are empty.
-#       - Union of empty + other's tags = other's tags (the concurrent add survives).
-#       - Union of tags + same tags = same tags (idempotent).
+#       merged_tags(e) = (self_tags(e) | other_tags(e)) - (self._tombstones | other._tombstones)
+#       merged_tombstones = self._tombstones | other._tombstones
 #
-#     More precisely: merged_tags(e) = self_tags(e) | other_tags(e)
-#     This is correct because remove() clears the tags at the removing replica,
-#     so those tags won't appear in that replica's state anymore.
+#     WHY NAIVE UNION IS WRONG (the "resurrection bug"):
+#       R1 adds X (tag=T1) -> merges to R2 -> R1 removes X (clears T1) ->
+#       R2 merges stale state back to R1 -> union gives {T1} -> X is back!
+#       Without tombstones, we can't distinguish "never seen" from "seen and removed."
+#
+#     With tombstones: R1's tombstones contain T1 after remove. When R2 merges
+#     back, (tags_union - tombstones_union) = ({T1} - {T1}) = {} -> X stays dead.
+#
+#     Concurrent add-wins still works: R1 removes X (tombstones {T0}), R2
+#     concurrently adds X (new tag T1, not in any tombstone set).
+#     Merge: ({T1} | {}) - ({T0} | {}) = {T1} -> X is present. Add wins.
 #
 #   value():
 #     Return the set of elements that have at least one active tag.
@@ -200,8 +205,13 @@ class LWWRegister(StateCRDT[Any]):
 class ORSet(StateCRDT[frozenset]):
     """Observed-Remove Set / Add-Wins Set (state-based CRDT)."""
 
-    def __init__(self, elements: dict[Any, set[str]] | None = None) -> None:
-        # TODO(human): Store a DEEP COPY of elements (or empty dict if None).
+    def __init__(
+        self,
+        elements: dict[Any, set[str]] | None = None,
+        tombstones: set[str] | None = None,
+    ) -> None:
+        # TODO(human): Store a DEEP COPY of elements (or empty dict if None)
+        # and a COPY of tombstones (or empty set if None).
         # Must deep-copy both the outer dict AND each inner set to prevent
         # aliasing bugs where two replicas share the same mutable sets.
         #
@@ -229,14 +239,15 @@ class ORSet(StateCRDT[frozenset]):
         # Steps:
         #   1. Get the current tags for element (empty set if element not present)
         #   2. Save them (we'll return them for debugging)
-        #   3. Clear the element's tag set: self._elements[element] = set()
+        #   3. Add them to self._tombstones (prevents resurrection on merge)
+        #   4. Clear the element's tag set: self._elements[element] = set()
         #      (or delete the key entirely)
-        #   4. Return the set of removed tags
+        #   5. Return the set of removed tags
         #
         # IMPORTANT: This only removes tags that THIS replica currently has.
         # If another replica concurrently added the same element with a NEW tag
         # that we haven't seen yet, that tag is safe -- it's not in our local
-        # state, so we can't remove it. This is the "observed-remove" semantics.
+        # state or tombstones, so it survives merge. This is "observed-remove" semantics.
         #
         # If element is not in the set, this is a no-op (returns empty set).
         raise NotImplementedError("TODO(human): Implement ORSet.remove")
@@ -256,32 +267,33 @@ class ORSet(StateCRDT[frozenset]):
     def merge(self, other: StateCRDT[frozenset]) -> None:
         # TODO(human): Merge another OR-Set's state into this one.
         #
-        # For each element present in EITHER self or other:
-        #   merged_tags = self_tags | other_tags   (set union)
-        #
         # Steps:
-        #   1. Collect all element keys from both self and other
-        #   2. For each element, compute the union of tags from both replicas
-        #   3. Store the merged tag set
-        #   4. Optionally clean up elements with empty tag sets
+        #   1. Merge tombstones: self._tombstones |= other._tombstones
+        #   2. Collect all element keys from both self and other
+        #   3. For each element, compute:
+        #        alive_tags = (self_tags | other_tags) - self._tombstones
+        #      (tombstones were already merged in step 1)
+        #   4. Store the alive tags. Clean up elements with empty tag sets.
         #
-        # Why union is correct:
-        #   - Tags from self that other doesn't have: keep (other never saw them,
-        #     so other didn't explicitly remove them)
-        #   - Tags from other that self doesn't have: keep (same logic)
-        #   - Tags in both: keep (both agree they're active)
-        #   - Tags that were removed: they're already gone from the removing
-        #     replica's state, so they don't appear in the union
+        # Why this is correct:
+        #   - Tags from self that other doesn't have AND not tombstoned: keep
+        #   - Tags from other that self doesn't have AND not tombstoned: keep
+        #   - Tags in both AND not tombstoned: keep
+        #   - Tags that were removed: in tombstones, so subtracted out
         #
-        # This is a valid semilattice join because set union is:
-        #   - Commutative: A | B == B | A
-        #   - Associative: (A | B) | C == A | (B | C)
-        #   - Idempotent:  A | A == A
+        # Semilattice: (elements=union, tombstones=union) with subtraction.
+        # The combined state (active_tags, tombstones) grows monotonically:
+        #   - Tombstone set only grows (union)
+        #   - Active tags = raw_tags - tombstones; new adds create fresh tags
+        #     not in any tombstone set, so they survive
+        #
+        # Trade-off: tombstones grow forever. See OptimizedORSet for the
+        # version-vector approach that avoids this (Bieniusa et al. 2012).
         raise NotImplementedError("TODO(human): Implement ORSet.merge")
 
     def copy(self) -> ORSet:
         # TODO(human): Return a deep copy of this OR-Set.
-        # Must deep-copy the elements dict AND each inner tag set.
+        # Must deep-copy the elements dict, each inner tag set, AND tombstones.
         # Hint: use the same pattern as __init__: {k: set(v) for k, v in ...}
         raise NotImplementedError("TODO(human): Implement ORSet.copy")
 
@@ -622,6 +634,404 @@ def test_orset_remove_nonexistent() -> None:
     print("  PASSED")
 
 
+def test_orset_no_resurrection() -> None:
+    """Verify that a removed tag doesn't reappear when a stale replica merges back.
+
+    This is the "resurrection bug" that naive union-based merge suffers from.
+    Scenario:
+      1. R1 adds X (tag=T1)
+      2. R1 merges into R2 (R2 now has X with tag T1)
+      3. R1 removes X (T1 is tombstoned at R1)
+      4. R2 merges its stale state back into R1
+      -> X must NOT reappear at R1 (T1 is in R1's tombstones)
+    """
+    print("\n[Test] OR-Set no resurrection from stale replica")
+    print("-" * 40)
+
+    r1 = ORSet()
+    tag = r1.add("X")
+    print(f"  R1 adds X (tag={tag[:8]}...)")
+
+    # Simulate merge R1 -> R2 (R2 gets a copy of R1's state)
+    r2 = r1.copy()
+    print(f"  R2 = copy of R1: {r2.value()}")
+
+    # R1 removes X
+    r1.remove("X")
+    print(f"  R1 removes X: {r1.value()} (X present: {r1.contains('X')})")
+    assert not r1.contains("X"), "R1 removed X"
+
+    # R2's stale state merges back into R1
+    r1.merge(r2.copy())
+    print(f"  R1 after merging stale R2: {r1.value()} (X present: {r1.contains('X')})")
+    assert not r1.contains("X"), (
+        "RESURRECTION BUG: X should stay removed! "
+        "Stale tag from R2 should be blocked by R1's tombstone."
+    )
+
+    # Also verify R2 converges after getting R1's state
+    r2.merge(r1.copy())
+    assert not r2.contains("X"), "R2 should also agree X is removed"
+    assert r1.value() == r2.value(), "Both should converge"
+
+    print("  PASSED (no resurrection)")
+
+
+# ---------------------------------------------------------------------------
+# Optimized OR-Set (version vectors, no tombstones)
+# ---------------------------------------------------------------------------
+
+# TODO(human): Implement the Optimized OR-Set CRDT.
+#
+# The tombstone-based OR-Set above has a problem: tombstones grow forever.
+# Every removed tag stays in memory for the lifetime of the system. In a
+# busy system with millions of add/remove cycles, this is a memory leak.
+#
+# The Optimized OR-Set (Bieniusa et al. 2012, Almeida et al. 2018) replaces
+# tombstones with a CAUSAL CONTEXT (version vector) that summarizes which
+# operations each replica has seen. This allows detecting whether a tag was
+# "removed" without storing individual tombstones.
+#
+# KEY IDEA -- "Dots" instead of UUIDs:
+#   Instead of UUID tags, each add generates a "dot": (replica_id, seq_number).
+#   Replica R's sequence number increments with each add. The causal context
+#   tracks the highest sequence number seen from each replica.
+#
+#   A dot (R, N) is "known" to a replica if N <= causal_context[R].
+#   If a dot is known but NOT in the active set, it was explicitly removed.
+#
+# Internal state:
+#   self._entries: dict[Any, set[tuple[str, int]]]
+#     Maps each element to a set of "dots" (replica_id, seq_num).
+#     An element with dots is present; empty means absent.
+#
+#   self._causal_context: dict[str, int]
+#     Version vector: maps replica_id -> highest seq_num seen from that replica.
+#     Summarizes ALL operations this replica has ever witnessed.
+#
+# Operations:
+#   add(element, replica_id):
+#     1. seq = causal_context.get(replica_id, 0) + 1
+#     2. causal_context[replica_id] = seq
+#     3. Add dot (replica_id, seq) to entries[element]
+#     4. Return the dot
+#
+#   remove(element):
+#     1. Clear entries[element] (all dots removed)
+#     2. Causal context stays unchanged (it already covers those dots)
+#     3. Return the removed dots
+#     NOTE: No tombstones needed! The causal context remembers we've "seen"
+#     those dots. If they're missing from entries, we know they were removed.
+#
+#   merge(other):
+#     For each element, a dot survives in the merged state if:
+#       - It's in self's entries AND (other hasn't seen it OR other also has it active)
+#       - OR it's in other's entries AND (self hasn't seen it OR self also has it active)
+#
+#     Formally, for dot (r, n) and element e:
+#       keep from self:  (r,n) in self.entries[e]  AND
+#                        (n > other.cc[r]  OR  (r,n) in other.entries[e])
+#       keep from other: (r,n) in other.entries[e] AND
+#                        (n > self.cc[r]   OR  (r,n) in self.entries[e])
+#
+#     In words: a dot from self is REMOVED only if other has "seen" it
+#     (n <= other.cc[r]) but doesn't have it active (it's not in other.entries[e]).
+#     That means other explicitly removed it. Same logic symmetrically for other's dots.
+#
+#     Merged causal context: element-wise max of both contexts.
+#
+# WHY THIS WORKS for the resurrection scenario:
+#   1. R1: add(X) -> dot=(R1,1), entries={X:{(R1,1)}}, cc={R1:1}
+#   2. Merge R1->R2: R2 entries={X:{(R1,1)}}, cc={R1:1}
+#   3. R1: remove(X) -> entries={X:{}}, cc={R1:1} (cc unchanged)
+#   4. Merge R2->R1:
+#      - Dot (R1,1) is in R2's entries. Is it new to R1? n=1 <= R1.cc[R1]=1, no.
+#        Does R1 also have it active? No (removed). -> DON'T KEEP. Removed by R1.
+#      - Result: X stays removed, no tombstones needed!
+#
+# WHY ADD-WINS still works:
+#   1. Both: entries={X:{(orig,1)}}, cc={orig:1}
+#   2. R1: remove(X) -> entries={X:{}}, cc={orig:1}
+#   3. R2: add(X) -> dot=(R2,1), entries={X:{(orig,1),(R2,1)}}, cc={orig:1,R2:1}
+#   4. Merge:
+#      - Dot (orig,1): R1 has seen it (cc[orig]=1) but removed it. R2 has it.
+#        R1 saw it and removed -> don't keep.
+#      - Dot (R2,1): R1 hasn't seen it (cc[R2]=0 < 1) -> new! KEEP.
+#      - Result: X -> {(R2,1)} -> X is present. Add wins!
+#
+# ADVANTAGE: No tombstones, no unbounded memory growth. The causal context
+# is O(num_replicas), not O(num_operations).
+#
+# Reference: Bieniusa et al. 2012, "An Optimized Conflict-free Replicated Set"
+# Also: Almeida et al. 2018, "Delta State Replicated Data Types"
+
+
+Dot = tuple[str, int]  # (replica_id, sequence_number)
+
+
+class OptimizedORSet(StateCRDT[frozenset]):
+    """Optimized OR-Set using version vectors instead of tombstones."""
+
+    def __init__(
+        self,
+        entries: dict[Any, set[Dot]] | None = None,
+        causal_context: dict[str, int] | None = None,
+    ) -> None:
+        # TODO(human): Store deep copies of entries and causal_context.
+        #
+        # self._entries: dict[Any, set[tuple[str, int]]]
+        #   Deep copy: {k: set(v) for k, v in entries.items()} if entries else {}
+        # self._causal_context: dict[str, int]
+        #   Copy: dict(causal_context) if causal_context else {}
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.__init__")
+
+    def add(self, element: Any, replica_id: str) -> Dot:
+        # TODO(human): Add element with a new dot from this replica.
+        #
+        # Steps:
+        #   1. seq = self._causal_context.get(replica_id, 0) + 1
+        #   2. self._causal_context[replica_id] = seq
+        #   3. dot = (replica_id, seq)
+        #   4. If element not in self._entries, create empty set
+        #   5. Add dot to self._entries[element]
+        #   6. Return the dot
+        #
+        # Unlike the tombstone OR-Set, tags are (replica_id, seq_num) pairs,
+        # not UUIDs. This ties each tag to the causal context, enabling
+        # tombstone-free removal detection during merge.
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.add")
+
+    def remove(self, element: Any) -> set[Dot]:
+        # TODO(human): Remove all dots for element.
+        #
+        # Steps:
+        #   1. Get current dots for element (empty set if absent)
+        #   2. Save them for return
+        #   3. Clear self._entries[element] = set()
+        #   4. Return removed dots
+        #
+        # NOTE: Do NOT modify causal_context here. The cc already covers
+        # these dots (they were added in prior add() calls). The fact that
+        # the dots are in cc but NOT in entries is what tells merge() they
+        # were removed.
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.remove")
+
+    def contains(self, element: Any) -> bool:
+        # TODO(human): Return True if element has at least one active dot.
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.contains")
+
+    def value(self) -> frozenset:
+        # TODO(human): Return frozenset of elements with at least one active dot.
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.value")
+
+    def merge(self, other: StateCRDT[frozenset]) -> None:
+        # TODO(human): Merge using causal context (no tombstones!).
+        #
+        # Steps:
+        #   1. Collect all element keys from both self and other
+        #   2. For each element, compute surviving dots:
+        #
+        #      surviving = set()
+        #      for dot in self._entries.get(elem, set()):
+        #          r, n = dot
+        #          # Keep if other hasn't seen it, OR other also has it active
+        #          if n > other._causal_context.get(r, 0) or dot in other._entries.get(elem, set()):
+        #              surviving.add(dot)
+        #      for dot in other._entries.get(elem, set()):
+        #          r, n = dot
+        #          # Keep if self hasn't seen it, OR self also has it active
+        #          if n > self._causal_context.get(r, 0) or dot in self._entries.get(elem, set()):
+        #              surviving.add(dot)
+        #
+        #   3. Store surviving as self._entries[elem] (clean up if empty)
+        #   4. Merge causal contexts: element-wise max
+        #      for r in union of keys:
+        #          self._causal_context[r] = max(self._causal_context.get(r,0),
+        #                                       other._causal_context.get(r,0))
+        #
+        # IMPORTANT: Compute ALL surviving dots BEFORE updating the causal context.
+        # If you update cc first, the "n > self.cc[r]" checks use wrong values.
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.merge")
+
+    def copy(self) -> OptimizedORSet:
+        # TODO(human): Deep copy entries and causal_context.
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.copy")
+
+    def __repr__(self) -> str:
+        # TODO(human): Show present elements with dot counts.
+        # Example: "OptORSet({apple: 2 dots, banana: 1 dot}, cc={A:3, B:2})"
+        raise NotImplementedError("TODO(human): Implement OptimizedORSet.__repr__")
+
+
+# ---------------------------------------------------------------------------
+# Optimized OR-Set tests
+# ---------------------------------------------------------------------------
+
+def test_opt_orset_basic() -> None:
+    """Test OptimizedORSet basic add/remove."""
+    print("\n[Test] OptimizedORSet basic add/remove")
+    print("-" * 40)
+
+    s = OptimizedORSet()
+    s.add("apple", "A")
+    s.add("banana", "A")
+    s.add("cherry", "B")
+
+    print(f"  After adds: {s}")
+    assert s.value() == frozenset({"apple", "banana", "cherry"})
+
+    s.remove("banana")
+    assert not s.contains("banana")
+    assert s.value() == frozenset({"apple", "cherry"})
+
+    # Re-add banana (new dot)
+    s.add("banana", "A")
+    assert s.contains("banana")
+
+    print("  PASSED")
+
+
+def test_opt_orset_no_resurrection() -> None:
+    """Verify OptimizedORSet prevents resurrection WITHOUT tombstones."""
+    print("\n[Test] OptimizedORSet no resurrection (tombstone-free)")
+    print("-" * 40)
+
+    r1 = OptimizedORSet()
+    dot = r1.add("X", "R1")
+    print(f"  R1 adds X: dot={dot}")
+
+    r2 = r1.copy()
+
+    r1.remove("X")
+    print(f"  R1 removes X: value={r1.value()}")
+    assert not r1.contains("X")
+
+    # Stale merge from R2
+    r1.merge(r2.copy())
+    print(f"  R1 after stale merge from R2: value={r1.value()}")
+    assert not r1.contains("X"), (
+        "RESURRECTION BUG: X should stay removed! "
+        "R1's causal context knows about dot (R1,1), and it's not in entries -> removed."
+    )
+
+    r2.merge(r1.copy())
+    assert r1.value() == r2.value()
+    print("  PASSED (no tombstones needed)")
+
+
+def test_opt_orset_add_wins() -> None:
+    """Verify add-wins semantics in OptimizedORSet."""
+    print("\n[Test] OptimizedORSet add-wins")
+    print("-" * 40)
+
+    # Both start with same state
+    r1 = OptimizedORSet()
+    r1.add("X", "orig")
+    r2 = r1.copy()
+
+    # Concurrent: R1 removes, R2 adds
+    r1.remove("X")
+    r2.add("X", "R2")
+
+    print(f"  R1 after remove: {r1.value()}")
+    print(f"  R2 after add:    {r2.value()}")
+
+    r1.merge(r2.copy())
+    r2.merge(r1.copy())
+
+    print(f"  R1 after merge: {r1.value()}")
+    print(f"  R2 after merge: {r2.value()}")
+
+    assert r1.contains("X"), "Add should win over concurrent remove"
+    assert r1.value() == r2.value()
+    print("  PASSED (add wins)")
+
+
+def test_opt_orset_merge_idempotent() -> None:
+    """Verify OptimizedORSet merge is idempotent."""
+    print("\n[Test] OptimizedORSet merge idempotency")
+    print("-" * 40)
+
+    a = OptimizedORSet()
+    a.add("x", "A")
+    a.add("y", "A")
+
+    b = OptimizedORSet()
+    b.add("y", "B")
+    b.add("z", "B")
+
+    a.merge(b.copy())
+    val1 = a.value()
+    a.merge(b.copy())
+    val2 = a.value()
+
+    assert val1 == val2 == frozenset({"x", "y", "z"})
+    print("  PASSED")
+
+
+def test_opt_orset_commutativity() -> None:
+    """Verify OptimizedORSet merge is commutative."""
+    print("\n[Test] OptimizedORSet merge commutativity")
+    print("-" * 40)
+
+    a = OptimizedORSet()
+    a.add("apple", "A")
+    a.add("banana", "A")
+
+    b = OptimizedORSet()
+    b.add("banana", "B")
+    b.add("cherry", "B")
+
+    a1 = a.copy()
+    a1.merge(b.copy())
+
+    b1 = b.copy()
+    b1.merge(a.copy())
+
+    assert a1.value() == b1.value(), "Merge should be commutative"
+    print("  PASSED")
+
+
+def test_opt_orset_network() -> None:
+    """Test OptimizedORSet convergence through network with partition."""
+    print("\n[Test] OptimizedORSet convergence with partition")
+    print("-" * 40)
+
+    replicas: dict[str, OptimizedORSet] = {
+        "A": OptimizedORSet(),
+        "B": OptimizedORSet(),
+        "C": OptimizedORSet(),
+    }
+
+    net = ReplicaNetwork(replicas=replicas, min_delay=0, max_delay=1)  # type: ignore[arg-type]
+
+    # Phase 1: All connected
+    replicas["A"].add("apple", "A")
+    replicas["B"].add("banana", "B")
+    replicas["C"].add("cherry", "C")
+    net.full_sync()
+    assert all_converged(net.replicas)
+
+    # Phase 2: Partition
+    net.set_partition([{"A", "B"}, {"C"}])
+    replicas["A"].remove("cherry")
+    replicas["C"].add("cherry", "C")  # concurrent re-add
+    replicas["B"].add("date", "B")
+    net.full_sync()
+
+    assert "cherry" not in replicas["A"].value()
+    assert "cherry" in replicas["C"].value()
+
+    # Phase 3: Heal
+    net.heal_partition()
+    net.full_sync()
+    assert all_converged(net.replicas)
+    assert "cherry" in replicas["A"].value(), "Add-wins across partition"
+
+    print(f"  Final: {replicas['A'].value()}")
+    print("  PASSED")
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -636,12 +1046,22 @@ def main() -> None:
     test_lww_register_idempotent()
     test_lww_register_network()
 
+    print("\n--- OR-Set (with tombstones) ---")
     test_orset_basic_add_remove()
     test_orset_add_wins_semantics()
     test_orset_merge_idempotent()
     test_orset_commutativity()
     test_orset_network_with_partition()
     test_orset_remove_nonexistent()
+    test_orset_no_resurrection()
+
+    print("\n--- Optimized OR-Set (version vectors, no tombstones) ---")
+    test_opt_orset_basic()
+    test_opt_orset_no_resurrection()
+    test_opt_orset_add_wins()
+    test_opt_orset_merge_idempotent()
+    test_opt_orset_commutativity()
+    test_opt_orset_network()
 
     print("\n" + "=" * 60)
     print("All Exercise 2 tests passed!")

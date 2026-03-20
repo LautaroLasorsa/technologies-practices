@@ -15,7 +15,7 @@ from pathlib import Path
 # Ensure sibling modules are importable when running as a script
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
+from _00_crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

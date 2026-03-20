@@ -169,7 +169,7 @@ Build a complete suite of CRDT implementations from scratch in pure Python. No e
 
 ### Exercise 1: G-Counter and PN-Counter (~25 min)
 
-**File:** `src/01_counters.py`
+**File:** `src/_01_counters.py`
 
 **Concepts:** State-based CRDT fundamentals. The G-Counter is the "hello world" of CRDTs — a vector where each replica owns one entry, merges via element-wise max, and queries via sum. The PN-Counter extends this to support decrements by composing two G-Counters.
 
@@ -181,19 +181,20 @@ After implementing, the scaffolded tests create 3 replicas, run concurrent incre
 
 ### Exercise 2: LWW-Register and OR-Set (~30 min)
 
-**File:** `src/02_registers_sets.py`
+**File:** `src/_02_registers_sets.py`
 
 **Concepts:** More complex state-based CRDTs. LWW-Register resolves conflicts by timestamp (simple but lossy). OR-Set uses unique tags per add-operation to support add-wins semantics — the key insight is that `remove` only removes tags that exist at the time of removal, so a concurrent `add` (with a fresh tag) survives.
 
 **TODO(human) tasks:**
 - Implement `LWWRegister` — State is `(value, timestamp, replica_id)`. `assign()` updates only if new timestamp is strictly greater (or equal timestamp but higher replica_id for tie-breaking). `merge()` keeps the winner.
-- Implement `ORSet` — State is a dict mapping `element -> set of (unique_tag, replica_id)` pairs. `add()` generates a fresh UUID tag. `remove()` removes all currently observed tags for that element. `merge()` takes union of tags from both replicas, minus tags that were explicitly removed. `value()` returns elements with at least one active tag.
+- Implement `ORSet` (with tombstones) — State is a dict mapping `element -> set of UUID tags` plus a `_tombstones: set[str]` tracking removed tags. `add()` generates a fresh UUID tag. `remove()` moves all current tags to tombstones. `merge()` takes `(union of tags) - (union of tombstones)`. Tombstones prevent the "resurrection bug" where a stale replica re-introduces a removed tag.
+- Implement `OptimizedORSet` (with version vectors) — Replaces UUIDs+tombstones with "dots" `(replica_id, seq_num)` and a causal context (version vector). No tombstones needed: a dot missing from entries but covered by the causal context is known to be removed. This is the production-grade approach (Bieniusa et al. 2012).
 
-The OR-Set is the most complex CRDT in this practice. Pay attention to how the merge handles the case where one replica added an element (new tag) while another removed it (different tag) — both operations should take effect.
+The OR-Set is the most complex CRDT in this practice. Pay attention to how the merge handles the case where one replica added an element (new tag) while another removed it (different tag) — both operations should take effect. The OptimizedORSet then shows how to achieve the same semantics without unbounded tombstone growth.
 
 ### Exercise 3: Operation-based CRDTs (~25 min)
 
-**File:** `src/03_op_based.py`
+**File:** `src/_03_op_based.py`
 
 **Concepts:** The other CRDT family — instead of merging full state, replicas broadcast operations. This requires a **causal broadcast** layer: operations must be delivered exactly once and in causal order (if operation A happened-before operation B at the sender, all replicas must see A before B). You'll implement both the CRDT and the broadcast layer.
 
@@ -205,7 +206,7 @@ The test creates 5 replicas, broadcasts operations with simulated random delays 
 
 ### Exercise 4: Convergence Simulation (~30 min)
 
-**File:** `src/04_convergence_test.py`
+**File:** `src/_04_convergence_test.py`
 
 **Concepts:** Put it all together. Simulate a realistic distributed environment: multiple replicas running concurrently, network partitions that split replicas into groups, and eventual healing. Verify that all CRDT implementations converge after partition healing. Also verify the semilattice properties (commutativity, associativity, idempotency) through property-based testing.
 
@@ -230,11 +231,11 @@ CRDTs are foundational to modern distributed systems. Understanding them deeply 
 | Command | Description |
 |---------|-------------|
 | `uv sync` | Install dependencies and create virtualenv (no external deps) |
-| `uv run python src/00_crdt_base.py` | Run base classes self-test (verifies abstract interface) |
-| `uv run python src/01_counters.py` | Exercise 1: G-Counter and PN-Counter |
-| `uv run python src/02_registers_sets.py` | Exercise 2: LWW-Register and OR-Set |
-| `uv run python src/03_op_based.py` | Exercise 3: Operation-based counter with causal broadcast |
-| `uv run python src/04_convergence_test.py` | Exercise 4: Multi-replica convergence simulation |
+| `uv run python src/_00_crdt_base.py` | Run base classes self-test (verifies abstract interface) |
+| `uv run python src/_01_counters.py` | Exercise 1: G-Counter and PN-Counter |
+| `uv run python src/_02_registers_sets.py` | Exercise 2: LWW-Register and OR-Set |
+| `uv run python src/_03_op_based.py` | Exercise 3: Operation-based counter with causal broadcast |
+| `uv run python src/_04_convergence_test.py` | Exercise 4: Multi-replica convergence simulation |
 
 ## State
 
