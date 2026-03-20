@@ -113,17 +113,19 @@ class OpBasedCounter:
         # The _applied set is critical for exactly-once semantics. Without it,
         # if the network layer retransmits an operation (e.g., during retry),
         # we'd apply it twice, corrupting the counter.
-        raise NotImplementedError("TODO(human): Implement OpBasedCounter.__init__")
+        self._replica_id = replica_id
+        self._value = 0
+        self._applied = set[str]()
 
     @property
     def value(self) -> int:
         # TODO(human): Return self._value.
-        raise NotImplementedError("TODO(human): Implement OpBasedCounter.value")
+        return self._value
 
     @property
     def replica_id(self) -> str:
         # TODO(human): Return self._replica_id.
-        raise NotImplementedError("TODO(human): Implement OpBasedCounter.replica_id")
+        return self._replica_id
 
     def apply(self, op: Operation) -> bool:
         # TODO(human): Apply an operation to this replica's local state.
@@ -139,7 +141,11 @@ class OpBasedCounter:
         # This is intentionally simple -- the complexity is in the delivery layer,
         # not the CRDT itself. The counter just needs to handle add/subtract.
         # Commutativity holds because integer addition is commutative.
-        raise NotImplementedError("TODO(human): Implement OpBasedCounter.apply")
+        if op.op_id in self._applied:
+            return False
+        self._value += op.amount if op.op_type == OpType.INCREMENT else -op.amount
+        self._applied.add(op.op_id)
+        return True
 
     def __repr__(self) -> str:
         return f"OpCounter({self._replica_id}, value={self._value}, applied={len(self._applied)})"
@@ -217,45 +223,43 @@ class CausalBroadcast:
         #        generate unique op_ids and stamp vector clocks)
         #   self._delivered: set[str] = set()
         #     -- op_ids already delivered (for dedup on re-receive)
-        raise NotImplementedError("TODO(human): Implement CausalBroadcast.__init__")
+        self._replica_id = replica_id
+        self._vclock : dict[str,int] = defaultdict(int)
+        self._buffer : list[Operation] = []
+        self._op_counter: int = 0
+        self._delivered : set[str] = set()
 
     @property
     def vclock(self) -> dict[str, int]:
         # TODO(human): Return dict(self._vclock) -- a copy to prevent external mutation.
-        raise NotImplementedError("TODO(human): Implement CausalBroadcast.vclock")
+        return dict(self._vclock)
 
     def create_operation(self, op_type: OpType, amount: int) -> Operation:
         # TODO(human): Create a new operation stamped with this replica's vector clock.
         #
+        # Convention: increment vclock FIRST, then snapshot. The operation's
+        # vclock[R] equals this operation's sequence number (starting from 1).
+        #
         # Steps:
         #   1. Increment self._op_counter
         #   2. Generate a unique op_id: f"{self._replica_id}:{self._op_counter}"
-        #   3. Create a SNAPSHOT of the current vector clock (copy it!)
-        #   4. Increment self._vclock[self._replica_id] (this op is now "created")
-        #   5. Mark op_id as delivered in self._delivered (creator auto-delivers to self)
-        #   6. Return the Operation with the SNAPSHOT vclock (from step 3, BEFORE step 4)
+        #   3. Increment self._vclock[self._replica_id] (this op is now "created")
+        #   4. snapshot = dict(self._vclock)   (AFTER incrementing)
+        #   5. Mark op_id as delivered in self._delivered (creator auto-delivers)
+        #   6. Return the Operation with vclock=snapshot
         #
-        # IMPORTANT: The vclock in the Operation is the sender's clock BEFORE
-        # incrementing. This is because the deliverability check at the receiver
-        # expects V[R] == receiver.vclock[R] + 1. If we put the AFTER clock,
-        # the receiver would need V[R] == receiver.vclock[R] + 1 but V[R] would
-        # already be incremented, making the condition off-by-one.
-        #
-        # Wait -- actually the convention here is: the operation's vclock[R] should
-        # equal the sequence number of this operation (starting from 1). So:
-        #   - Before creating: self._vclock[R] = N (we've created N ops so far)
-        #   - Create op: stamp with vclock where vclock[R] = N + 1
-        #   - After: self._vclock[R] = N + 1
-        #
-        # Simpler approach: increment vclock FIRST, then snapshot.
-        # The receiver checks: op.vclock[R] == receiver.vclock[R] + 1, meaning
-        # "this is operation number (my_count + 1) from R".
-        #
-        # Let's use this convention:
-        #   1. self._vclock[self._replica_id] += 1
-        #   2. snapshot = dict(self._vclock)
-        #   3. Create Operation with vclock=snapshot
-        raise NotImplementedError("TODO(human): Implement CausalBroadcast.create_operation")
+        # The receiver checks: op.vclock[R] == receiver.vclock[R] + 1,
+        # meaning "this is operation number (my_count + 1) from R".
+        # Since we incremented before snapshot, op.vclock[R] = N+1,
+        # and a receiver that has seen N ops from R expects exactly N+1.
+        self._op_counter += 1
+        op_id = f"{self._replica_id}:{self._op_counter}"
+        self._vclock[self._replica_id] += 1
+        self._delivered.add(op_id)
+        return Operation(
+            op_type, amount,self._replica_id, op_id, self.vclock
+        )
+
 
     def is_deliverable(self, op: Operation) -> bool:
         # TODO(human): Check if an operation can be delivered NOW.
@@ -273,7 +277,13 @@ class CausalBroadcast:
         #
         # Also check: if op.op_id is already in self._delivered, it's a duplicate.
         # Return False for duplicates (though the caller may also check this).
-        raise NotImplementedError("TODO(human): Implement CausalBroadcast.is_deliverable")
+
+        next_op = op.vclock[op.origin] == self._vclock.get(op.origin,0) + 1
+        other_rep = all(
+            op.vclock.get(S,0) <= self._vclock.get(S,0) for S in op.vclock.keys() if S != op.origin
+        )
+
+        return next_op and other_rep
 
     def receive(self, op: Operation) -> list[Operation]:
         # TODO(human): Receive an operation and return all operations that can be
@@ -296,7 +306,25 @@ class CausalBroadcast:
         # of buffered operation B. So after each delivery, we must re-scan the buffer.
         # This is O(n^2) in the worst case but correct. Production implementations
         # use more efficient data structures.
-        raise NotImplementedError("TODO(human): Implement CausalBroadcast.receive")
+
+        if op.op_id in self._delivered: return []
+        self._buffer.append(op)
+
+        delivered = []
+        while True:
+            new_buffer = []
+            for opb in self._buffer:
+                if self.is_deliverable(opb):
+                    self._delivered.add(opb.op_id)
+                    self._vclock[opb.origin] += 1
+                    delivered.append(opb)
+                else:
+                    new_buffer.append(opb)
+            if len(new_buffer) == len(self._buffer):
+                break
+            self._buffer = new_buffer
+
+        return delivered
 
     @property
     def buffer_size(self) -> int:

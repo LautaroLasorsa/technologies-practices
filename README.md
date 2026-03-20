@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-14%20%2F%20127%20practices-blue?style=flat-square" alt="Progress: 14/127">
+  <img src="https://img.shields.io/badge/Progress-15%20%2F%20127%20practices-blue?style=flat-square" alt="Progress: 14/127">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -349,10 +349,10 @@ python clean_all.py
   <td>—</td>
 </tr>
 <tr>
-  <td>050</td>
-  <td>CRDTs: Conflict-Free Replicated Data Types</td>
+  <td><b>050</b></td>
+  <td><b>CRDTs: Conflict-Free Replicated Data Types</b></td>
   <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>051</td>

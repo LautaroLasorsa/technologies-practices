@@ -21,9 +21,9 @@ from typing import Any, Callable
 # Ensure sibling modules are importable when running as a script
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
-from counters import GCounter, PNCounter  # noqa: E402
-from registers_sets import LWWRegister, ORSet  # noqa: E402
+from _00_crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
+from _01_counters import GCounter, PNCounter  # noqa: E402
+from _02_registers_sets import LWWRegister, ORSet, OptimizedORSet  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -72,6 +72,23 @@ def random_orset(max_elements: int = 5, max_tags_per: int = 3) -> ORSet:
         tags = {str(uuid.uuid4()) for _ in range(num_tags)}
         elements[elem] = tags
     return ORSet(elements)
+
+
+def random_opt_orset(max_elements: int = 5, num_replicas: int = 3) -> OptimizedORSet:
+    """Generate an OptimizedORSet with random elements and dots."""
+    possible_elements = ["apple", "banana", "cherry", "date", "elderberry",
+                         "fig", "grape"]
+    replica_ids = [f"R{i}" for i in range(num_replicas)]
+    s = OptimizedORSet()
+    num_ops = random.randint(0, max_elements * 2)
+    for _ in range(num_ops):
+        elem = random.choice(possible_elements)
+        rid = random.choice(replica_ids)
+        if random.random() < 0.7:
+            s.add(elem, rid)
+        else:
+            s.remove(elem)
+    return s
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +174,38 @@ def verify_semilattice_properties(
     # Return (total_checks, failures)
     #
     # total_checks = num_trials * 3 (three axioms per trial)
-    raise NotImplementedError("TODO(human): Implement verify_semilattice_properties")
+    #
+    for _ in range(num_trials):
+        a = generator()
+        b = generator()
+        c = generator()
+
+        a1 = a.copy()
+        b1 = b.copy()
+        a1.merge(b.copy())
+        b1.merge(a.copy())
+
+        assert a1.value() == b1.value()
+
+        ab = a.copy()
+        ab.merge(b.copy())
+        ab.merge(c.copy())
+
+        bc = b.copy()
+        bc.merge(c.copy())
+        a2 = a.copy()
+        a2.merge(bc)
+
+        assert a2.value() == ab.value()
+
+        a3 = a.copy()
+        val_before = a3.value()
+        a3.merge(a3.copy())
+        val_after = a3.value()
+
+        assert val_before == val_after
+
+    return (num_trials*3,0)
 
 
 # ---------------------------------------------------------------------------
@@ -242,7 +290,29 @@ def simulate_concurrent_updates(
     #
     # This tests the end-to-end CRDT guarantee: even though replicas received
     # different updates in different orders, they all reach the same final state.
-    raise NotImplementedError("TODO(human): Implement simulate_concurrent_updates")
+    replicas = {rid: replica_factory(rid) for rid in replica_ids}
+    net = ReplicaNetwork(replicas=replicas, min_delay=0,max_delay=2)
+    net.full_sync()
+    for replica in replicas.values():
+        print(replica.value())
+
+    net.set_partition(partition_groups)
+    print(partition_groups)
+
+    for rid in replica_ids:
+        for _ in range(updates_per_replica):
+            updater(replicas[rid], rid)
+
+    net.full_sync()
+    for group in partition_groups:
+        for r1 in group:
+            for r2 in group:
+                assert replicas[r1].value() == replicas[r2].value()
+
+    net.heal_partition()
+    net.full_sync()
+    return all_converged(net.replicas)
+
 
 
 # ---------------------------------------------------------------------------
@@ -281,6 +351,17 @@ def update_orset(crdt: StateCRDT, replica_id: str) -> None:
     elem = random.choice(elements)
     if random.random() < 0.7:
         crdt.add(elem)
+    else:
+        crdt.remove(elem)
+
+
+def update_opt_orset(crdt: StateCRDT, replica_id: str) -> None:
+    """Perform a random OptimizedORSet update (add or remove)."""
+    assert isinstance(crdt, OptimizedORSet)
+    elements = ["apple", "banana", "cherry", "date", "elderberry"]
+    elem = random.choice(elements)
+    if random.random() < 0.7:
+        crdt.add(elem, replica_id)
     else:
         crdt.remove(elem)
 
@@ -411,6 +492,34 @@ def test_convergence_three_way_partition() -> None:
     print("  PASSED")
 
 
+def test_semilattice_opt_orset() -> None:
+    """Verify OptimizedORSet satisfies semilattice axioms."""
+    print("\n[Test] OptimizedORSet semilattice properties")
+    print("-" * 40)
+    checks, failures = verify_semilattice_properties(
+        "OptimizedORSet", random_opt_orset, num_trials=200,
+    )
+    assert failures == 0, f"OptimizedORSet: {failures} semilattice violations!"
+    print(f"  {checks} checks, {failures} failures")
+    print("  PASSED")
+
+
+def test_convergence_opt_orset() -> None:
+    """Test OptimizedORSet convergence with partition."""
+    print("\n[Test] OptimizedORSet convergence with partition")
+    print("-" * 40)
+    ok = simulate_concurrent_updates(
+        crdt_name="OptimizedORSet",
+        replica_factory=lambda rid: OptimizedORSet(),
+        updater=update_opt_orset,
+        replica_ids=["A", "B", "C", "D"],
+        partition_groups=[{"A", "B"}, {"C", "D"}],
+        updates_per_replica=10,
+    )
+    assert ok, "OptimizedORSet should converge after partition healing"
+    print("  PASSED")
+
+
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
@@ -449,6 +558,7 @@ def main() -> None:
     test_semilattice_pncounter()
     test_semilattice_lww_register()
     test_semilattice_orset()
+    test_semilattice_opt_orset()
 
     # Part 2: Convergence with partitions
     print("\n>>> Part 2: Convergence with Network Partitions")
@@ -468,6 +578,9 @@ def main() -> None:
 
     test_convergence_three_way_partition()
     results["PNCounter (3-way partition)"] = True
+
+    test_convergence_opt_orset()
+    results["OptimizedORSet (2-way partition)"] = True
 
     print_summary(results)
 

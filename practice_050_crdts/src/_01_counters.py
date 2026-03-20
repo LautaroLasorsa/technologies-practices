@@ -15,7 +15,7 @@ from pathlib import Path
 # Ensure sibling modules are importable when running as a script
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
+from _00_crdt_base import StateCRDT, ReplicaNetwork, all_converged  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -52,20 +52,24 @@ class GCounter(StateCRDT[int]):
     def __init__(self, counts: dict[str, int] | None = None) -> None:
         # TODO(human): Store a COPY of counts (or empty dict if None).
         # Copying prevents aliasing bugs where two replicas share the same dict.
-        raise NotImplementedError("TODO(human): Implement GCounter.__init__")
+
+        self.counts = counts.copy() if counts else dict[str,int]()
 
     def increment(self, replica_id: str, amount: int = 1) -> None:
         # TODO(human): Add `amount` to self._counts[replica_id].
         # If replica_id not in dict, initialize to 0 first.
         # amount must be >= 0 (grow-only!). Raise ValueError if negative.
         # This enforces the monotonicity requirement: state can only grow.
-        raise NotImplementedError("TODO(human): Implement GCounter.increment")
+        if amount < 0:
+            raise ValueError("amount must be positive")
+
+        self.counts[replica_id] = self.counts.get(replica_id,0) + amount
 
     def value(self) -> int:
         # TODO(human): Return sum(self._counts.values()).
         # This is the "query" operation -- the externally visible counter value.
         # The sum aggregates all replicas' contributions into a single int.
-        raise NotImplementedError("TODO(human): Implement GCounter.value")
+        return sum(self.counts.values())
 
     def merge(self, other: StateCRDT[int]) -> None:
         # TODO(human): Element-wise max merge.
@@ -74,16 +78,19 @@ class GCounter(StateCRDT[int]):
         #                                  other._counts[replica_id])
         # Also include any replica_ids only in self (they stay as-is via max with 0).
         # This is the join operation of the semilattice.
-        raise NotImplementedError("TODO(human): Implement GCounter.merge")
+
+        for replica_id in other.counts:
+            self.counts[replica_id] = max(self.counts.get(replica_id,0), other.counts.get(replica_id,0))
+
 
     def copy(self) -> GCounter:
         # TODO(human): Return GCounter(dict(self._counts)) -- deep copy.
         # This simulates serializing state to send to another replica.
-        raise NotImplementedError("TODO(human): Implement GCounter.copy")
+        return GCounter(self.counts)
 
     def __repr__(self) -> str:
         # TODO(human): Return f"GCounter({self._counts})"
-        raise NotImplementedError("TODO(human): Implement GCounter.__repr__")
+        return f"GCounter({self.counts})"
 
 
 # ---------------------------------------------------------------------------
@@ -115,23 +122,24 @@ class PNCounter(StateCRDT[int]):
     def __init__(self, p: GCounter | None = None, n: GCounter | None = None) -> None:
         # TODO(human): Initialize self._p and self._n.
         # Use provided GCounters or create fresh empty ones.
-        raise NotImplementedError("TODO(human): Implement PNCounter.__init__")
+        self.pos = p.copy() if p else GCounter()
+        self.neg = n.copy() if n else GCounter()
 
     def increment(self, replica_id: str, amount: int = 1) -> None:
         # TODO(human): Delegate to self._p.increment(replica_id, amount).
         # Incrementing the positive counter increases the overall value.
-        raise NotImplementedError("TODO(human): Implement PNCounter.increment")
+        self.pos.increment(replica_id, amount)
 
     def decrement(self, replica_id: str, amount: int = 1) -> None:
         # TODO(human): Delegate to self._n.increment(replica_id, amount).
         # Note: we INCREMENT the N counter (it's a G-Counter, grow-only).
         # This decreases the overall value because value = P - N.
-        raise NotImplementedError("TODO(human): Implement PNCounter.decrement")
+        self.neg.increment(replica_id, amount)
 
     def value(self) -> int:
         # TODO(human): Return self._p.value() - self._n.value().
         # Can be negative! That's fine -- if decrements exceed increments.
-        raise NotImplementedError("TODO(human): Implement PNCounter.value")
+        return self.pos.value() - self.neg.value()
 
     def merge(self, other: StateCRDT[int]) -> None:
         # TODO(human): Merge both P and N independently.
@@ -139,15 +147,18 @@ class PNCounter(StateCRDT[int]):
         # self._n.merge(other._n)
         # This works because merge distributes over composition --
         # each G-Counter merges independently and the combined result is correct.
-        raise NotImplementedError("TODO(human): Implement PNCounter.merge")
+        self.pos.merge(other.pos)
+        self.neg.merge(other.neg)
 
     def copy(self) -> PNCounter:
         # TODO(human): Return PNCounter(self._p.copy(), self._n.copy()).
-        raise NotImplementedError("TODO(human): Implement PNCounter.copy")
+        return PNCounter(
+            self.pos, self.neg
+        )
 
     def __repr__(self) -> str:
         # TODO(human): Return f"PNCounter(value={self.value()}, P={self._p}, N={self._n})"
-        raise NotImplementedError("TODO(human): Implement PNCounter.__repr__")
+        return f"PNCounter(value={self.value()}, P={self.pos}, N={self.neg})"
 
 
 # ---------------------------------------------------------------------------

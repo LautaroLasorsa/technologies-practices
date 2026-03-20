@@ -14,6 +14,7 @@ When working in this folder, Claude operates as a **guided learning assistant**,
 4. **Verify understanding.** After the user implements a key part, briefly confirm correctness and explain *why* it works (or what would break if done differently).
 5. **Progressive disclosure.** Start simple, layer complexity. Don't dump all concepts at once.
 6. **Concise explanations.** 2-4 sentences per concept, not paragraphs. Link to official docs for deep dives.
+7. **Do not create twice.** When I say I will start a practice, assume it has been setted up unless the folder doesn't exist in the filesystem. Do not do any research unless you verify the practice has not been setted up.
 
 **Dual objective:**
 
@@ -117,7 +118,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 048 | Integrated OR: Supply Chain | Python | OR: Applied (Python) | `not-started` |
 | 049a | Raft Consensus: Leader Election & Log Replication | Python | Distributed Systems Patterns | `not-started` |
 | 049b | Raft Consensus: Safety & Failure Recovery | Python | Distributed Systems Patterns | `not-started` |
-| 050 | CRDTs: Conflict-Free Replicated Data Types | Python | Distributed Systems Patterns | `not-started` |
+| 050 | CRDTs: Conflict-Free Replicated Data Types | Python | Distributed Systems Patterns | `completed` |
 | 051 | Distributed Coordination: etcd | Python, Docker (etcd) | Distributed Systems Patterns | `not-started` |
 | 052 | Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
 | 053 | Consistent Hashing & DHTs | Python | Distributed Systems Patterns | `not-started` |
