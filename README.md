@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-15%20%2F%20127%20practices-blue?style=flat-square" alt="Progress: 14/127">
+  <img src="https://img.shields.io/badge/Progress-15%20%2F%20129%20practices-blue?style=flat-square" alt="Progress: 15/129">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -699,6 +699,18 @@ python clean_all.py
 <tr>
   <td>025f</td>
   <td>ML Compilers: torch.compile Deep Dive</td>
+  <td><img src="https://skillicons.dev/icons?i=py,pytorch" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>081a</td>
+  <td>Predictive Coding Networks: Foundations & Backprop Comparison</td>
+  <td><img src="https://skillicons.dev/icons?i=py,pytorch" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>081b</td>
+  <td>Predictive Coding Networks: Where PCNs Diverge from Backprop</td>
   <td><img src="https://skillicons.dev/icons?i=py,pytorch" height="20"></td>
   <td>—</td>
 </tr>

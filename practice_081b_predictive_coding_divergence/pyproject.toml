@@ -1,0 +1,15 @@
+[project]
+name = "practice-081b-predictive-coding-divergence"
+version = "0.1.0"
+description = "Predictive Coding Networks: Where PCNs Diverge from Backprop"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "matplotlib>=3.7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
