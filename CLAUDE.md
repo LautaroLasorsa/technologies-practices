@@ -157,6 +157,8 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 078 | Distributed Rate Limiting: Token Bucket, Sliding Window & Redis Lua | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
 | 079 | Distributed Task Queues: Celery & ARQ Worker Patterns | Python, Docker (Redis) | Data Stores & Messaging | `not-started` |
 | 080 | Feature Flags & Runtime Configuration: OpenFeature & Flagsmith | Python, Docker (Flagsmith) | Infra, DevOps & Observability | `not-started` |
+| 081a | Predictive Coding Networks: Foundations & Backprop Comparison | Python (PyTorch) | ML Systems | `not-started` |
+| 081b | Predictive Coding Networks: Where PCNs Diverge from Backprop | Python (PyTorch) | ML Systems | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 

@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Practice outputs
+/outputs/
+/checkpoints/
+*.png
+
+# Datasets
+/data/
+
+# OS
+*.swp
+*~
+Thumbs.db
+.DS_Store

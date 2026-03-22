@@ -34,7 +34,7 @@ Two-session hands-on practice implementing Predictive Coding Networks (PCNs) —
 | Baseline approach | Backprop MLP pre-built as scaffold | User knows backprop cold — all hands-on time goes to PCN implementation |
 | Session A datasets | MNIST + Fashion-MNIST + KMNIST (3-dataset benchmark) | Robustness study across pattern complexity levels |
 | Session B primary dataset | Fashion-MNIST (generative/missing-data experiments) | Visually interesting for generation and inference |
-| Session B stretch | CIFAR-10 with convolutional cortical layers | Tests understanding at scale, biologically grounded (retinotopic receptive fields) |
+| Session B Phase 5 | CIFAR-10 with convolutional cortical layers | Tests understanding at scale, biologically grounded (retinotopic receptive fields) |
 
 ---
 
@@ -169,10 +169,8 @@ Implement precision (inverse variance) on prediction errors — `precision_weigh
 **Phase 4: Continual Learning (~15 min)**
 Implement `continual_learning_experiment(network, dataset_sequence)` — train sequentially on Fashion-MNIST split into two task groups (e.g., tops/bottoms then accessories/footwear). Measure catastrophic forgetting. Compare PCN vs backprop MLP. PCNs are hypothesized to forget less because local weight updates disturb fewer unrelated weights.
 
-**The session is complete and satisfying after Phase 4 (~75 min).**
-
-**Phase 5 (Stretch Goal): Retinotopic Cortical Layers — Convolutional PCN on CIFAR-10 (~25 min)**
-Implement `RetinotopicCorticalLayer` — a convolutional variant of `CorticalLayer` that mirrors V1→V2→V4 local receptive field structure. Adapt inference dynamics and Hebbian updates for conv layers (replace matrix multiply with convolution in both prediction and error computation). Train on CIFAR-10. This mirrors the actual retinotopic organization of visual cortex — local receptive fields tiled across the visual field. **Note:** The scaffold provides conv boilerplate (layer shape management, transposed convolutions for top-down path); the user implements only the inference/update adaptation.
+**Phase 5: Retinotopic Cortical Layers — Convolutional PCN on CIFAR-10 (~25 min)**
+Implement `RetinotopicCorticalLayer` — a convolutional variant of `CorticalLayer` that mirrors V1→V2→V4 local receptive field structure. Adapt inference dynamics and Hebbian updates for conv layers (replace matrix multiply with convolution in both prediction and error computation). Train on CIFAR-10. This mirrors the actual retinotopic organization of visual cortex — local receptive fields tiled across the visual field. The scaffold provides conv boilerplate (layer shape management, transposed convolutions for top-down path); the user implements the inference/update adaptation.
 
 ### Expected Outcomes
 
@@ -246,7 +244,7 @@ practice_081b_predictive_coding_divergence/
         missing_data.py            # Missing data inference (TODO(human): partial input inference)
         precision_weighting.py     # Precision-weighted prediction errors (TODO(human))
         continual_learning.py      # Sequential task experiment (TODO(human))
-        retinotopic_layer.py       # Convolutional cortical layer (TODO(human), stretch goal)
+        retinotopic_layer.py       # Convolutional cortical layer (TODO(human))
         experiments.py             # Experiment runner
         visualization.py           # Session B specific plots
     tests/
@@ -255,6 +253,7 @@ practice_081b_predictive_coding_divergence/
         test_missing_data.py
         test_precision.py
         test_continual_learning.py
+        test_retinotopic.py
 ```
 
 ---
@@ -306,6 +305,6 @@ practice_081b_predictive_coding_divergence/
 
 ## Open Questions / Risks
 
-1. **Session B Phase 5 (stretch goal):** Implementing conv inference dynamics from scratch in ~25 min may be tight. Mitigation: scaffold provides conv boilerplate (shape management, transposed convolutions); user implements only the inference/update adaptation. Labeled as stretch goal — session is complete after Phase 4.
+1. **Session B Phase 5 timing:** Implementing conv inference dynamics from scratch in ~25 min may be tight. Mitigation: scaffold provides conv boilerplate (shape management, transposed convolutions); user implements only the inference/update adaptation.
 2. **Generative quality:** From-scratch PCN generation on Fashion-MNIST will be blurry. Set expectations clearly — this demonstrates the *capability*, not SOTA quality.
 3. **Continual learning signal:** The forgetting difference between PCN and backprop may be subtle on a small benchmark. Mitigation: design the task split to maximize interference (similar-looking classes in different tasks).
