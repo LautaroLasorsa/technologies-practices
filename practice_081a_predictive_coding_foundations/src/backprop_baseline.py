@@ -9,6 +9,7 @@ to ensure a fair comparison.
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
 
 
 class BackpropMLP(nn.Module):
@@ -60,7 +61,8 @@ def train_backprop_model(
         correct = 0
         total = 0
 
-        for images, labels in train_loader:
+        pbar = tqdm(train_loader, desc=f"  [BP] Epoch {epoch + 1}/{num_epochs}", leave=False)
+        for images, labels in pbar:
             images = images.view(images.size(0), -1).to(device)
             labels = labels.to(device)
 
@@ -73,6 +75,7 @@ def train_backprop_model(
             total_loss += loss.item() * images.size(0)
             correct += (outputs.argmax(dim=1) == labels).sum().item()
             total += images.size(0)
+            pbar.set_postfix(loss=f"{total_loss / total:.4f}", acc=f"{correct / total:.4f}")
 
         epoch_loss = total_loss / total
         epoch_acc = correct / total

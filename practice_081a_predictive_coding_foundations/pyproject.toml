@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "practice-081a-predictive-coding-foundations"
 version = "0.1.0"
@@ -7,9 +11,25 @@ dependencies = [
     "torch>=2.0",
     "torchvision>=0.15",
     "matplotlib>=3.7",
+    "tqdm>=4.67.3",
 ]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
 
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
 ]
+
+# PyTorch CUDA wheels: these are larger than CPU-only but work on all machines.
+# CUDA is used automatically when a GPU is available, CPU otherwise.
+# To switch CUDA version, change cu124 to cu118 or cu121.
+[[tool.uv.index]]
+name = "pytorch-cuda"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cuda" }
+torchvision = { index = "pytorch-cuda" }

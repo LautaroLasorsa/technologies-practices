@@ -2,9 +2,13 @@
 PredictiveCodingNetwork -- The hierarchical generative model.
 
 In neuroscience, the cortex is organized as a hierarchy of cortical areas
-(V1 -> V2 -> V4 -> IT -> PFC). Each area generates predictions of the area below
-and receives prediction errors from below. The ENTIRE system minimizes a single
+(V1 -> V2 -> V4 -> IT -> PFC). Each area generates predictions and receives
+prediction errors from adjacent areas. The ENTIRE system minimizes a single
 objective: free energy (total prediction error across all levels).
+
+NOTE: In the brain, predictions flow top-down (abstract -> sensory). This
+implementation uses the W&B (2017) bottom-up formulation (input -> output):
+each layer l predicts layer l+1. Mathematically equivalent.
 
 This class orchestrates:
 1. Inference phase: iterate neural activities to minimize free energy (perception)

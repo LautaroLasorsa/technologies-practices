@@ -81,7 +81,7 @@ where the **prediction error** at layer l+1 is:
 
     epsilon_{l+1} = a_{l+1} - f(W_l . a_l)
 
-Here f is the activation function (tanh by default) and f(W_l . a_l) is the **top-down prediction** of layer l+1 made by layer l.
+Here f is the activation function (tanh by default) and f(W_l . a_l) is the **prediction** of layer l+1 made by layer l (bottom-up in the W&B supervised formulation; the neuroscience version has the equivalent computation flowing top-down).
 
 #### Inference Dynamics: Two Biological Pathways
 
@@ -245,7 +245,8 @@ Build a Predictive Coding Network from scratch in pure PyTorch (no autograd for 
 
 | Phase | Command | Description |
 |-------|---------|-------------|
-| Setup | `uv sync` | Install dependencies |
+| Setup | `uv sync` | Install dependencies (includes CUDA 12.4 PyTorch by default) |
+| Setup (other CUDA) | Edit `pyproject.toml`: change `cu124` to `cu118`/`cu121` in the `[[tool.uv.index]]` URL, then `uv lock --upgrade && uv sync` | Switch CUDA version |
 | Phase 1 | `uv run pytest tests/test_energy.py -v` | Verify CorticalLayer (energy tests exercise predictions) |
 | Phase 2 | `uv run pytest tests/test_energy.py -v` | Verify free energy computation |
 | Phase 3 | `uv run pytest tests/test_inference.py -v` | Verify inference dynamics |

@@ -12,6 +12,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+from tqdm import tqdm
 
 from src.backprop_baseline import BackpropMLP, train_backprop_model
 from src.predictive_coding_network import PredictiveCodingNetwork
@@ -101,7 +102,8 @@ def train_pcn_model(
         total = 0
         num_batches = 0
 
-        for images, labels in train_loader:
+        pbar = tqdm(train_loader, desc=f"  [PCN] Epoch {epoch + 1}/{num_epochs}", leave=False)
+        for images, labels in pbar:
             images = images.view(images.size(0), -1).to(device)
             one_hot = torch.zeros(images.size(0), 10, device=device)
             one_hot.scatter_(1, labels.to(device).unsqueeze(1), 1.0)
@@ -112,6 +114,7 @@ def train_pcn_model(
             correct += int(metrics["accuracy"] * images.size(0))
             total += images.size(0)
             num_batches += 1
+            pbar.set_postfix(energy=f"{total_energy / num_batches:.4f}", acc=f"{correct / total:.4f}")
 
         epoch_energy = total_energy / num_batches
         epoch_acc = correct / total
