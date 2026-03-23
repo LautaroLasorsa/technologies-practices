@@ -81,7 +81,7 @@ where the **prediction error** at layer l+1 is:
 
     epsilon_{l+1} = a_{l+1} - f(W_l . a_l)
 
-Here f is the activation function (tanh by default) and f(W_l . a_l) is the **top-down prediction** of layer l+1 made by layer l.
+Here f is the activation function (tanh by default) and f(W_l . a_l) is the **prediction** of layer l+1 made by layer l (bottom-up in the W&B supervised formulation; the neuroscience version has the equivalent computation flowing top-down).
 
 #### Inference Dynamics: Two Biological Pathways
 
@@ -245,7 +245,8 @@ Build a Predictive Coding Network from scratch in pure PyTorch (no autograd for 
 
 | Phase | Command | Description |
 |-------|---------|-------------|
-| Setup | `uv sync` | Install dependencies |
+| Setup | `uv sync` | Install dependencies (includes CUDA 12.4 PyTorch by default) |
+| Setup (other CUDA) | Edit `pyproject.toml`: change `cu124` to `cu118`/`cu121` in the `[[tool.uv.index]]` URL, then `uv lock --upgrade && uv sync` | Switch CUDA version |
 | Phase 1 | `uv run pytest tests/test_energy.py -v` | Verify CorticalLayer (energy tests exercise predictions) |
 | Phase 2 | `uv run pytest tests/test_energy.py -v` | Verify free energy computation |
 | Phase 3 | `uv run pytest tests/test_inference.py -v` | Verify inference dynamics |
@@ -257,6 +258,12 @@ Build a Predictive Coding Network from scratch in pure PyTorch (no autograd for 
 | Phase 5 | `uv run python src/benchmark.py --dataset kmnist` | Benchmark KMNIST only |
 | All | `uv run pytest tests/ -v` | Run all tests |
 
+## Notes
+
+- **PCN vs Backprop accuracy gap is mostly optimizer-driven, not algorithmic.** The benchmark uses Adam (adaptive LR + momentum) for backprop but vanilla SGD for PCN's Hebbian updates. The Whittington-Bogacz equivalence guarantees the same *gradients*, not the same *convergence speed*. Running PCN for 30-50 epochs or adding momentum to the Hebbian rule closes the gap significantly.
+- **Prediction direction in this implementation is bottom-up (input -> output)**, following the W&B (2017) supervised classification formulation. Classical neuroscience predictive coding (Rao & Ballard 1999) is top-down (abstract -> sensory). The math is equivalent — just a relabeling of indices. But the same trained weights can be used generatively by clamping the output and freeing the input (bidirectional inference).
+- **GPU gives minimal speedup for this network size.** The 784x256 matmuls are too small to saturate GPU cores, and CPU<->GPU transfer overhead dominates. Unified memory architectures (Apple M-series, NVIDIA Grace Hopper) would eliminate the transfer bottleneck.
+
 ## State
 
-`not-started`
+`completed`

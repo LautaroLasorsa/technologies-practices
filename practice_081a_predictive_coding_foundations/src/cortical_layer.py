@@ -6,9 +6,15 @@ at a specific level of abstraction. Higher areas generate top-down predictions
 of what lower areas should be seeing. Lower areas compute prediction errors
 (mismatches between predictions and actual input) and send them upward.
 
+NOTE on direction: The neuroscience version is top-down (abstract → sensory).
+This implementation follows the Whittington & Bogacz (2017) supervised
+classification formulation, where predictions go bottom-up (input → output):
+layer l predicts layer l+1. The math (free energy, inference dynamics, Hebbian
+updates, backprop equivalence) is identical either way.
+
 This class models one such cortical area:
 - It holds synaptic_weights (W_l) connecting it to the layer above
-- It computes top-down predictions: what this layer expects the layer above to look like
+- It computes predictions: what this layer expects the layer above to look like
 - It computes prediction errors: the mismatch between actual activity and the prediction
 """
 
@@ -25,7 +31,7 @@ class CorticalLayer:
       energy pathologies due to flat gradients at zero)
 
     Neuroscience mapping:
-    - Deep pyramidal cells -> carry top-down predictions (compute_prediction)
+    - Deep pyramidal cells -> carry predictions (compute_prediction)
     - Superficial pyramidal cells -> carry prediction errors (compute_prediction_error)
     """
 
@@ -47,10 +53,9 @@ class CorticalLayer:
         self.synaptic_weights.requires_grad_(False)  # We do NOT use autograd -- updates are local/Hebbian
 
     def compute_prediction(self, neural_activity: torch.Tensor) -> torch.Tensor:
-        """Compute the top-down prediction: what this layer predicts the layer above looks like.
+        """Compute prediction: what this layer predicts the layer above looks like.
 
-        In the brain, deep pyramidal cells in a higher cortical area send descending
-        predictions to the layer below. The prediction is:
+        In the W&B (2017) formulation, layer l predicts layer l+1 (bottom-up):
 
             prediction = f(W_l . a_l)
 
@@ -62,10 +67,13 @@ class CorticalLayer:
         The result has shape (batch_size, output_dim) -- it predicts what the layer
         above's activity "should" look like according to this layer.
 
-        In the standard PCN convention (Bogacz 2017, arXiv:2407.04117):
+        Convention (Bogacz 2017, arXiv:2407.04117):
         - Layer l has activity a_l of dimension dim_l
         - W_l has shape (dim_{l+1}, dim_l) -- maps FROM layer l TO layer l+1
         - The prediction OF a_{l+1} made BY layer l is: f(W_l . a_l)
+
+        (In neuroscience, predictions go top-down: abstract → sensory. This code
+        uses the equivalent bottom-up formulation for supervised classification.)
 
         Args:
             neural_activity: This layer's activity a_l, shape (batch_size, input_dim)
@@ -73,7 +81,7 @@ class CorticalLayer:
         Returns:
             Prediction of the layer above's activity, shape (batch_size, output_dim)
         """
-        # TODO(human): Compute the top-down prediction.
+        # TODO(human): Compute the prediction (layer l → layer l+1).
         #
         # The prediction is: f(a_l @ W^T)
         # where:
@@ -89,7 +97,7 @@ class CorticalLayer:
         # "best guess" of what the next level of processing should look like.
         # When this prediction matches reality, prediction error is zero and
         # no learning signal is generated (the brain is "unsurprised").
-        raise NotImplementedError("TODO(human): Implement top-down prediction")
+        return self.activation_fn(neural_activity @ self.synaptic_weights.T)
 
     def compute_prediction_error(
         self, neural_activity_above: torch.Tensor, prediction: torch.Tensor
@@ -127,7 +135,7 @@ class CorticalLayer:
         # Neuroscience: These are the signals carried by superficial pyramidal
         # cells. Only prediction errors travel upward -- if a cortical area
         # perfectly predicts its input, it sends nothing (efficient coding).
-        raise NotImplementedError("TODO(human): Implement prediction error computation")
+        return neural_activity_above - prediction
 
     def activation_derivative(self, pre_activation: torch.Tensor) -> torch.Tensor:
         """Compute f'(x) -- derivative of the activation function.

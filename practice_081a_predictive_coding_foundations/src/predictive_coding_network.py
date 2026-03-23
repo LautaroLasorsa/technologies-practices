@@ -2,9 +2,13 @@
 PredictiveCodingNetwork -- The hierarchical generative model.
 
 In neuroscience, the cortex is organized as a hierarchy of cortical areas
-(V1 -> V2 -> V4 -> IT -> PFC). Each area generates predictions of the area below
-and receives prediction errors from below. The ENTIRE system minimizes a single
+(V1 -> V2 -> V4 -> IT -> PFC). Each area generates predictions and receives
+prediction errors from adjacent areas. The ENTIRE system minimizes a single
 objective: free energy (total prediction error across all levels).
+
+NOTE: In the brain, predictions flow top-down (abstract → sensory). This
+implementation uses the W&B (2017) bottom-up formulation (input → output):
+each layer l predicts layer l+1. Mathematically equivalent.
 
 This class orchestrates:
 1. Inference phase: iterate neural activities to minimize free energy (perception)
@@ -160,7 +164,11 @@ class PredictiveCodingNetwork:
         #
         # Think about: Why is this the right objective? What happens when free energy
         # is zero? (Every layer perfectly predicts the one above -- no surprise.)
-        raise NotImplementedError("TODO(human): Implement free energy computation")
+        return 0.5 * torch.sum(
+            torch.Tensor([torch.sum(
+                (neural_activities[l+1] - layer.compute_prediction(neural_activities[l]))**2
+            ) for l, layer in enumerate(self.cortical_layers)])
+        ) / neural_activities[0].shape[0]
 
     def run_inference_phase(
         self,
@@ -242,7 +250,26 @@ class PredictiveCodingNetwork:
         # Watch for: epsilon_l is the error AT layer l (between a_l and the prediction
         # from layer l-1). Make sure indices are correct -- off-by-one errors here
         # will make the network diverge instead of converge.
-        raise NotImplementedError("TODO(human): Implement inference phase")
+        neural_activities[0] = sensory_input
+        neural_activities[-1] = target
+        energy_trace = []
+
+        for _ in range(self.num_inference_steps):
+            epsilon =[0] + [
+                layer.compute_prediction_error(neural_activities[l+1] ,layer.compute_prediction(neural_activities[l]))
+                for l, layer in enumerate(self.cortical_layers)
+            ]
+            for l in range(1,len(self.cortical_layers)):
+                layer = self.cortical_layers[l]
+
+                neural_activities[l] += self.inference_rate*(-epsilon[l] +
+                    epsilon[l+1]*layer.activation_derivative(
+                        layer.pre_activation(neural_activities[l]
+                        )) @ layer.synaptic_weights)
+
+                energy_trace.append(self.compute_free_energy(neural_activities))
+
+        return (neural_activities, energy_trace)
 
     def hebbian_weight_update(
         self,
@@ -299,7 +326,17 @@ class PredictiveCodingNetwork:
         # Think about: Why outer product? It captures the correlation between
         # the error signal (what needs to change) and the input activity
         # (what caused the current prediction). This is pure Hebbian learning.
-        raise NotImplementedError("TODO(human): Implement Hebbian weight updates")
+
+        for l, layer in enumerate(self.cortical_layers):
+
+            prediction = layer.compute_prediction(neural_activities[l])
+            epsilon = layer.compute_prediction_error(neural_activities[l+1],prediction)
+
+            f_prime = layer.activation_derivative(layer.pre_activation(neural_activities[l]))
+            modulated = epsilon * f_prime
+
+            layer.synaptic_weights += self.learning_rate * (modulated.T @ neural_activities[l]) / neural_activities[l].shape[0]
+
 
     def train_step(
         self,
@@ -342,7 +379,21 @@ class PredictiveCodingNetwork:
         # During inference, output is clamped to the target (teacher forcing).
         # The accuracy check uses an unclamped forward pass to see what the
         # network actually predicts -- this is how we measure learning.
-        raise NotImplementedError("TODO(human): Implement full training step")
+
+        activities = self._initialize_activities(sensory_input)
+        (updated_activities, energy_trace) = self.run_inference_phase(sensory_input, target, activities)
+        self.hebbian_weight_update(updated_activities)
+
+        predictions = self.forward(sensory_input)
+        predicted_labels = predictions.argmax(dim=1)
+        true_labels = target.argmax(dim=1)
+
+        accuracy = (predicted_labels==true_labels).float().mean().item()
+        return {
+            "free_energy":energy_trace[-1],
+            "energy_trace":energy_trace,
+            "accuracy":accuracy
+        }
 
     def to(self, device: torch.device) -> "PredictiveCodingNetwork":
         """Move all weights to a device (CPU/GPU)."""
