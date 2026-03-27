@@ -12,11 +12,12 @@ Implement jump consistent hashing (Lamping & Veach, 2014) and rendezvous hashing
 
 This exercise crystallizes WHEN to use each algorithm in practice:
   - Consistent hashing (ring + vnodes): General-purpose, any topology change.
-  - Jump consistent hash: Fastest, perfectly balanced, but sequential-only changes.
+  - Jump consistent hash: Fastest, balanced in expectation, but sequential-only changes.
   - Rendezvous hashing: Simplest, no data structure, but O(N) per lookup.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import struct
 import sys
@@ -24,6 +25,7 @@ import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import numpy as np
 
 # Ensure sibling modules are importable when running as a script
@@ -71,7 +73,7 @@ from consistent_hash_ring import ConsistentHashRing  # noqa: E402
 #   O(ln N) expected iterations instead of O(N).
 #
 # Properties:
-#   - PERFECTLY balanced: each bucket gets exactly 1/N of keys (no variance)
+#   - Balanced in expectation: each bucket has probability exactly 1/N (CV->0 as K->inf)
 #   - O(ln N) time, O(1) space (no ring, no sorted array)
 #   - Minimal disruption: going from N to N+1 buckets moves exactly 1/(N+1) keys
 #   - Limitation: only supports adding/removing the LAST bucket (N-1 -> N or N -> N-1)
@@ -98,7 +100,8 @@ class JumpConsistentHash:
         # That's it -- jump consistent hash needs NO other state.
         # This is the "zero memory" property: the entire algorithm is
         # a pure function of (key, num_buckets), with no data structure.
-        raise NotImplementedError("TODO(human): Implement JumpConsistentHash.__init__")
+
+        self.num_buckets = num_buckets
 
     def get_bucket(self, key: str) -> int:
         # TODO(human): Implement the jump consistent hash algorithm.
@@ -120,7 +123,14 @@ class JumpConsistentHash:
         # Each iteration of the loop is one "jump" -- on average there are ln(N) jumps.
         #
         # Verify: get_bucket should return an int in [0, self.num_buckets).
-        raise NotImplementedError("TODO(human): Implement JumpConsistentHash.get_bucket")
+
+        key_int = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8],"big")
+        b, j = -1, 0
+        while j < self.num_buckets:
+            b = j
+            key_int = ((key_int * 2862933555777941757) + 1) & 0xFFFFFFFFFFFFFFFF
+            j = int((b + 1) * ((1 << 31) / ((key_int >> 33) + 1)))
+        return b
 
     def get_distribution(self, keys: list[str]) -> dict[int, int]:
         """Count how many keys map to each bucket.
@@ -133,7 +143,8 @@ class JumpConsistentHash:
             counts[bucket] += 1
         return counts
 
-
+    def get_server(self, key) -> str:
+        return str(self.get_bucket(key))
 # ---------------------------------------------------------------------------
 # Rendezvous Hashing / Highest Random Weight (Thaler & Ravishankar, 1998)
 # ---------------------------------------------------------------------------
@@ -151,7 +162,7 @@ class JumpConsistentHash:
 # That's the entire algorithm. No ring, no sorted array, no finger table.
 #
 # Properties:
-#   - Perfectly balanced (with a good hash function)
+#   - Balanced in expectation (each server has probability 1/N; CV->0 as K->inf)
 #   - Minimal disruption: when adding/removing a server, only O(K/N) keys move.
 #     A key only moves if the new server has a higher hash than the current winner.
 #   - Supports ARBITRARY topology changes: any server can be added or removed.
@@ -180,7 +191,7 @@ class RendezvousHash:
         #
         # Store self.servers = list(servers) to avoid aliasing.
         # That's all the state rendezvous hashing needs -- just the list of servers.
-        raise NotImplementedError("TODO(human): Implement RendezvousHash.__init__")
+        self.servers = list(servers)
 
     def get_server(self, key: str) -> str:
         # TODO(human): Find the server with the highest hash for this key.
@@ -194,7 +205,7 @@ class RendezvousHash:
         # This is O(N) where N = len(self.servers). Every lookup must
         # compute N hashes. For N=10, that's trivial. For N=10000, it's
         # 10000 SHA-256 computations per lookup -- significant.
-        raise NotImplementedError("TODO(human): Implement RendezvousHash.get_server")
+        return max(self.servers, key=lambda s: hash_pair(key, s))
 
     def add_server(self, server: str) -> None:
         """Add a server to the pool.
@@ -329,7 +340,88 @@ def benchmark_comparison(
     #      "jump":       {"cv": ..., "latency_us": ..., "migration_pct": ..., "memory_bytes": ...},
     #      "rendezvous": {"cv": ..., "latency_us": ..., "migration_pct": ..., "memory_bytes": ...},
     #    }
-    raise NotImplementedError("TODO(human): Implement benchmark_comparison")
+
+    servers = [f"server-{i}" for i in range(num_servers)]
+    keys = [f"key-{i}" for i in range(num_keys)]
+
+    ring = ConsistentHashRing(num_virtual_nodes)
+    for server in servers: ring.add_node(server)
+    jch = JumpConsistentHash(num_servers)
+    rh = RendezvousHash(servers)
+
+    ring_d = ring.get_distribution(keys)
+    jch_d = {keys[k]: j for (k,j) in jch.get_distribution(keys).items()}
+    rh_d = rh.get_distribution(keys)
+
+    ring_stats = load_balance_stats(ring_d)
+    jch_stats = load_balance_stats(jch_d)
+    rh_stats = load_balance_stats(rh_d)
+
+    times = []
+    for algo in (ring, jch, rh):
+        start = time.perf_counter()
+        for key in keys: algo.get_server(key)
+        elapsed = time.perf_counter() - start
+        times.append(elapsed/num_keys * 1_000_000)
+
+    ring2 = ConsistentHashRing(num_virtual_nodes)
+    for server in servers: ring2.add_node(server)
+    ring2.add_node(f"server-{num_servers}")
+    jch2 = JumpConsistentHash(num_servers+1)
+    rh2 = RendezvousHash(servers+[f"server-{num_servers}"])
+
+    changes = []
+
+    for (before, after) in ((ring,ring2),(jch,jch2),(rh,rh2)):
+        changed = 0
+        for key in keys:
+            if before.get_server(key) != after.get_server(key):
+                changed += 1
+        changes.append(changed/len(keys) * 100)
+
+    consistent_mem = num_servers * num_virtual_nodes * 12
+    jump_mem = 8
+    rendezvous_mem = sum(len(s.encode()) for s in servers)
+
+    fig, axs = plt.subplots(2, 2, figsize=(14, 10))
+    axs : list[list[Axes]]
+    x = ["Consistent Hash Ring", "Jump Consistent Hash", "Rendezvous Hash"]
+    axs[0][0].bar(
+        x,
+        [ring_stats["cv"],jch_stats["cv"],rh_stats["cv"]],
+    )
+    axs[0][0].set_title("Load Balance (CV)")
+
+    axs[0][1].bar(
+        x,
+        times,
+    )
+    axs[0][1].set_title("Lookup Latency (us/lookup)")
+
+    axs[1][0].bar(
+        x,
+        changes
+    )
+    axs[1][0].set_title("Key Migration (% moved)")
+
+    axs[1][1].bar(
+        x,
+        [consistent_mem, jump_mem, rendezvous_mem],
+    )
+    axs[1][1].set_title("Memory Usage (bytes)")
+
+    save_plot(fig,"04_algorithm_comparison.png")
+
+    results = {
+              "consistent": {"cv": ring_stats["cv"], "latency_us": times[0], "migration_pct": changes[0], "memory_bytes": consistent_mem},
+              "jump":       {"cv": jch_stats["cv"], "latency_us": times[1], "migration_pct": changes[1], "memory_bytes": jump_mem},
+              "rendezvous": {"cv": rh_stats["cv"], "latency_us": times[2], "migration_pct": changes[2], "memory_bytes": rendezvous_mem},
+    }
+
+    with open("data/04_comparison_results.json", "w") as fout:
+        fout.write(json.dumps(results))
+
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -465,7 +557,7 @@ def main() -> None:
     | Property          | Consistent     | Jump           | Rendezvous     |
     |                   | (Ring+Vnodes)  | (Lamping 2014) | (HRW 1998)     |
     +-------------------+----------------+----------------+----------------+
-    | Balance           | Good (CV~0.03) | Perfect (CV=0) | Good (CV~0.01) |
+    | Balance           | Good (CV~0.03) | Unbiased 1/N   | Unbiased 1/N   |
     | Lookup time       | O(log M)       | O(ln N)        | O(N)           |
     | Memory            | O(N * V)       | O(1)           | O(N)           |
     | Migration (add)   | ~K/(N+1)       | K/(N+1) exact  | ~K/(N+1)       |
@@ -475,7 +567,7 @@ def main() -> None:
 
     Choose:
       - Consistent hashing: General-purpose, production default (DynamoDB, Cassandra)
-      - Jump: When servers are numbered sequentially, need perfect balance (sharded DBs)
+      - Jump: When servers are numbered sequentially, unbiased balance (sharded DBs)
       - Rendezvous: Small N, simplicity > performance (config routing, DNS)
     """)
 

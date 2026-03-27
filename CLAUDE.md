@@ -121,7 +121,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 050 | CRDTs: Conflict-Free Replicated Data Types | Python | Distributed Systems Patterns | `completed` |
 | 051 | Distributed Coordination: etcd | Python, Docker (etcd) | Distributed Systems Patterns | `not-started` |
 | 052 | Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting | Python, Docker (Redis) | Distributed Systems Patterns | `not-started` |
-| 053 | Consistent Hashing & DHTs | Python | Distributed Systems Patterns | `not-started` |
+| 053 | Consistent Hashing & DHTs | Python | Distributed Systems Patterns | `completed` |
 | 054a | Google ADK: Agents, Tools & Sessions | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 054b | Google ADK: Multi-Agent Orchestration | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 054c | Google ADK: Callbacks, Evaluation & Streaming | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |

@@ -17,11 +17,13 @@ import bisect
 import sys
 from collections import defaultdict
 from pathlib import Path
+from heapq import merge
+import matplotlib.pyplot as plt
 
 # Ensure sibling modules are importable when running as a script
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from hash_utils import (  # noqa: E402
+from _00_hash_utils import (  # noqa: E402
     RING_SIZE,
     hash_to_ring,
     format_ring_pos,
@@ -110,7 +112,12 @@ class ConsistentHashRing:
         #   - self.num_virtual_nodes = num_virtual_nodes
         #
         # The ring starts empty -- nodes are added via add_node().
-        raise NotImplementedError("TODO(human): Implement ConsistentHashRing.__init__")
+
+        self.num_virtual_nodes = num_virtual_nodes
+        self._ring_positions = list[int]()
+        self._position_to_node = dict[int,str]()
+        self._node_positions = dict[str,list[int]]()
+
 
     def add_node(self, node: str) -> None:
         # TODO(human): Add a physical node to the ring.
@@ -133,7 +140,18 @@ class ConsistentHashRing:
         # collision probability is negligible (birthday paradox: ~50% at
         # ~77,000 entries). For production systems, handle this or use
         # 128-bit hashes.
-        raise NotImplementedError("TODO(human): Implement ConsistentHashRing.add_node")
+
+        positions = list[int]()
+
+        for i in range(self.num_virtual_nodes):
+            node_i = f"{node}:{i}"
+            hash_i = hash_to_ring(node_i)
+            positions.append(hash_i)
+            self._position_to_node[hash_i] = node
+
+        positions.sort()
+        self._ring_positions = list(merge(self._ring_positions, positions))
+        self._node_positions[node] = positions
 
     def remove_node(self, node: str) -> None:
         # TODO(human): Remove a physical node and all its virtual nodes from the ring.
@@ -153,7 +171,13 @@ class ConsistentHashRing:
         # automatically be reassigned to the next clockwise node --
         # this is the key migration property. Only keys in the removed
         # node's arcs move; all other assignments stay the same.
-        raise NotImplementedError("TODO(human): Implement ConsistentHashRing.remove_node")
+
+        positions = frozenset(self._node_positions.pop(node,[]))
+
+        self._ring_positions = list(filter(lambda x: x not in positions, self._ring_positions))
+        for x in positions:
+            self._position_to_node.pop(x,None)
+
 
     def get_node(self, key: str) -> str | None:
         # TODO(human): Find which physical node owns the given key.
@@ -167,7 +191,14 @@ class ConsistentHashRing:
         #
         # This is O(log M) where M = total virtual nodes on the ring.
         # For 10 servers with 150 vnodes each, that's log2(1500) ~ 11 comparisons.
-        raise NotImplementedError("TODO(human): Implement ConsistentHashRing.get_node")
+        if len(self._ring_positions) == 0: return None
+
+        pos = hash_to_ring(key)
+        idx = bisect.bisect_right(self._ring_positions,pos)%len(self._ring_positions)
+        return self._position_to_node[self._ring_positions[idx]]
+
+    def get_server(self, key: str) -> str | None:
+        return self.get_node(key)
 
     def get_distribution(self, keys: list[str]) -> dict[str, int]:
         """Count how many keys map to each physical node.
@@ -241,9 +272,25 @@ def visualize_ring(
     # 11. plt.close(fig2)
     #
     # 12. Return ring
-    raise NotImplementedError("TODO(human): Implement visualize_ring")
+
+    ring = ConsistentHashRing(num_virtual_nodes)
+
+    for node in nodes:
+        ring.add_node(node)
+
+    key_assignments = {key: str(ring.get_node(key)) for key in keys}
+    node_positions = ring._node_positions
+    drawed = draw_ring(node_positions, key_assignments, title=f"Visualization of ring {plot_prefix}")
+    save_plot(drawed, f"{plot_prefix}_ring.png")
+    plt.close(drawed)
+
+    distribution = ring.get_distribution(keys)
+    bars = draw_load_bar_chart(distribution, title=f"Load bars {plot_prefix}")
+    save_plot(bars,f"{plot_prefix}_load_distribution.png")
+    plt.close(bars)
 
 
+    return ring
 # ---------------------------------------------------------------------------
 # Experiment: Effect of virtual node count on balance
 # ---------------------------------------------------------------------------

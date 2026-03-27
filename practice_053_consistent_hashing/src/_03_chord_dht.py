@@ -41,10 +41,10 @@ from hash_utils import save_plot, ensure_dirs, DATA_DIR  # noqa: E402
 # ---------------------------------------------------------------------------
 
 # Use a small m for visualization/debugging. Real Chord uses m=160 (SHA-1).
-# With m=8, the ring has 256 positions -- enough for educational purposes
-# with up to ~20 nodes, while keeping finger tables small and debuggable.
-M = 8
-RING_MOD = 2**M  # 256
+# With m=16, the ring has 65536 positions -- large enough to avoid hash
+# collisions in tests while keeping finger tables manageable.
+M = 16
+RING_MOD = 2**M  # 65536
 
 
 def chord_hash(name: str) -> int:
@@ -140,7 +140,10 @@ class ChordNode:
         #
         # In a real Chord implementation, the finger table starts as all-None
         # and is populated during the join protocol and stabilization.
-        raise NotImplementedError("TODO(human): Implement ChordNode.__init__")
+        self.id = node_id
+        self.finger: list[None | ChordNode] = [None] * M
+        self.predecessor: None | ChordNode = None
+        self.data : dict[int,str]= {}
 
     @property
     def successor(self) -> ChordNode | None:
@@ -193,7 +196,21 @@ class ChordNode:
         # NOTE: This recursive implementation mirrors the paper. In production,
         # each recursive call would be an RPC to a different machine. The
         # number of RPCs = number of hops = O(log N).
-        raise NotImplementedError("TODO(human): Implement ChordNode.find_successor")
+        assert self.successor is not None
+
+        if in_interval(key_id,self.id, self.successor.id):
+            return self.successor
+
+        for i in range(M-1,-1,-1):
+            finger_i = self.finger[i]
+
+            if finger_i is None: continue
+
+            if in_interval(finger_i.id, self.id,key_id, False, False ):
+                return finger_i.find_successor(key_id)
+
+        return self.successor
+
 
     def join(self, existing_node: ChordNode | None) -> None:
         # TODO(human): Join the Chord ring via an existing node.
@@ -218,7 +235,16 @@ class ChordNode:
         # concurrent joins: stabilize() will eventually fix any
         # inconsistencies. The only requirement is that finger[0]
         # (successor) is correct after join.
-        raise NotImplementedError("TODO(human): Implement ChordNode.join")
+
+        if existing_node is None:
+            self.predecessor = self
+            self.finger = [self] * M
+            return
+
+        self.predecessor = None
+        self.finger = [None] * M
+        self.successor = existing_node.find_successor(self.id)
+
 
     def stabilize(self) -> None:
         # TODO(human): Periodic stabilization protocol.
@@ -248,7 +274,14 @@ class ChordNode:
         #   X sets its successor to B. When A stabilizes, it asks B for B's
         #   predecessor, which B will eventually report as X. A then updates
         #   its successor to X. Now A -> X -> B is correct.
-        raise NotImplementedError("TODO(human): Implement ChordNode.stabilize")
+
+        assert self.successor is not None
+        x = self.successor.predecessor
+
+        if x is not None and in_interval(x.id,self.id,self.successor.id,False,False):
+            self.successor = x
+
+        self.successor.notify(self)
 
     def notify(self, candidate: ChordNode) -> None:
         # TODO(human): Notification from a node that thinks it might be our predecessor.
@@ -267,7 +300,9 @@ class ChordNode:
         #   stabilize() fixes successor pointers (forward links).
         #   notify() fixes predecessor pointers (backward links).
         #   Together, they maintain the bidirectional ring invariant.
-        raise NotImplementedError("TODO(human): Implement ChordNode.notify")
+
+        if self.predecessor is None or in_interval(candidate.id, self.predecessor.id, self.id, False, False):
+            self.predecessor = candidate
 
     def fix_fingers(self) -> None:
         # TODO(human): Recompute all finger table entries.
@@ -294,7 +329,10 @@ class ChordNode:
         #   to fixing all fingers at once. In a real distributed system,
         #   each fix requires an RPC (find_successor), so spreading them
         #   out reduces per-round network traffic.
-        raise NotImplementedError("TODO(human): Implement ChordNode.fix_fingers")
+
+       for i in range(1, M):
+           target = (self.id + 2**i) % RING_MOD
+           self.finger[i] = self.find_successor(target)
 
     def store(self, key_id: int, value: str) -> ChordNode:
         """Store a key-value pair in the DHT.

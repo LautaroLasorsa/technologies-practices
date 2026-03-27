@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-16%20%2F%20129%20practices-blue?style=flat-square" alt="Progress: 16/129">
+  <img src="https://img.shields.io/badge/Progress-17%20%2F%20129%20practices-blue?style=flat-square" alt="Progress: 17/129">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -367,10 +367,10 @@ python clean_all.py
   <td>—</td>
 </tr>
 <tr>
-  <td>053</td>
-  <td>Consistent Hashing & DHTs</td>
+  <td><b>053</b></td>
+  <td><b>Consistent Hashing & DHTs</b></td>
   <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>078</td>

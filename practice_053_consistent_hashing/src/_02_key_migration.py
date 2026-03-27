@@ -110,8 +110,29 @@ def measure_key_migration(
     #   Add one node, record assignments again. Count differences.
     #
     # Return the result dict described above.
-    raise NotImplementedError("TODO(human): Implement measure_key_migration")
+    result = dict[str, int|float]()
 
+    naive_before = [hash_to_ring(key)%num_servers for key in keys]
+    naive_after = [hash_to_ring(key)%(num_servers+1) for key in keys]
+
+    result["naive_moved"] = sum([int(b != a) for b,a in zip(naive_before,naive_after)])
+    result["naive_fraction"] = result["naive_moved"] / len(keys)
+
+    ring = ConsistentHashRing(num_virtual_nodes)
+    for i in range(num_servers):
+        ring.add_node(f"node{i+1}")
+
+    ring_before = [ring.get_node(key) for key in keys]
+    ring.add_node(f"node{num_servers+1}")
+    ring_after = [ring.get_node(key) for key in keys]
+
+    result["consistent_moved"] = sum([int(b != a) for b,a in zip(ring_before,ring_after)])
+    result["consistent_fraction"] = result["consistent_moved"] / len(keys)
+    result["num_keys"] = len(keys)
+    result["num_servers_before"] = num_servers
+    result["num_servers_after"] = num_servers + 1
+
+    return result
 
 # ---------------------------------------------------------------------------
 # Multi-scenario migration comparison
@@ -173,8 +194,55 @@ def compare_naive_vs_consistent(
     #   ax.bar(x - 0.5*width, naive_theory, width, label="Naive (theoretical)")
     #   ax.bar(x + 0.5*width, consistent_measured, width, label="Consistent (measured)")
     #   ax.bar(x + 1.5*width, consistent_theory, width, label="Consistent (theoretical)")
-    raise NotImplementedError("TODO(human): Implement compare_naive_vs_consistent")
+    from prettytable import PrettyTable
 
+    server_counts = server_counts or [3, 5, 10, 15, 20, 30, 50]
+
+    table = PrettyTable(["N","Naive Moved%", "Consistent Moved%", "Naive Theory", "Consistent Theory"])
+    results = [measure_key_migration(n,keys,num_virtual_nodes) for n in server_counts]
+
+    naive_measured = [ result["naive_fraction"] for result in results]
+    naive_theory = [ (n/(n+1)) for n in server_counts]
+    consistent_measured = [result["consistent_fraction"] for result in results]
+    consistent_theory = [(1/(n+1)) for n in server_counts]
+
+    for n,naive_m, naive_t,  consistent_m, consistent_t in zip(server_counts, naive_measured,naive_theory, consistent_measured, consistent_theory):
+        table.add_row([
+            n,
+            naive_m * 100,
+            consistent_m * 100,
+            naive_t * 100,
+            consistent_t * 100
+        ])
+
+    print(table)
+
+    fig = plt.figure(1)
+    ax = plt.axes()
+    x = np.arange(len(server_counts))
+    width = 0.2
+    ax.bar(x - 1.5*width, naive_measured, width, label="Naive (measured)")
+    ax.bar(x - 0.5*width, naive_theory, width, label="Naive (theoretical)")
+    ax.bar(x + 0.5*width, consistent_measured, width, label="Consistent (measured)")
+    ax.bar(x + 1.5*width, consistent_theory, width, label="Consistent (theoretical)")
+
+    ax.set_xlabel("Number of servers")
+    ax.set_ylabel("Movement proportion")
+
+    ax.set_xticks(range(len(server_counts)))
+    ax.set_xticklabels(map(str,server_counts))
+
+    fig.legend()
+
+    save_plot(fig, "02_migration_comparison.png")
+
+    with open("data/02_migration_results.json", "w") as fout:
+        json.dump(
+            results,
+            fout
+        )
+
+    return results
 
 # ---------------------------------------------------------------------------
 # Experiment: Migration when removing a node
