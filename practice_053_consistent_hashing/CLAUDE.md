@@ -198,13 +198,13 @@ Implement and compare the three major consistent hashing algorithms, then build 
 
 ### Exercise 1: Consistent Hash Ring with Virtual Nodes (~25 min)
 
-**File:** `src/01_consistent_hash_ring.py`
+**File:** `src/_01_consistent_hash_ring.py`
 
 Build a consistent hash ring from scratch. You will implement the core data structure that maps keys to servers using a sorted ring of virtual node positions with O(log N) binary-search lookup.
 
 **What it teaches:** The ring abstraction is the foundation of consistent hashing. By implementing add/remove/lookup, you internalize why sorted positions + binary search gives efficient clockwise traversal, why virtual nodes improve balance, and how the ring structure naturally minimizes key migration. The visualization makes the abstract ring concrete.
 
-1. First, run `src/00_hash_utils.py` to verify the hash utilities work.
+1. First, run `src/_00_hash_utils.py` to verify the hash utilities work.
 2. Implement `ConsistentHashRing.__init__` and `add_node` -- the ring data structure using `bisect` for O(log N) lookup. Each physical node maps to `num_virtual_nodes` positions on the ring.
 3. Implement `ConsistentHashRing.get_node` -- clockwise lookup via `bisect_right` with wrap-around.
 4. Implement `ConsistentHashRing.remove_node` -- clean removal of all virtual node positions for a physical node.
@@ -213,7 +213,7 @@ Build a consistent hash ring from scratch. You will implement the core data stru
 
 ### Exercise 2: Key Migration Analysis (~20 min)
 
-**File:** `src/02_key_migration.py`
+**File:** `src/_02_key_migration.py`
 
 Quantify the key migration cost of adding/removing servers under consistent hashing vs naive modulo hashing. This is the core value proposition of consistent hashing made measurable.
 
@@ -225,7 +225,7 @@ Quantify the key migration cost of adding/removing servers under consistent hash
 
 ### Exercise 3: Chord DHT with Finger Tables (~30 min)
 
-**File:** `src/03_chord_dht.py`
+**File:** `src/_03_chord_dht.py`
 
 Implement a simplified Chord DHT to understand how distributed hash tables achieve O(log N) lookup using finger tables. This is the most algorithmically rich exercise.
 
@@ -239,7 +239,7 @@ Implement a simplified Chord DHT to understand how distributed hash tables achie
 
 ### Exercise 4: Algorithm Comparison (~15 min)
 
-**File:** `src/04_comparison.py`
+**File:** `src/_04_comparison.py`
 
 Implement jump consistent hashing and rendezvous hashing, then benchmark all three approaches head-to-head on load balance, lookup speed, key migration, and memory usage.
 
@@ -264,11 +264,11 @@ Consistent hashing is a fundamental building block of distributed systems -- it 
 | Command | Description |
 |---------|-------------|
 | `uv sync` | Install dependencies (matplotlib, numpy) |
-| `uv run python src/00_hash_utils.py` | Run hash utility self-tests |
-| `uv run python src/01_consistent_hash_ring.py` | Run consistent hash ring implementation |
-| `uv run python src/02_key_migration.py` | Run key migration analysis and generate comparison plots |
-| `uv run python src/03_chord_dht.py` | Run Chord DHT implementation and verify O(log N) lookup |
-| `uv run python src/04_comparison.py` | Run full comparison of all three hashing algorithms |
+| `uv run python src/_00_hash_utils.py` | Run hash utility self-tests |
+| `uv run python src/_01_consistent_hash_ring.py` | Run consistent hash ring implementation |
+| `uv run python src/_02_key_migration.py` | Run key migration analysis and generate comparison plots |
+| `uv run python src/_03_chord_dht.py` | Run Chord DHT implementation and verify O(log N) lookup |
+| `uv run python src/_04_comparison.py` | Run full comparison of all three hashing algorithms |
 
 ## State
 

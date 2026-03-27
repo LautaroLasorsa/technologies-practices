@@ -12,7 +12,7 @@ Implement jump consistent hashing (Lamping & Veach, 2014) and rendezvous hashing
 
 This exercise crystallizes WHEN to use each algorithm in practice:
   - Consistent hashing (ring + vnodes): General-purpose, any topology change.
-  - Jump consistent hash: Fastest, perfectly balanced, but sequential-only changes.
+  - Jump consistent hash: Fastest, balanced in expectation, but sequential-only changes.
   - Rendezvous hashing: Simplest, no data structure, but O(N) per lookup.
 """
 from __future__ import annotations
@@ -71,7 +71,7 @@ from consistent_hash_ring import ConsistentHashRing  # noqa: E402
 #   O(ln N) expected iterations instead of O(N).
 #
 # Properties:
-#   - PERFECTLY balanced: each bucket gets exactly 1/N of keys (no variance)
+#   - Balanced in expectation: each bucket has probability exactly 1/N (CV->0 as K->inf)
 #   - O(ln N) time, O(1) space (no ring, no sorted array)
 #   - Minimal disruption: going from N to N+1 buckets moves exactly 1/(N+1) keys
 #   - Limitation: only supports adding/removing the LAST bucket (N-1 -> N or N -> N-1)
@@ -151,7 +151,7 @@ class JumpConsistentHash:
 # That's the entire algorithm. No ring, no sorted array, no finger table.
 #
 # Properties:
-#   - Perfectly balanced (with a good hash function)
+#   - Balanced in expectation (each server has probability 1/N; CV->0 as K->inf)
 #   - Minimal disruption: when adding/removing a server, only O(K/N) keys move.
 #     A key only moves if the new server has a higher hash than the current winner.
 #   - Supports ARBITRARY topology changes: any server can be added or removed.
@@ -465,7 +465,7 @@ def main() -> None:
     | Property          | Consistent     | Jump           | Rendezvous     |
     |                   | (Ring+Vnodes)  | (Lamping 2014) | (HRW 1998)     |
     +-------------------+----------------+----------------+----------------+
-    | Balance           | Good (CV~0.03) | Perfect (CV=0) | Good (CV~0.01) |
+    | Balance           | Good (CV~0.03) | Unbiased 1/N   | Unbiased 1/N   |
     | Lookup time       | O(log M)       | O(ln N)        | O(N)           |
     | Memory            | O(N * V)       | O(1)           | O(N)           |
     | Migration (add)   | ~K/(N+1)       | K/(N+1) exact  | ~K/(N+1)       |
@@ -475,7 +475,7 @@ def main() -> None:
 
     Choose:
       - Consistent hashing: General-purpose, production default (DynamoDB, Cassandra)
-      - Jump: When servers are numbered sequentially, need perfect balance (sharded DBs)
+      - Jump: When servers are numbered sequentially, unbiased balance (sharded DBs)
       - Rendezvous: Small N, simplicity > performance (config routing, DNS)
     """)
 

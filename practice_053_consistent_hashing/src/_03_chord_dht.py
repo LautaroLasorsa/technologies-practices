@@ -41,10 +41,10 @@ from hash_utils import save_plot, ensure_dirs, DATA_DIR  # noqa: E402
 # ---------------------------------------------------------------------------
 
 # Use a small m for visualization/debugging. Real Chord uses m=160 (SHA-1).
-# With m=8, the ring has 256 positions -- enough for educational purposes
-# with up to ~20 nodes, while keeping finger tables small and debuggable.
-M = 8
-RING_MOD = 2**M  # 256
+# With m=16, the ring has 65536 positions -- large enough to avoid hash collisions
+# in tests while keeping finger tables manageable.
+M = 16
+RING_MOD = 2**M  # 65536
 
 
 def chord_hash(name: str) -> int:
