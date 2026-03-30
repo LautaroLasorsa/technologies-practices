@@ -75,4 +75,19 @@
 -- rather than evenly distributed. In practice, this is rare enough that
 -- the approximation is excellent for rate limiting purposes.
 
-return {0, "0"}
+local max_requests = tonumber(ARGV[1])
+local window_seconds = tonumber(ARGV[2])
+local elapsed_fraction = tonumber(ARGV[3])
+
+local prev_count = tonumber(redis.call('GET', KEYS[2])) or 0
+local curr_count = tonumber(redis.call('GET', KEYS[1])) or 0
+
+local estimated = prev_count * (1 - elapsed_fraction) + curr_count
+
+if estimated < max_requests then
+    redis.call('INCR', KEYS[1])
+    redis.call('EXPIRE', KEYS[1], window_seconds * 2)
+    return { 1, tostring(estimated + 1) }
+else
+    return { 0, tostring(estimated) }
+end

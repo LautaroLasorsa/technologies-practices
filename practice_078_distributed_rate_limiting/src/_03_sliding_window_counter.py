@@ -10,7 +10,7 @@ The weighted formula:
 Where elapsed_fraction is how far we are into the current window (0.0 to 1.0).
 
 Run (requires Redis from docker-compose):
-    uv run python src/03_sliding_window_counter.py
+    uv run python src/_03_sliding_window_counter.py
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ import redis.asyncio as aioredis
 from src.common import (
     REDIS_URL,
     RateLimiter,
+    call_script,
     create_redis_client,
     load_lua_script,
     print_header,
@@ -143,7 +144,20 @@ class SlidingWindowCounterRateLimiter(RateLimiter):
         # DEBUGGING TIP: Print the estimated count to see the weighted
         # formula in action. You should see the previous window's
         # contribution decrease as elapsed_fraction increases.
-        raise NotImplementedError("TODO(human): implement sliding window counter allow()")
+
+        await self._ensure_script()
+        current_key, prev_key, elapsed_fraction = self._window_keys(key)
+
+        result = await call_script(
+            self._script,
+            keys = [current_key, prev_key],
+            args = [self.max_requests, self.window_seconds, elapsed_fraction]
+        )
+
+        allowed = bool( result[0] == 1 )
+        self.metrics.record(allowed)
+
+        return allowed
 
     async def close(self) -> None:
         """Close the Redis connection."""
@@ -217,9 +231,38 @@ async def demo_sliding_window_counter() -> None:
     #
     # 6. CLEANUP:
     #    await limiter.close()
-    raise NotImplementedError("TODO(human): implement demo_sliding_window_counter()")
 
+    client = await create_redis_client()
 
+    limiter = SlidingWindowCounterRateLimiter(
+        name = "sw_counter_demo",
+        redis_client = client,
+        max_requests= 10,
+        window_seconds= 5,
+        key_prefix="ratelimit:demo:swcounter"
+    )
+
+    await client.flushdb()
+
+    print("\n--- Phase A: Fill window, then watch weight decay ---")
+    for _ in range(8):
+        await limiter.allow("demo-user")
+        await asyncio.sleep(0.05)
+    print("  Sent 8 requests. Waiting for window rollover...")
+    await asyncio.sleep(5.0)
+
+    for _ in range(8):
+        _, prev_key, elapsed_frac = limiter._window_keys("demo-user")
+        prev_count_raw = await client.get(prev_key)
+        prev_count = int(prev_count_raw) if prev_count_raw else 0
+        weight = 1 - elapsed_frac
+        weighted = prev_count * weight
+        allowed = await limiter.allow("demo-user")
+        print(f"  t+{elapsed_frac*5:.1f}s: prev_weight={weight:.2f} weighted_prev={weighted:.1f} allowed={allowed}")
+        await asyncio.sleep(0.6)
+
+    print_metrics(limiter)
+    await limiter.close()
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------

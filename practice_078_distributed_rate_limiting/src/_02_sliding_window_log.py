@@ -10,7 +10,7 @@ sequence requires branching on an intermediate result (the count after
 pruning), which Redis MULTI/EXEC cannot do.
 
 Run (requires Redis from docker-compose):
-    uv run python src/02_sliding_window_log.py
+    uv run python src/_02_sliding_window_log.py
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ from src.common import (
     load_lua_script,
     print_header,
     print_metrics,
+    call_script
 )
 
 
@@ -133,7 +134,19 @@ class SlidingWindowLogRateLimiter(RateLimiter):
         # approach (each entry represents exactly one request). If you
         # needed weighted requests, you'd either add multiple entries
         # or switch to the token bucket algorithm.
-        raise NotImplementedError("TODO(human): implement sliding window log allow()")
+        await self._ensure_script()
+        redis_key = f"{self.key_prefix}:{key}"
+        now = time.time()
+        member = self._make_member(now)
+        result = await call_script(
+            self._script,
+            keys = [redis_key],
+            args=[self.max_requests, self.window_seconds, now, member]
+        )
+        allowed = bool(result[0] == 1)
+        self.metrics.record(allowed)
+        return allowed
+
 
     async def close(self) -> None:
         """Close the Redis connection."""
@@ -216,9 +229,61 @@ async def demo_sliding_window_log() -> None:
     # 7. CLEANUP:
     #    print_metrics(limiter)
     #    await limiter.close()
-    raise NotImplementedError("TODO(human): implement demo_sliding_window_log()")
 
+    client = await create_redis_client()
+    print("Connected to Redis")
 
+    limiter = SlidingWindowLogRateLimiter(
+        name = "fixed_window_demo",
+        redis_client = client,
+        max_requests = 10,
+        window_seconds = 5,
+        key_prefix = "ratelimit:demo:slidinglog"
+    )
+
+    await client.flushdb()
+
+    print("\n--- Phase A: Steady traffic (10 requests in 5s window) ---")
+    for i in range(12):
+        allowed = await limiter.allow("demo-user")
+        status = "PASS" if allowed else "REJECT"
+        print(f" Request {i+1:2d}: {status}")
+        await asyncio.sleep(0.1)
+
+    print("\n--- Phase B: Boundary spike (burst at window edge) ---")
+    limiter = SlidingWindowLogRateLimiter(
+        name = "fixed_window_demo",
+        redis_client = client,
+        max_requests = 10,
+        window_seconds = 5,
+        key_prefix = "ratelimit:demo:slidinglog"
+    )
+    now = time.time()
+    window_end = (int(now)//5+1) * 5
+    wait_time = window_end - now - 0.5
+    if wait_time>0:
+        print(f"  Waiting {wait_time:.1f}s until window boundary...")
+        await asyncio.sleep(wait_time)
+
+    print("  Sending 10 requests just before window boundary...")
+    for i in range(10):
+        allowed = await limiter.allow("burst-user")
+        await asyncio.sleep(0.02)
+
+    await asyncio.sleep(1.0)
+
+    print("  Sending 10 requests just after window boundary...")
+    for i in range(10):
+        allowed = await limiter.allow("burst-user")
+        await asyncio.sleep(0.02)
+    print(( f"\n  Boundary spike result: {limiter.metrics.allowed_requests} "
+            "requests allowed in ~1.5 seconds (limit is 10 per 5s)"))
+    print("  No boundary spike -- sliding window is perfectly accurate!")
+
+    key = "ratelimit:demo:slidinglog:burst-user"
+    count = await client.zcard(key)
+    print(f"\n  Sorted set members for burst-user: {count}")
+    print("  (Each request = 1 member. At scale, this adds up!)")
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------

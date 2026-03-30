@@ -18,4 +18,4 @@ COPY lua/ lua/
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "src.06_fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "src._06_fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]

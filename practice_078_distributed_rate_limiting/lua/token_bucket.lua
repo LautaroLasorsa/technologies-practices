@@ -87,4 +87,34 @@
 -- hash values are strings). Use tonumber() when reading them back.
 -- Lua's math.min() and math.max() work on numbers, not strings.
 
-return {0, "0"}
+local capacity = tonumber(ARGV[1])
+local refill_rate = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+local cost = tonumber(ARGV[4])
+
+local tokens = tonumber(redis.call('HGET', KEYS[1], 'tokens'))
+local last_refill = tonumber(redis.call('HGET', KEYS[1], 'last_refill'))
+
+if tokens == nil then
+    tokens = capacity
+    last_refill = now
+end
+
+local elapsed = math.max(0, now - last_refill)
+tokens = math.min(capacity, tokens + elapsed * refill_rate)
+last_refill = now
+
+local allowed = 0
+
+if tokens >= cost then
+    tokens = tokens - cost
+    allowed = 1
+end
+
+redis.call("HSET", KEYS[1], "tokens", tostring(tokens))
+redis.call("HSET", KEYS[1], "last_refill", tostring(last_refill))
+
+local ttl = math.ceil(capacity / refill_rate) * 2
+redis.call('EXPIRE', KEYS[1], ttl)
+
+return { allowed, tostring(tokens) }

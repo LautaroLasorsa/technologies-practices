@@ -9,7 +9,7 @@ returns HTTP 429 Too Many Requests with proper headers when the limit
 is exceeded.
 
 Run locally (single replica):
-    uv run uvicorn src.06_fastapi_app:app --host 0.0.0.0 --port 8000
+    uv run uvicorn src._06_fastapi_app:app --host 0.0.0.0 --port 8000
 
 Run via Docker Compose (3 replicas behind Nginx):
     docker compose up --build -d
@@ -26,7 +26,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from src.common import load_lua_script
+from src.common import call_script, load_lua_script
 
 
 # ---------------------------------------------------------------------------
@@ -181,8 +181,52 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # systems (banking APIs) fail-closed.
 
         # Placeholder -- passes all requests through without rate limiting
-        return await call_next(request)
 
+        if request.url.path == '/health':
+            return await call_next(request)
+
+        client_id = request.headers.get("x-api-key") or request.client.host
+        redis_key = f"ratelimit:api:tokenbucket:{client_id}"
+        now = time.time()
+
+        try:
+            result = await call_script(
+                state.token_bucket_script,
+                keys = [redis_key],
+                args=[
+                    RATE_LIMIT_CAPACITY,
+                    RATE_LIMIT_REFILL_RATE,
+                    now,
+                    1
+                ]
+            )
+            allowed = (result[0]==1)
+            tokens_remaining = float(result[1])
+
+        except Exception as exec:
+            print(f"[{state.replica_id}] Redis error: {exec}. Failing open.")
+            return await call_next(request)
+
+        if not allowed:
+            retry_after = max(1.0, (1-tokens_remaining)/ RATE_LIMIT_REFILL_RATE)
+            return JSONResponse(
+                status_code = 429,
+                content = {
+                    "error": "rate_limit_exceeded",
+                    "message": f"Rate limit exceeded for client {client_id}",
+                    "retry_after": round(retry_after,2)
+                },
+                headers={
+                    "X-RateLimit-Limit": str(RATE_LIMIT_CAPACITY),
+                    "X-RateLimit-Remaining": "0",
+                    "Retry-After": str(int(retry_after))
+                }
+            )
+
+        response = await call_next(request)
+        response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_CAPACITY)
+        response.headers["X-RateLimit-Remaining"] = str(int(tokens_remaining))
+        return response
 
 # ---------------------------------------------------------------------------
 # FastAPI Application

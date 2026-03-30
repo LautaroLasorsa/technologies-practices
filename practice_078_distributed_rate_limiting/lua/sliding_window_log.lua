@@ -72,4 +72,22 @@
 -- HINT: The member must be unique per request. The Python side generates
 -- it (e.g., f"{timestamp}:{process_id}:{counter}"). You just use ARGV[4].
 
-return {0, 0}
+local max_requests = tonumber(ARGV[1])
+local window_seconds = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+local member = ARGV[4]
+
+local window_start = now - window_seconds
+redis.call("ZREMRANGEBYSCORE", KEYS[1], "-inf", tostring(window_start))
+
+local current_count = redis.call('ZCARD', KEYS[1])
+
+
+if current_count < max_requests then
+    redis.call('ZADD', KEYS[1], now, member)
+    redis.call('EXPIRE', KEYS[1], math.ceil(window_seconds) + 1)
+    return { 1, current_count + 1 }
+else
+    redis.call('EXPIRE', KEYS[1], math.ceil(window_seconds) + 1)
+    return { 0, current_count }
+end

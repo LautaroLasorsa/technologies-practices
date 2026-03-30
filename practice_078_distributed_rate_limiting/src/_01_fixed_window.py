@@ -9,7 +9,7 @@ The Redis key includes the window timestamp, so each window gets its own
 key that auto-expires via TTL.
 
 Run (requires Redis from docker-compose):
-    uv run python src/01_fixed_window.py
+    uv run python src/_01_fixed_window.py
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from src.common import (
     load_lua_script,
     print_header,
     print_metrics,
+    call_script
 )
 
 
@@ -124,7 +125,17 @@ class FixedWindowRateLimiter(RateLimiter):
         #
         # HINT: The Lua script returns integers. In Python, Redis returns
         # these as `int` type, so `result[0] == 1` works directly.
-        raise NotImplementedError("TODO(human): implement fixed window allow()")
+
+        await self._ensure_script()
+        redis_key = self._window_key(key)
+        result = await call_script(
+            self._script,
+            keys = [redis_key],
+            args=[self.max_requests, self.window_seconds]
+        )
+        allowed = bool(result[0] == 1)
+        self.metrics.record(allowed)
+        return allowed
 
     async def close(self) -> None:
         """Close the Redis connection."""
@@ -219,9 +230,56 @@ async def demo_fixed_window() -> None:
     #
     # 7. CLEANUP:
     #    await limiter.close()
-    raise NotImplementedError("TODO(human): implement demo_fixed_window()")
+    client = await create_redis_client()
+    print("Connected to Redis")
 
+    limiter = FixedWindowRateLimiter(
+        name = "fixed_window_demo",
+        redis_client = client,
+        max_requests = 10,
+        window_seconds = 5,
+        key_prefix = "ratelimit:demo:fixedwindow"
+    )
 
+    await client.flushdb()
+
+    print("\n--- Phase A: Steady traffic (10 requests in 5s window) ---")
+    for i in range(12):
+        allowed = await limiter.allow("demo-user")
+        status = "PASS" if allowed else "REJECT"
+        print(f" Request {i+1:2d}: {status}")
+        await asyncio.sleep(0.1)
+
+    print("\n--- Phase B: Boundary spike (burst at window edge) ---")
+    limiter = FixedWindowRateLimiter(
+        name = "fixed_window_demo",
+        redis_client = client,
+        max_requests = 10,
+        window_seconds = 5,
+        key_prefix = "ratelimit:demo:fixedwindow"
+    )
+    now = time.time()
+    window_end = (int(now)//5+1) * 5
+    wait_time = window_end - now - 0.5
+    if wait_time>0:
+        print(f"  Waiting {wait_time:.1f}s until window boundary...")
+        await asyncio.sleep(wait_time)
+
+    print("  Sending 10 requests just before window boundary...")
+    for i in range(10):
+        allowed = await limiter.allow("spike-user")
+        await asyncio.sleep(0.02)
+
+    await asyncio.sleep(1.0)
+
+    print("  Sending 10 requests just after window boundary...")
+    for i in range(10):
+        allowed = await limiter.allow("spike-user")
+        await asyncio.sleep(0.02)
+    print(( f"\n  Boundary spike result: {limiter.metrics.allowed_requests} "
+          "requests allowed in ~1.5 seconds (limit is 10 per 5s)"))
+
+    print("  This is the boundary spike problem!")
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------

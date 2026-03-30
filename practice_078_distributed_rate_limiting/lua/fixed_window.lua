@@ -61,4 +61,17 @@
 -- (the Python side appends it), so you don't need to calculate windows
 -- inside Lua. Each window gets its own key that auto-expires.
 
-return {0, 0}
+local max_requests = tonumber(ARGV[1])
+local window_seconds = tonumber(ARGV[2])
+
+local current = redis.call("INCR", KEYS[1])
+
+if current == 1 then
+    redis.call('EXPIRE', KEYS[1], window_seconds)
+end
+
+if current <= max_requests then
+    return { 1, current }
+else
+    return { 0, current }
+end
