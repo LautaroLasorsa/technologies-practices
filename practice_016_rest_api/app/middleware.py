@@ -84,13 +84,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app):
         super().__init__(app)
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # Initialize per-IP tracking data structure here. Store count and window
-        # start time for each client IP. This in-memory approach works for learning
-        # but production systems use Redis with TTL keys for distributed rate limiting.
-        # ──────────────────────────────────────────────────────────────────────
-        # TODO(human): initialize the per-IP tracking dict here
-        pass
+        # Per-IP state: {ip: {"count": int, "window_start": float}}
+        self.clients: dict[str, dict] = {}
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # ── Exercise Context ──────────────────────────────────────────────────

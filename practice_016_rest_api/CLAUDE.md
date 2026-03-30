@@ -48,7 +48,7 @@ The API manages two resources — **books** and **authors** — with a one-to-ma
 ### What you'll learn
 
 1. **Resource naming** — plural nouns, hierarchical paths, no verbs in URLs
-2. **HTTP method semantics** — GET/POST/PUT/PATCH/DELETE with correct status codes (200, 201, 204, 400, 404, 409, 422, 429)
+2. **HTTP method semantics** — GET/POST/PUT/PATCH/DELETE with correct status codes (200, 201, 204, 400, 404, 409, 422, 429), including PUT vs PATCH distinction
 3. **Structured error responses** — RFC 9457 Problem Details format (`type`, `title`, `status`, `detail`, `instance`)
 4. **Pagination** — offset-based with `limit`/`offset` query params and navigation links
 5. **Filtering & sorting** — query parameter patterns for collection endpoints
@@ -75,16 +75,56 @@ The API manages two resources — **books** and **authors** — with a one-to-ma
 3. **User implements:** `POST /v1/books` — create a book, return `201` with `Location` header
 4. **User implements:** `GET /v1/books/{book_id}` — return a single book or `404`
 5. **User implements:** `PUT /v1/books/{book_id}` — full replace, return `200` or `404`
-6. **User implements:** `DELETE /v1/books/{book_id}` — return `204` or `404`
-7. Key question: Why return `201 Created` (not `200 OK`) for POST? Why `204 No Content` for DELETE?
+6. **User implements:** `PATCH /v1/books/{book_id}` — partial update using `exclude_unset=True`, return `200` or `404`
+7. **User implements:** `DELETE /v1/books/{book_id}` — return `204` or `404`
+8. Key question: Why return `201 Created` (not `200 OK`) for POST? Why `204 No Content` for DELETE?
+9. Key question: What is the difference between PUT and PATCH? Why does `exclude_unset=True` matter?
+
+**Test after each endpoint** (server must be running with `uv run uvicorn app.main:app --reload`):
+```bash
+# After step 2 — list books (should return seed data, 9 books)
+curl http://localhost:8000/v1/books
+
+# After step 3 — create a book (expect 201 + Location header)
+# -v shows headers — check for "Location: /v1/books/book_..."
+curl -v -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -d "{\"title\":\"Test Book\",\"author_id\":\"auth_marquez1\",\"genre\":\"Fiction\",\"year\":2020}"
+
+# After step 4 — get single book (use an id from the POST response or list)
+curl http://localhost:8000/v1/books/{book_id}
+# Also test 404:
+curl http://localhost:8000/v1/books/nonexistent
+
+# After step 5 — full replace (expect 200, all fields updated)
+curl -X PUT http://localhost:8000/v1/books/{book_id} -H "Content-Type: application/json" -d "{\"title\":\"Replaced\",\"author_id\":\"auth_marquez1\",\"genre\":\"Drama\",\"year\":2025}"
+
+# After step 6 — partial update (expect 200, only year changes)
+curl -X PATCH http://localhost:8000/v1/books/{book_id} -H "Content-Type: application/json" -d "{\"year\":1999}"
+
+# After step 7 — delete (expect 204 empty body, then 404 on re-fetch)
+curl -v -X DELETE http://localhost:8000/v1/books/{book_id}
+curl http://localhost:8000/v1/books/{book_id}
+```
 
 ### Phase 3: Error Handling — RFC 9457 (~15 min)
 
 1. Open `app/errors.py` — read the `ProblemDetail` model and exception handler scaffold
 2. **User implements:** `raise_problem` helper that raises an `HTTPException` with RFC 9457 body
 3. **User implements:** Wire the exception handler into `app/main.py`
-4. Test: `GET /v1/books/nonexistent-id` should return a structured JSON error, not a plain string
-5. Key question: Why include a `type` URI in errors? What benefit does it give API consumers?
+4. Key question: Why include a `type` URI in errors? What benefit does it give API consumers?
+
+**Test after wiring the handler:**
+```bash
+# Should return application/problem+json with type, title, status, detail, instance
+curl -v http://localhost:8000/v1/books/nonexistent-id
+# Check: Content-Type header should be "application/problem+json"
+# Check: body has "type", "title", "status", "detail", "instance" fields
+
+# Also test a validation error (missing required field — expect 422 in RFC 9457 format)
+curl -v -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -d "{\"title\":\"No Author\"}"
+
+# Test author-not-found from POST (expect 404 in RFC 9457 format)
+curl -v -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -d "{\"title\":\"Ghost\",\"author_id\":\"auth_fake\",\"genre\":\"Fiction\",\"year\":2020}"
+```
 
 ### Phase 4: Pagination & Filtering (~20 min)
 
@@ -95,12 +135,49 @@ The API manages two resources — **books** and **authors** — with a one-to-ma
 5. **User implements:** Sorting by `title` or `year` with `sort_by` and `order` params
 6. Key question: Why is offset pagination simpler but worse for large datasets than cursor pagination?
 
+**Test after implementing:**
+```bash
+# Pagination — first page of 3
+curl "http://localhost:8000/v1/books?limit=3&offset=0"
+# Check: _pagination.total == 9, _pagination.next is a URL, _pagination.prev is null
+
+# Pagination — second page
+curl "http://localhost:8000/v1/books?limit=3&offset=3"
+# Check: _pagination.prev is a URL pointing to offset=0
+
+# Filtering — Tolkien's books only
+curl "http://localhost:8000/v1/books?author_id=auth_tolkien1"
+
+# Filtering — Fantasy genre
+curl "http://localhost:8000/v1/books?genre=Fantasy"
+
+# Filtering — books between 1950 and 1970
+curl "http://localhost:8000/v1/books?year_min=1950&year_max=1970"
+
+# Sorting — by year descending
+curl "http://localhost:8000/v1/books?sort_by=year&order=desc"
+
+# Combined — Fantasy books sorted by year, page 1 of 2
+curl "http://localhost:8000/v1/books?genre=Fantasy&sort_by=year&order=asc&limit=2&offset=0"
+```
+
 ### Phase 5: HATEOAS Links (~15 min)
 
 1. Open `app/routes/books.py` — find the HATEOAS `TODO(human)` markers
 2. **User implements:** Add `_links` to single-book responses: `self`, `author`, `collection`
 3. **User implements:** Add `_links` to collection responses: `self`, `next`, `prev`, `first`
 4. Key question: How does HATEOAS help API consumers discover available actions without reading docs?
+
+**Test after implementing:**
+```bash
+# Single book — check _links array has self, author, collection, update, delete
+curl http://localhost:8000/v1/books/{book_id}
+# Expected: "_links": [{"href":"/v1/books/...","method":"GET","rel":"self"}, ...]
+
+# Collection — check _links array has self, next, prev, first
+curl "http://localhost:8000/v1/books?limit=3&offset=3"
+# Expected: top-level "_links" with navigation links
+```
 
 ### Phase 6: Rate Limiting Middleware (~15 min)
 
@@ -110,12 +187,40 @@ The API manages two resources — **books** and **authors** — with a one-to-ma
 4. **User implements:** Return `429 Too Many Requests` with `Retry-After` when limit exceeded
 5. Key question: Why use a middleware instead of decorating each route?
 
+**Test after implementing:**
+```bash
+# Check rate limit headers on any request
+curl -v http://localhost:8000/v1/health
+# Check headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+
+# Trigger 429 — send 35 requests in a burst (limit is 30)
+# Expected: first 30 return 200, last 5 return 429
+uv run python -c "import httpx; [print(httpx.get('http://localhost:8000/v1/health').status_code) for _ in range(35)]"
+
+# Inspect the 429 response body and Retry-After header
+uv run python -c "import httpx; [httpx.get('http://localhost:8000/v1/health') for _ in range(31)]; r=httpx.get('http://localhost:8000/v1/health'); print(r.status_code, r.headers.get('retry-after'), r.text)"
+```
+
 ### Phase 7: Idempotency & Final Touches (~15 min)
 
 1. Open `app/routes/books.py` — find the idempotency `TODO(human)` marker
 2. **User implements:** Check `Idempotency-Key` header on POST; if key seen before, return cached response
 3. Explore `/docs` — verify all endpoints appear with correct descriptions and examples
 4. Final discussion: Which of these patterns (pagination, HATEOAS, RFC 9457, rate limiting) does your current work API use? Which should it adopt?
+
+**Test after implementing:**
+```
+# First POST with idempotency key — creates the book (201)
+curl -v -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -H "Idempotency-Key: unique-key-001" -d "{\"title\":\"Idempotent Book\",\"author_id\":\"auth_orwell01\",\"genre\":\"Fiction\",\"year\":2024}"
+
+# Retry same key — should return cached 201 response, NOT create a duplicate
+# Verify: same book_id in both responses, total book count unchanged
+curl -v -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -H "Idempotency-Key: unique-key-001" -d "{\"title\":\"Idempotent Book\",\"author_id\":\"auth_orwell01\",\"genre\":\"Fiction\",\"year\":2024}"
+
+# POST without idempotency key — always creates a new book (two different book_ids)
+curl -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -d "{\"title\":\"No Key\",\"author_id\":\"auth_orwell01\",\"genre\":\"Fiction\",\"year\":2024}"
+curl -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -d "{\"title\":\"No Key\",\"author_id\":\"auth_orwell01\",\"genre\":\"Fiction\",\"year\":2024}"
+```
 
 ## Motivation
 
@@ -169,7 +274,8 @@ The API manages two resources — **books** and **authors** — with a one-to-ma
 | `curl -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -d '{"title":"Test","author_id":"auth_marquez1","genre":"Fiction","year":2000}'` | Create a new book |
 | `curl -X POST http://localhost:8000/v1/books -H "Content-Type: application/json" -H "Idempotency-Key: my-key-123" -d '{"title":"Test","author_id":"auth_marquez1","genre":"Fiction","year":2000}'` | Create a book with idempotency key |
 | `curl http://localhost:8000/v1/books/{book_id}` | Get a single book by ID |
-| `curl -X PUT http://localhost:8000/v1/books/{book_id} -H "Content-Type: application/json" -d '{"title":"Updated","author_id":"auth_marquez1","genre":"Fiction","year":2001}'` | Replace a book entirely |
+| `curl -X PUT http://localhost:8000/v1/books/{book_id} -H "Content-Type: application/json" -d '{"title":"Updated","author_id":"auth_marquez1","genre":"Fiction","year":2001}'` | Replace a book entirely (PUT — all fields required) |
+| `curl -X PATCH http://localhost:8000/v1/books/{book_id} -H "Content-Type: application/json" -d '{"year":2002}'` | Partially update a book (PATCH — only changed fields) |
 | `curl -X DELETE http://localhost:8000/v1/books/{book_id}` | Delete a book |
 
 ## State

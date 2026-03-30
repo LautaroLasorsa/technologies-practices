@@ -21,6 +21,7 @@ from fastapi import APIRouter, Header, Query, Request, Response
 
 from app.models import (
     BookCreate,
+    BookPatch,
     BookResponse,
     BookUpdate,
     Link,
@@ -262,6 +263,52 @@ async def replace_book(book_id: str, body: BookUpdate) -> BookResponse:
     Return 200 on success (the resource existed and was replaced).
     """
     # TODO(human): implement full replacement
+    raise_problem(501, "Not implemented yet — this is your task!")
+
+
+# ---------------------------------------------------------------------------
+# PATCH /v1/books/{book_id} — Partial update
+# ---------------------------------------------------------------------------
+
+@router.patch(
+    "/{book_id}",
+    response_model=BookResponse,
+    summary="Partially update a book",
+    operation_id="patchBook",
+)
+async def patch_book(book_id: str, body: BookPatch) -> BookResponse:
+    """Partially update a book — only provided fields are changed.
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This exercise teaches PATCH semantics: partial update. Unlike PUT (which
+    # requires ALL fields and replaces the entire resource), PATCH only modifies
+    # the fields included in the request body. Fields set to None (or omitted from
+    # JSON) are left unchanged. PATCH may not be idempotent — applying the same
+    # patch to a resource that has been modified in between may yield different
+    # results. Pydantic's model_dump(exclude_unset=True) is key: it distinguishes
+    # "field was omitted" from "field was explicitly set to null", enabling correct
+    # partial update semantics. Production APIs commonly use PATCH more than PUT
+    # since clients rarely want to re-send every field just to change one.
+    # ──────────────────────────────────────────────────────────────────────
+
+    TODO(human): Implement this endpoint. Steps:
+
+    1. Look up book_id in store.books
+    2. If not found, raise_problem(404, ...)
+    3. Get only the fields the client actually sent:
+       - updates = body.model_dump(exclude_unset=True)
+       - This is crucial: exclude_unset=True ignores fields not present in the
+         request JSON, so omitted fields stay unchanged.
+    4. If "author_id" is in updates, validate it exists in store.authors
+    5. Apply each field from updates to the existing book dict
+    6. Set updated_at = datetime.now(timezone.utc)
+    7. Return _book_to_response(updated_book)
+
+    Key concept: PATCH vs PUT — PUT replaces entirely (all fields required),
+    PATCH modifies partially (only sent fields change). Use exclude_unset=True
+    to tell "not sent" apart from "sent as null".
+    """
+    # TODO(human): implement partial update
     raise_problem(501, "Not implemented yet — this is your task!")
 
 

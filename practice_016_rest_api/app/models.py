@@ -82,6 +82,20 @@ class BookUpdate(BaseModel):
     isbn: str | None = Field(None, pattern=r"^\d{13}$", examples=["9780060883287"])
 
 
+class BookPatch(BaseModel):
+    """Payload for partial update of a book (PATCH /v1/books/{book_id}).
+
+    All fields optional — only provided fields are updated.
+    This is the key difference from PUT (full replacement).
+    """
+
+    title: str | None = Field(None, min_length=1, max_length=500, examples=["One Hundred Years of Solitude"])
+    author_id: str | None = Field(None, examples=["auth_7f3a9b2e"])
+    genre: str | None = Field(None, min_length=1, max_length=100, examples=["Magical Realism"])
+    year: int | None = Field(None, ge=1000, le=2100, examples=[1967])
+    isbn: str | None = Field(None, pattern=r"^\d{13}$", examples=["9780060883287"])
+
+
 class BookResponse(BaseModel):
     """Book as returned by the API (includes server-generated fields + HATEOAS links)."""
 
