@@ -10,7 +10,7 @@ The weighted formula:
 Where elapsed_fraction is how far we are into the current window (0.0 to 1.0).
 
 Run (requires Redis from docker-compose):
-    uv run python src/03_sliding_window_counter.py
+    uv run python src/_03_sliding_window_counter.py
 """
 
 from __future__ import annotations

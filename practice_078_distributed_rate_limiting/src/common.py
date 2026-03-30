@@ -108,6 +108,16 @@ class RateLimiter(ABC):
 # ---------------------------------------------------------------------------
 
 
+from typing import Any, Sequence
+
+
+async def call_script(
+    script: Any, keys: Sequence[str], args: Sequence[object],
+) -> list[Any]:
+    """Call a registered Redis Lua script (typed wrapper for AsyncScript)."""
+    return await script(keys=list(keys), args=list(args))  # type: ignore[misc]
+
+
 async def create_redis_client(url: str = REDIS_URL) -> aioredis.Redis:
     """Create and verify an async Redis connection."""
     client = aioredis.from_url(url, decode_responses=False)

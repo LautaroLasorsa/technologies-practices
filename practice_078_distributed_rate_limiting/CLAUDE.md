@@ -224,52 +224,52 @@ Build a **Distributed Rate Limiting System** with five rate limiting algorithms,
 
 ### Phase 2: Fixed Window Counter (~15 min)
 
-1. Open `src/01_fixed_window.py` and study the structure
+1. Open `src/_01_fixed_window.py` and study the structure
 2. **User implements:** The Lua script for atomic `INCR` + conditional `EXPIRE` -- this teaches why you cannot use separate `INCR` and `EXPIRE` commands (race condition between them)
 3. **User implements:** The `allow()` method that calls the Lua script and tracks metrics
 4. **User implements:** The `demo_fixed_window()` function that demonstrates the boundary spike problem -- send requests right at the boundary of two windows to show the 2x burst
-5. Run: `uv run python src/01_fixed_window.py`
+5. Run: `uv run python src/_01_fixed_window.py`
 6. Key question: Can you think of a scenario where the boundary spike actually matters? (Hint: think billing APIs, database writes)
 
 ### Phase 3: Sliding Window Log (~20 min)
 
-1. Open `src/02_sliding_window_log.py` and study the structure
+1. Open `src/_02_sliding_window_log.py` and study the structure
 2. **User implements:** The Lua script that atomically prunes expired entries (`ZREMRANGEBYSCORE`), counts remaining (`ZCARD`), and conditionally adds the new request (`ZADD`) -- all in one atomic operation. This is the first exercise where you see why `MULTI/EXEC` is insufficient (you need conditional logic after the `ZCARD`).
 3. **User implements:** The `allow()` method and the demo function
-4. Run: `uv run python src/02_sliding_window_log.py`
+4. Run: `uv run python src/_02_sliding_window_log.py`
 5. Key question: If you have 10 million users each making 100 req/min, how much memory does the sorted set approach consume? Is this practical?
 
 ### Phase 4: Sliding Window Counter (~15 min)
 
-1. Open `src/03_sliding_window_counter.py` and study the structure
+1. Open `src/_03_sliding_window_counter.py` and study the structure
 2. **User implements:** The Lua script that reads two fixed-window counters and computes the weighted estimate. This teaches the approximation technique that most production rate limiters use.
 3. **User implements:** The `allow()` method and demo
-4. Run: `uv run python src/03_sliding_window_counter.py`
+4. Run: `uv run python src/_03_sliding_window_counter.py`
 5. Key question: Under what traffic pattern does the sliding window counter give the worst approximation?
 
 ### Phase 5: Token Bucket (~20 min) -- Core of the practice
 
-1. Open `src/04_token_bucket.py` and study the structure
+1. Open `src/_04_token_bucket.py` and study the structure
 2. Review the Lua script template in `lua/token_bucket.lua`
 3. **User implements:** The full Lua script -- read state, calculate refill, try to consume, save state. This is the most important exercise: the lazy refill calculation is the core insight of the token bucket algorithm.
 4. **User implements:** The `allow()` method with metrics tracking
 5. **User implements:** The demo showing burst behavior vs sustained rate
-6. Run: `uv run python src/04_token_bucket.py`
+6. Run: `uv run python src/_04_token_bucket.py`
 7. Key question: How would you set `capacity` and `refill_rate` for an API that should handle 100 req/sec sustained with occasional bursts of up to 500?
 
 ### Phase 6: Algorithm Comparison (~10 min)
 
-1. Open `src/05_comparison.py` and study the structure
+1. Open `src/_05_comparison.py` and study the structure
 2. **User implements:** The benchmark function that sends identical traffic patterns through all four algorithms and collects allowed/rejected counts per second
-3. Run: `uv run python src/05_comparison.py`
+3. Run: `uv run python src/_05_comparison.py`
 4. Examine the comparison output -- which algorithm allowed the most burst traffic? Which was strictest?
 
 ### Phase 7: FastAPI Middleware & Multi-Replica (~15 min)
 
-1. Open `src/06_fastapi_app.py` and study the structure
+1. Open `src/_06_fastapi_app.py` and study the structure
 2. **User implements:** The `RateLimitMiddleware` class that intercepts requests, checks the rate limiter, and returns 429 with proper headers when rejected
 3. Start three replicas behind Nginx: `docker compose up --build -d`
-4. Run the multi-replica test: `uv run python src/07_multi_replica_test.py`
+4. Run the multi-replica test: `uv run python src/_07_multi_replica_test.py`
 5. Observe that the total allowed requests across all replicas stays within the global limit
 6. Key question: What should the middleware do if Redis is unreachable? Fail-open or fail-closed?
 
@@ -306,16 +306,16 @@ All commands are run from `practice_078_distributed_rate_limiting/`.
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/01_fixed_window.py` | Run fixed window counter exercise (requires Redis) |
-| `uv run python src/02_sliding_window_log.py` | Run sliding window log exercise (requires Redis) |
-| `uv run python src/03_sliding_window_counter.py` | Run sliding window counter exercise (requires Redis) |
-| `uv run python src/04_token_bucket.py` | Run token bucket exercise (requires Redis) |
+| `uv run python src/_01_fixed_window.py` | Run fixed window counter exercise (requires Redis) |
+| `uv run python src/_02_sliding_window_log.py` | Run sliding window log exercise (requires Redis) |
+| `uv run python src/_03_sliding_window_counter.py` | Run sliding window counter exercise (requires Redis) |
+| `uv run python src/_04_token_bucket.py` | Run token bucket exercise (requires Redis) |
 
 ### Phase 6: Algorithm Comparison
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/05_comparison.py` | Run side-by-side benchmark of all four algorithms |
+| `uv run python src/_05_comparison.py` | Run side-by-side benchmark of all four algorithms |
 
 ### Phase 7: FastAPI & Multi-Replica
 
@@ -324,7 +324,7 @@ All commands are run from `practice_078_distributed_rate_limiting/`.
 | `docker compose up --build -d` | Build and start all services (3 FastAPI replicas + Redis + Nginx) |
 | `docker compose logs -f api` | Follow FastAPI replica logs |
 | `docker compose logs -f nginx` | Follow Nginx load balancer logs |
-| `uv run python src/07_multi_replica_test.py` | Run multi-replica rate limiting test |
+| `uv run python src/_07_multi_replica_test.py` | Run multi-replica rate limiting test |
 | `curl http://localhost:8080/health` | Health check via load balancer |
 | `curl http://localhost:8080/api/data` | Request data via load balancer (rate-limited) |
 | `curl -H "X-API-Key: user-123" http://localhost:8080/api/data` | Request with explicit API key for per-user limiting |

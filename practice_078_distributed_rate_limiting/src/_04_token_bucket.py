@@ -11,7 +11,7 @@ stateless between requests and easy to implement in Redis with a Lua script.
 This is the CORE exercise of the practice.
 
 Run (requires Redis from docker-compose):
-    uv run python src/04_token_bucket.py
+    uv run python src/_04_token_bucket.py
 """
 
 from __future__ import annotations

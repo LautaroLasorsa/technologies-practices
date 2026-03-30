@@ -9,7 +9,7 @@ The Redis key includes the window timestamp, so each window gets its own
 key that auto-expires via TTL.
 
 Run (requires Redis from docker-compose):
-    uv run python src/01_fixed_window.py
+    uv run python src/_01_fixed_window.py
 """
 
 from __future__ import annotations

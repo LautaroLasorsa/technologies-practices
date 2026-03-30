@@ -12,7 +12,7 @@ Prerequisites:
     docker compose up --build -d   (starts Redis, 3 API replicas, Nginx)
 
 Run:
-    uv run python src/07_multi_replica_test.py
+    uv run python src/_07_multi_replica_test.py
 """
 
 from __future__ import annotations

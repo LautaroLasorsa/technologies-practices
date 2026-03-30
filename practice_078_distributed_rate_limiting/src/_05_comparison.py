@@ -5,7 +5,7 @@ and compares their behavior side-by-side. Generates a comparison plot
 showing allowed requests over time for each algorithm.
 
 Run (requires Redis from docker-compose):
-    uv run python src/05_comparison.py
+    uv run python src/_05_comparison.py
 """
 
 from __future__ import annotations
@@ -21,10 +21,10 @@ from src.common import (
     print_header,
     print_metrics,
 )
-from src.01_fixed_window import FixedWindowRateLimiter
-from src.02_sliding_window_log import SlidingWindowLogRateLimiter
-from src.03_sliding_window_counter import SlidingWindowCounterRateLimiter
-from src.04_token_bucket import TokenBucketRateLimiter
+from src._01_fixed_window import FixedWindowRateLimiter
+from src._02_sliding_window_log import SlidingWindowLogRateLimiter
+from src._03_sliding_window_counter import SlidingWindowCounterRateLimiter
+from src._04_token_bucket import TokenBucketRateLimiter
 
 
 # ---------------------------------------------------------------------------

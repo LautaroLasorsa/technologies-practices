@@ -10,7 +10,7 @@ sequence requires branching on an intermediate result (the count after
 pruning), which Redis MULTI/EXEC cannot do.
 
 Run (requires Redis from docker-compose):
-    uv run python src/02_sliding_window_log.py
+    uv run python src/_02_sliding_window_log.py
 """
 
 from __future__ import annotations

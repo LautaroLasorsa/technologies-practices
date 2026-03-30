@@ -9,7 +9,7 @@ returns HTTP 429 Too Many Requests with proper headers when the limit
 is exceeded.
 
 Run locally (single replica):
-    uv run uvicorn src.06_fastapi_app:app --host 0.0.0.0 --port 8000
+    uv run uvicorn src._06_fastapi_app:app --host 0.0.0.0 --port 8000
 
 Run via Docker Compose (3 replicas behind Nginx):
     docker compose up --build -d
