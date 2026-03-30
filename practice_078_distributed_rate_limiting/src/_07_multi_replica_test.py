@@ -48,114 +48,94 @@ async def multi_replica_test() -> None:
     across replicas, the number of allowed (200) responses should be
     close to the configured capacity, not capacity * num_replicas.
     """
-    # TODO(human): Implement the multi-replica rate limiting test.
-    #
-    # WHY THIS MATTERS:
-    # This is the PROOF that distributed rate limiting works. Without
-    # shared state, 3 replicas each allowing 20 requests = 60 total.
-    # With Redis-backed rate limiting, the total should be ~20 regardless
-    # of how many replicas are running. This is the core value proposition
-    # of distributed rate limiting.
-    #
-    # STEP-BY-STEP PLAN:
-    #
-    # 1. VERIFY SERVICES ARE RUNNING:
-    #    async with httpx.AsyncClient() as client:
-    #        try:
-    #            resp = await client.get(f"{BASE_URL}/health", timeout=5.0)
-    #            print(f"Health check: {resp.json()}")
-    #        except httpx.ConnectError:
-    #            print("ERROR: Cannot connect to load balancer at "
-    #                  f"{BASE_URL}. Is docker compose up?")
-    #            return
-    #
-    # 2. FLUSH RATE LIMIT STATE (start fresh):
-    #    import redis.asyncio as aioredis
-    #    redis_client = aioredis.from_url("redis://localhost:6379")
-    #    await redis_client.flushdb()
-    #    await redis_client.aclose()
-    #    print("Flushed Redis rate limit state")
-    #
-    # 3. DEFINE THE REQUEST WORKER:
-    #    results = []  # list of (status_code, replica_id, latency)
-    #    semaphore = asyncio.Semaphore(CONCURRENCY)
-    #
-    #    async def send_request(client: httpx.AsyncClient, idx: int):
-    #        async with semaphore:
-    #            start = time.time()
-    #            resp = await client.get(
-    #                f"{BASE_URL}/api/data",
-    #                headers={"X-API-Key": API_KEY},
-    #                timeout=10.0,
-    #            )
-    #            latency = (time.time() - start) * 1000  # ms
-    #            data = resp.json()
-    #            replica = data.get("replica", "unknown")
-    #            results.append((resp.status_code, replica, latency))
-    #
-    # 4. SEND ALL REQUESTS CONCURRENTLY:
-    #    async with httpx.AsyncClient() as client:
-    #        print(f"\nSending {TOTAL_REQUESTS} requests with "
-    #              f"concurrency={CONCURRENCY}...")
-    #        start = time.time()
-    #
-    #        tasks = [send_request(client, i) for i in range(TOTAL_REQUESTS)]
-    #        await asyncio.gather(*tasks)
-    #
-    #        elapsed = time.time() - start
-    #        print(f"Completed in {elapsed:.2f}s")
-    #
-    # 5. ANALYZE RESULTS:
-    #    allowed = sum(1 for s, _, _ in results if s == 200)
-    #    rejected = sum(1 for s, _, _ in results if s == 429)
-    #    errors = sum(1 for s, _, _ in results if s not in (200, 429))
-    #
-    #    # Count requests per replica
-    #    from collections import Counter
-    #    replica_counts = Counter(r for _, r, _ in results)
-    #
-    #    print(f"\n{'='*50}")
-    #    print("RESULTS")
-    #    print(f"{'='*50}")
-    #    print(f"  Total requests:  {TOTAL_REQUESTS}")
-    #    print(f"  Allowed (200):   {allowed}")
-    #    print(f"  Rejected (429):  {rejected}")
-    #    if errors:
-    #        print(f"  Errors:          {errors}")
-    #    print(f"\n  Requests per replica:")
-    #    for replica, count in sorted(replica_counts.items()):
-    #        print(f"    {replica}: {count} requests")
-    #
-    #    # Latency stats
-    #    latencies = [l for _, _, l in results]
-    #    avg_latency = sum(latencies) / len(latencies)
-    #    max_latency = max(latencies)
-    #    print(f"\n  Avg latency: {avg_latency:.1f}ms")
-    #    print(f"  Max latency: {max_latency:.1f}ms")
-    #
-    # 6. VALIDATE DISTRIBUTED BEHAVIOR:
-    #    print(f"\n{'='*50}")
-    #    print("VALIDATION")
-    #    print(f"{'='*50}")
-    #
-    #    Expected: allowed should be close to RATE_LIMIT_CAPACITY (20),
-    #    NOT capacity * num_replicas (60).
-    #    capacity = 20  # matches docker-compose.yml RATE_LIMIT_CAPACITY
-    #
-    #    if allowed <= capacity + 5:  # small tolerance for timing
-    #        print(f"  PASS: {allowed} allowed <= {capacity}+5 (global limit)")
-    #        print("  Rate limiting is correctly distributed across replicas!")
-    #    else:
-    #        print(f"  FAIL: {allowed} allowed > {capacity}+5")
-    #        print("  Rate limiting may NOT be working across replicas!")
-    #
-    #    if len(replica_counts) > 1:
-    #        print(f"  PASS: Requests were distributed across "
-    #              f"{len(replica_counts)} replicas")
-    #    else:
-    #        print("  WARNING: All requests went to a single replica")
-    #        print("  (Nginx may need more connections to distribute)")
-    raise NotImplementedError("TODO(human): implement multi_replica_test()")
+    # Verify services are running
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(f"{BASE_URL}/health", timeout=5.0)
+            print(f"Health check: {resp.json()}")
+        except httpx.ConnectError:
+            print(f"ERROR: Cannot connect to load balancer at {BASE_URL}. "
+                  "Is docker compose up?")
+            return
+
+    # Flush rate limit state
+    import redis.asyncio as aioredis
+    redis_client = aioredis.from_url("redis://localhost:6379")
+    await redis_client.flushdb()
+    await redis_client.aclose()
+    print("Flushed Redis rate limit state")
+
+    # Send requests concurrently
+    results: list[tuple[int, str, float]] = []
+    semaphore = asyncio.Semaphore(CONCURRENCY)
+
+    async def send_request(client: httpx.AsyncClient, idx: int) -> None:
+        async with semaphore:
+            start = time.time()
+            resp = await client.get(
+                f"{BASE_URL}/api/data",
+                headers={"X-API-Key": API_KEY},
+                timeout=10.0,
+            )
+            latency = (time.time() - start) * 1000
+            data = resp.json()
+            replica = data.get("replica", "unknown")
+            results.append((resp.status_code, replica, latency))
+
+    async with httpx.AsyncClient() as client:
+        print(f"\nSending {TOTAL_REQUESTS} requests with "
+              f"concurrency={CONCURRENCY}...")
+        start = time.time()
+        tasks = [send_request(client, i) for i in range(TOTAL_REQUESTS)]
+        await asyncio.gather(*tasks)
+        elapsed = time.time() - start
+        print(f"Completed in {elapsed:.2f}s")
+
+    # Analyze results
+    allowed = sum(1 for s, _, _ in results if s == 200)
+    rejected = sum(1 for s, _, _ in results if s == 429)
+    errors = sum(1 for s, _, _ in results if s not in (200, 429))
+
+    from collections import Counter
+    replica_counts = Counter(r for _, r, _ in results)
+
+    print(f"\n{'='*50}")
+    print("RESULTS")
+    print(f"{'='*50}")
+    print(f"  Total requests:  {TOTAL_REQUESTS}")
+    print(f"  Allowed (200):   {allowed}")
+    print(f"  Rejected (429):  {rejected}")
+    if errors:
+        print(f"  Errors:          {errors}")
+    print(f"\n  Requests per replica:")
+    for replica, count in sorted(replica_counts.items()):
+        print(f"    {replica}: {count} requests")
+
+    latencies = [lat for _, _, lat in results]
+    avg_latency = sum(latencies) / len(latencies)
+    max_latency = max(latencies)
+    print(f"\n  Avg latency: {avg_latency:.1f}ms")
+    print(f"  Max latency: {max_latency:.1f}ms")
+
+    # Validate distributed behavior
+    print(f"\n{'='*50}")
+    print("VALIDATION")
+    print(f"{'='*50}")
+    capacity = 20  # matches docker-compose.yml RATE_LIMIT_CAPACITY
+
+    if allowed <= capacity + 5:
+        print(f"  PASS: {allowed} allowed <= {capacity}+5 (global limit)")
+        print("  Rate limiting is correctly distributed across replicas!")
+    else:
+        print(f"  FAIL: {allowed} allowed > {capacity}+5")
+        print("  Rate limiting may NOT be working across replicas!")
+
+    if len(replica_counts) > 1:
+        print(f"  PASS: Requests were distributed across "
+              f"{len(replica_counts)} replicas")
+    else:
+        print("  WARNING: All requests went to a single replica")
+        print("  (Nginx may need more connections to distribute)")
 
 
 # ---------------------------------------------------------------------------

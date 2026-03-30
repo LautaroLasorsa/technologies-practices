@@ -253,23 +253,20 @@ Build a **Distributed Rate Limiting System** with five rate limiting algorithms,
 2. Review the Lua script template in `lua/token_bucket.lua`
 3. **User implements:** The full Lua script -- read state, calculate refill, try to consume, save state. This is the most important exercise: the lazy refill calculation is the core insight of the token bucket algorithm.
 4. **User implements:** The `allow()` method with metrics tracking
-5. **User implements:** The demo showing burst behavior vs sustained rate
-6. Run: `uv run python src/_04_token_bucket.py`
-7. Key question: How would you set `capacity` and `refill_rate` for an API that should handle 100 req/sec sustained with occasional bursts of up to 500?
+5. Run: `uv run python src/_04_token_bucket.py` (demo is pre-scaffolded)
+6. Key question: How would you set `capacity` and `refill_rate` for an API that should handle 100 req/sec sustained with occasional bursts of up to 500?
 
-### Phase 6: Algorithm Comparison (~10 min)
+### Phase 6: Algorithm Comparison (~5 min)
 
-1. Open `src/_05_comparison.py` and study the structure
-2. **User implements:** The benchmark function that sends identical traffic patterns through all four algorithms and collects allowed/rejected counts per second
-3. Run: `uv run python src/_05_comparison.py`
-4. Examine the comparison output -- which algorithm allowed the most burst traffic? Which was strictest?
+1. Run: `uv run python src/_05_comparison.py` (benchmark is pre-scaffolded)
+2. Examine the comparison output -- which algorithm allowed the most burst traffic? Which was strictest?
 
 ### Phase 7: FastAPI Middleware & Multi-Replica (~15 min)
 
 1. Open `src/_06_fastapi_app.py` and study the structure
 2. **User implements:** The `RateLimitMiddleware` class that intercepts requests, checks the rate limiter, and returns 429 with proper headers when rejected
 3. Start three replicas behind Nginx: `docker compose up --build -d`
-4. Run the multi-replica test: `uv run python src/_07_multi_replica_test.py`
+4. Run the multi-replica test: `uv run python src/_07_multi_replica_test.py` (test is pre-scaffolded)
 5. Observe that the total allowed requests across all replicas stays within the global limit
 6. Key question: What should the middleware do if Redis is unreachable? Fail-open or fail-closed?
 

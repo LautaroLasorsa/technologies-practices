@@ -141,72 +141,52 @@ async def demo_token_bucket() -> None:
     2. Pause -- wait for refill (shows lazy refill in action)
     3. Steady -- send at the refill rate (shows sustainable throughput)
     """
-    # TODO(human): Implement the token bucket demo.
-    #
-    # WHY THIS MATTERS:
-    # This demo makes the token bucket's two key properties visible:
-    # (a) burst tolerance (the bucket absorbs short spikes), and
-    # (b) sustained rate enforcement (long-term throughput = refill_rate).
-    # These are the exact properties that make it the industry standard.
-    #
-    # STEP-BY-STEP PLAN:
-    #
-    # 1. CONNECT TO REDIS:
-    #    client = await create_redis_client()
-    #
-    # 2. CREATE THE LIMITER:
-    #    limiter = TokenBucketRateLimiter(
-    #        name="token_bucket_demo",
-    #        redis_client=client,
-    #        capacity=15,       # can absorb a burst of 15
-    #        refill_rate=5.0,   # sustained rate: 5 req/sec
-    #        key_prefix="ratelimit:demo:tokenbucket",
-    #    )
-    #
-    # 3. CLEAN UP stale keys.
-    #
-    # 4. PHASE A -- Burst:
-    #    print("\n--- Phase A: Burst (20 requests as fast as possible) ---")
-    #    for i in range(20):
-    #        allowed = await limiter.allow("demo-user")
-    #        status = "PASS" if allowed else "REJECT"
-    #        print(f"  Request {i+1:2d}: {status}")
-    #
-    #    Expected: first 15 pass (capacity), last 5 rejected.
-    #    print(f"\n  Burst result: {limiter.metrics.allowed_requests} passed, "
-    #          f"{limiter.metrics.rejected_requests} rejected")
-    #    print("  (Capacity=15, so 15 passed and 5 were rejected)")
-    #
-    # 5. PHASE B -- Pause and refill:
-    #    print("\n--- Phase B: Pause 3 seconds (bucket refills) ---")
-    #    await asyncio.sleep(3.0)
-    #
-    #    After 3s at 5 tokens/sec, the bucket has 15 tokens (capped at capacity).
-    #    result = await limiter.allow("demo-user")
-    #    print(f"  After 3s pause: allowed={result}")
-    #    print("  (Bucket refilled: 3s * 5 tokens/s = 15 tokens)")
-    #
-    # 6. PHASE C -- Steady traffic at refill rate:
-    #    print("\n--- Phase C: Steady traffic (5 req/sec for 4 seconds) ---")
-    #    steady_allowed = 0
-    #    steady_rejected = 0
-    #    for i in range(20):
-    #        allowed = await limiter.allow("demo-user")
-    #        if allowed:
-    #            steady_allowed += 1
-    #        else:
-    #            steady_rejected += 1
-    #        await asyncio.sleep(0.2)  # 5 req/sec = 200ms interval
-    #
-    #    print(f"  Steady result: {steady_allowed} passed, {steady_rejected} rejected")
-    #    print("  (At refill rate, all requests should pass)")
-    #
-    # 7. PRINT SUMMARY:
-    #    print_metrics(limiter)
-    #
-    # 8. CLEANUP:
-    #    await limiter.close()
-    raise NotImplementedError("TODO(human): implement demo_token_bucket()")
+    client = await create_redis_client()
+    limiter = TokenBucketRateLimiter(
+        name="token_bucket_demo",
+        redis_client=client,
+        capacity=15,
+        refill_rate=5.0,
+        key_prefix="ratelimit:demo:tokenbucket",
+    )
+    await client.flushdb()
+
+    # Phase A -- Burst: exhaust the bucket
+    print("\n--- Phase A: Burst (20 requests as fast as possible) ---")
+    for i in range(20):
+        allowed = await limiter.allow("demo-user")
+        status = "PASS" if allowed else "REJECT"
+        print(f"  Request {i+1:2d}: {status}")
+
+    print(f"\n  Burst result: {limiter.metrics.allowed_requests} passed, "
+          f"{limiter.metrics.rejected_requests} rejected")
+    print("  (Capacity=15, so 15 passed and 5 were rejected)")
+
+    # Phase B -- Pause and refill
+    print("\n--- Phase B: Pause 3 seconds (bucket refills) ---")
+    await asyncio.sleep(3.0)
+
+    result = await limiter.allow("demo-user")
+    print(f"  After 3s pause: allowed={result}")
+    print("  (Bucket refilled: 3s * 5 tokens/s = 15 tokens)")
+
+    # Phase C -- Steady traffic at refill rate
+    print("\n--- Phase C: Steady traffic (5 req/sec for 4 seconds) ---")
+    steady_allowed = 0
+    steady_rejected = 0
+    for i in range(20):
+        allowed = await limiter.allow("demo-user")
+        if allowed:
+            steady_allowed += 1
+        else:
+            steady_rejected += 1
+        await asyncio.sleep(0.2)
+
+    print(f"  Steady result: {steady_allowed} passed, {steady_rejected} rejected")
+    print("  (At refill rate, all requests should pass)")
+
+    print_metrics(limiter)
+    await limiter.close()
 
 
 # ---------------------------------------------------------------------------
