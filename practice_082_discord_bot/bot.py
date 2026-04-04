@@ -101,7 +101,12 @@ def configure_intents() -> discord.Intents:
     #
     # Expected: Returns an Intents object with default + message_content + members
     """
-    raise NotImplementedError("Exercise 1: configure_intents")
+
+    intent = discord.Intents.default()
+    intent.message_content = True
+    intent.members = True
+
+    return intent
 
 
 class DiscordBot(commands.Bot):
@@ -156,7 +161,16 @@ class DiscordBot(commands.Bot):
         #
         # Expected: All 3 cogs load successfully, commands appear in Discord
         """
-        raise NotImplementedError("Exercise 3: setup_hook")
+
+        for extension in EXTENSIONS:
+            try:
+                await self.load_extension(extension)
+                log.info(f"Extension {extension} successfully loaded")
+            except Exception as e:
+                log.exception(f"Extension {extension} failed")
+        self.tree.copy_global_to(guild=TEST_GUILD)
+        synced = await self.tree.sync(guild=TEST_GUILD)
+        log.info(f"{synced} commands synced")
 
     # ---------------------------------------------------------------
     # Exercise 1 — Gateway Events
@@ -190,7 +204,9 @@ class DiscordBot(commands.Bot):
         # Expected log output:
         #   "Bot connected as Practice082Bot (ID: 123456789). Guilds: 1"
         """
-        raise NotImplementedError("Exercise 1: on_ready")
+
+        log.info(f"Bot conneceted as {self.user.name} (ID:{self.user.id}). Guilds: {len(self.guilds)}")
+        log.debug(f"Bot conneted to guilds: {self.guilds}")
 
     async def on_member_join(self, member: discord.Member) -> None:
         """Fires when a new member joins a guild the bot is in.
@@ -225,8 +241,18 @@ class DiscordBot(commands.Bot):
         #
         # Expected: New member gets an @-mention welcome in the system channel
         """
-        raise NotImplementedError("Exercise 1: on_member_join")
 
+        system_channel = member.guild.system_channel
+
+        if system_channel is None:
+            log.warning(f"System channel is None. Server {member.guild.id} unconfigured")
+            return
+
+        try:
+            await system_channel.send(f"Welcome to the server, {member.mention}!")
+            log.debug(f"{member.name} was welcomed to {member.guild.id}")
+        except Exception as e:
+            log.exception(f"Exception welcoming {member.name} ({member.id}) to {member.guild.id}")
 
 # ===================================================================
 # Exercise 2 — Slash Commands (defined on the bot's tree)
@@ -281,7 +307,16 @@ async def sync_commands(interaction: discord.Interaction) -> None:
     #
     # Expected: "/sync" responds with "Synced N commands to <guild_name>."
     """
-    raise NotImplementedError("Exercise 2: sync_commands")
+
+    guild = interaction.guild
+
+    if guild is None:
+        log.error("Sync with guild=None")
+        return
+
+    synced = await interaction.client.tree.sync(guild=guild)
+    await interaction.response.send_message(f"Synced {len(synced)} commands.", ephemeral=True)
+
 
 
 @bot.tree.command(name="ping", description="Check bot latency")
@@ -307,7 +342,10 @@ async def ping(interaction: discord.Interaction) -> None:
     #
     # Expected: "/ping" → "Pong! 42ms" (actual latency varies)
     """
-    raise NotImplementedError("Exercise 2: ping")
+
+    latency_ms = round(interaction.client.latency * 1000)
+
+    await interaction.response.send_message(f"Pong! {latency_ms} ms")
 
 
 @bot.tree.command(name="userinfo", description="Display info about a server member")
@@ -360,7 +398,23 @@ async def userinfo(
     #
     # Expected: "/userinfo @someone" → embed with avatar, join date, role info
     """
-    raise NotImplementedError("Exercise 2: userinfo")
+
+    target = member or interaction.user
+
+    assert isinstance(target, discord.Member)
+
+    embed = discord.Embed(
+        title=target.display_name,
+        color=target.top_role.color
+    )
+
+    embed.add_field(name="Username",value=target.name)
+    embed.add_field(name="ID",value=target.id)
+    embed.add_field(name="Joined Server",value=discord.utils.format_dt(target.joined_at,"R"))
+    embed.add_field(name="Account Created",value=discord.utils.format_dt(target.created_at,"R"))
+    embed.add_field(name="Top Role", value=target.top_role.mention)
+
+    await interaction.response.send_message(embed=embed)
 
 
 @bot.tree.command(name="serverinfo", description="Display server metadata")
@@ -415,7 +469,29 @@ async def serverinfo(interaction: discord.Interaction) -> None:
     #
     # Expected: "/serverinfo" → embed with server icon, stats, creation date
     """
-    raise NotImplementedError("Exercise 2: serverinfo")
+
+    guild = interaction.guild
+    assert guild is not None
+
+    embed = discord.Embed(
+        title=guild.name,
+        description=guild.description or "No description set",
+        color=discord.Color.blurple()
+    )
+
+    embed.add_field(name = "Owner", value = guild.owner.mention if guild.owner else "Unknown")
+    embed.add_field(name = "Members", value = guild.member_count)
+    embed.add_field(name = "Channels", value = len(guild.channels))
+    embed.add_field(name = "Roles", value = len(guild.roles))
+    embed.add_field(name = "Created", value = discord.utils.format_dt(guild.created_at,"R"))
+    embed.add_field(name = "Boost Level", value = guild.premium_tier)
+
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
+
+    embed.set_footer(text=f"Server ID: {guild.id}")
+
+    await interaction.response.send_message(embed=embed)
 
 
 # ===================================================================

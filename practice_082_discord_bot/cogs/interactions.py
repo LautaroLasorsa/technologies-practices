@@ -20,6 +20,7 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
+from attr.validators import max_len
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -118,9 +119,37 @@ class PollView(discord.ui.View):
     #   4. After 180s → buttons become disabled
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        raise NotImplementedError("Exercise 4: PollView.__init__")
+    def __init__(self, question: str, *, timeout: float = 180.0) -> None:
+        super().__init__(timeout=timeout)
+        self.question = question
+        self.votes : dict[str,set[int]] = {"yes":set(),"no":set()}
+
+    @discord.ui.button(label="Yes (0)",  style= discord.ButtonStyle.green, custom_id='poll_yes')
+    async def yes_button(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        user_id = interaction.user.id
+        self.votes["no"].discard(user_id)
+        self.votes["yes"].symmetric_difference_update({user_id})
+
+        self.children[0].label = f"Yes ({len(self.votes['yes'])})"
+        self.children[1].label = f"No ({len(self.votes['no'])})"
+
+        await interaction.response.edit_message(view=self)
+
+    @discord.ui.button(label="No (0)",  style= discord.ButtonStyle.red, custom_id='poll_no')
+    async def no_button(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        user_id = interaction.user.id
+        self.votes["yes"].discard(user_id)
+        self.votes["no"].symmetric_difference_update({user_id})
+
+        self.children[0].label = f"Yes ({len(self.votes['yes'])})"
+        self.children[1].label = f"No ({len(self.votes['no'])})"
+
+        await interaction.response.edit_message(view=self)
+
+    async def on_timeout(self) -> None:
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
 
 
 # ===================================================================
@@ -128,7 +157,7 @@ class PollView(discord.ui.View):
 # ===================================================================
 
 
-class FeedbackModal(discord.ui.Modal):
+class FeedbackModal(discord.ui.Modal, title="Submit Feedback"):
     """A modal dialog with text inputs for collecting user feedback.
 
     # TODO(human): Implement the FeedbackModal class.
@@ -195,7 +224,31 @@ class FeedbackModal(discord.ui.Modal):
     #   4. Feedback is logged to console
     """
 
-    pass  # Replace with your implementation
+    subject = discord.ui.TextInput(
+        label="Subject",
+        placeholder = "Brief summary of your feedback...",
+        style=discord.TextStyle.short,
+        required=True,
+        max_length=100
+    )
+
+    details = discord.ui.TextInput(
+        label="Details",
+        placeholder="Describe your feedback in detail...",
+        style = discord.TextStyle.long,
+        required=False,
+        max_length=1000
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        log.info(f"Feedback from {interaction.user}: {self.subject.value} \n {self.details.value}")
+        await interaction.response.send_message("Thanks for your feedback!")
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
+        log.exception("Error in FeedbackModal")
+        await interaction.response.send_message(
+                "Something went wrong. Please try again.", ephemeral=True
+        )
 
 
 # ===================================================================
@@ -247,7 +300,7 @@ class InteractionsCog(commands.Cog):
     @app_commands.command(name="poll", description="Create a poll with Yes/No buttons")
     @app_commands.describe(question="The question to ask")
     @app_commands.guild_only()
-    async def poll(self, interaction: discord.Interaction, question: str) -> None:
+    async def poll(self, interaction: discord.Interaction, question: str, timeout_s:float = 180.0) -> None:
         """Create a poll with interactive Yes/No buttons.
 
         # TODO(human): Implement the /poll command.
@@ -285,7 +338,20 @@ class InteractionsCog(commands.Cog):
         #
         # Expected: "/poll Best language?" → embed + Yes(0)/No(0) buttons
         """
-        raise NotImplementedError("Exercise 4: InteractionsCog.poll")
+
+        view = PollView(question=question, timeout = timeout_s)
+
+        embed = discord.Embed(
+            title="Poll",
+            description=question,
+            color=discord.Color.gold()
+        )
+
+        embed.set_footer(text=f"Started by {interaction.user.display_name}")
+
+        await interaction.response.send_message(embed=embed,view=view)
+        view.message = await interaction.original_response()
+
 
     # ---------------------------------------------------------------
     # Exercise 4 — /feedback command
@@ -318,7 +384,8 @@ class InteractionsCog(commands.Cog):
         #
         # Expected: "/feedback" → popup form appears with Subject + Details fields
         """
-        raise NotImplementedError("Exercise 4: InteractionsCog.feedback")
+        modal = FeedbackModal()
+        await interaction.response.send_modal(modal)
 
     # ---------------------------------------------------------------
     # Exercise 5 — /roles_embed command
@@ -377,7 +444,26 @@ class InteractionsCog(commands.Cog):
         #
         # Expected: "/roles_embed" → embed with emoji fields + bot adds reactions
         """
-        raise NotImplementedError("Exercise 5: InteractionsCog.roles_embed")
+
+        embed = discord.Embed(
+            title = "Role Selection",
+            description = "React with an emoji to get the corresponding role!",
+            color = discord.Color.blue()
+        )
+
+        for emoji, role_name in EMOJI_TO_ROLE.items():
+            embed.add_field(name=emoji, value=role_name, inline=True)
+
+        embed.set_footer(text="Remove your reaction to lose the role")
+
+        await interaction.response.send_message(embed=embed)
+        message = await interaction.original_response()
+
+        self.role_message_id = message.id
+        log.info(f"Role embed message ID: {message.id} - save to ROLE_MESSAGE_ID in .env")
+
+        for emoji in EMOJI_TO_ROLE:
+            await message.add_reaction(emoji)
 
     # ---------------------------------------------------------------
     # Exercise 5 — Reaction Role Listener
@@ -459,7 +545,44 @@ class InteractionsCog(commands.Cog):
         #   2. Bot assigns "Red Team" role to that user
         #   3. Log: "Assigned 'Red Team' to User#1234"
         """
-        raise NotImplementedError("Exercise 5: InteractionsCog.on_raw_reaction_add")
+
+        if self.role_message_id is None:
+            return
+
+        if payload.message_id != self.role_message_id:
+            return
+
+        if payload.user_id == self.bot.user.id:
+            return
+
+        emoji_str = str(payload.emoji)
+        role_name = EMOJI_TO_ROLE.get(emoji_str)
+        if role_name is None:
+            return
+
+        if payload.guild_id is None:
+            return
+
+        guild = self.bot.get_guild(payload.guild_id)
+        if guild is None:
+            return
+
+        member = payload.member
+        if member is None:
+            return
+
+        role = discord.utils.get(guild.roles, name = role_name)
+        if role is None:
+            log.warning(f"Role '{role_name}' not found in {guild.name}")
+            return
+
+        try:
+            await member.add_roles(role, reason="Reaction role")
+            log.info(f"Assigned '{role_name}' to {member}")
+        except discord.Forbidden:
+            log.exception(f"Missing permissions to assign '{role_name}'")
+        except discord.HTTPException as e:
+            log.exception(f"Failed to assign role: {e}")
 
 
 # ===================================================================
@@ -479,4 +602,5 @@ async def setup(bot: commands.Bot) -> None:
     #
     # Expected: InteractionsCog is registered with /poll, /feedback, /roles_embed
     """
-    raise NotImplementedError("Exercise 5: setup for InteractionsCog")
+    await bot.add_cog(InteractionsCog(bot))
+    log.info("InteractionsCog loaded")

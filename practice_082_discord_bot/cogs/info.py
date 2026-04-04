@@ -159,4 +159,4 @@ async def setup(bot: commands.Bot) -> None:
     #
     # Expected: InfoCog is registered and its 3 commands are in the tree
     """
-    raise NotImplementedError("Exercise 3: setup for InfoCog")
+    log.info("Info cog skipped. Part of bot.py")

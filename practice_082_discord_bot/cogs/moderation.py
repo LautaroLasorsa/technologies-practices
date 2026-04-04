@@ -92,7 +92,29 @@ class ModerationCog(commands.Cog):
         #
         # Expected: "/kick @user Spamming" → kicks user, confirms in ephemeral msg
         """
-        raise NotImplementedError("Exercise 3: ModerationCog.kick")
+
+        try:
+            if member.id == interaction.user.id:
+                raise ValueError("You cannot kick yourself")
+
+            if member.id == interaction.guild.owner_id:
+                raise ValueError("You cannot kick the server owner")
+
+            if member.top_role >= interaction.guild.me.top_role:
+                raise ValueError("The bot cannot kick someone with a higher role")
+
+            await member.kick(reason=reason)
+
+            log.info( f"Kicked {member.mention}. Reason: {reason or 'No reason provided'}")
+
+            await interaction.response.send_message(
+                f"Kicked {member.mention}. Reason: {reason or 'No reason provided'}",
+                ephemeral=True,
+            )
+
+        except Exception as e:
+            log.exception(f"There was an exception when trying to kick {member.mention} from {interaction.guild.id}")
+            await interaction.response.send_message(f"There was an error when trying to kick {member.mention} from {interaction.guild.id}: {str(e)}")
 
     @app_commands.command(name="ban", description="Ban a member from the server")
     @app_commands.describe(
@@ -149,7 +171,31 @@ class ModerationCog(commands.Cog):
         #
         # Expected: "/ban @user Harassment 7" → bans user, deletes 7 days of msgs
         """
-        raise NotImplementedError("Exercise 3: ModerationCog.ban")
+        try:
+            if member.id == interaction.user.id:
+                raise ValueError("You cannot ban yourself")
+
+            if member.id == interaction.guild.owner_id:
+                raise ValueError("You cannot ban the server owner")
+
+            if member.top_role >= interaction.guild.me.top_role:
+                raise ValueError("The bot cannot ban someone with a higher role")
+
+            await member.ban(
+                    reason=reason,
+                    delete_message_days=delete_days,
+            )
+
+            log.info( f"Banned {member.mention}. Reason: {reason or 'No reason provided'} Deleted {delete_days} day(s) of messages.")
+
+            await interaction.response.send_message(
+                 f"Banned {member.mention}. Reason: {reason or 'No reason provided'} Deleted {delete_days} day(s) of messages.",
+                 ephemeral=True,
+             )
+
+        except Exception as e:
+            log.exception(f"There was an exception when trying to ban {member.mention} from {interaction.guild.id}")
+            await interaction.response.send_message(f"There was an error when trying to ban {member.mention} from {interaction.guild.id}: {str(e)}")
 
 
 # ===================================================================
@@ -169,4 +215,6 @@ async def setup(bot: commands.Bot) -> None:
     #
     # Expected: ModerationCog is registered, /kick and /ban appear in the tree
     """
-    raise NotImplementedError("Exercise 3: setup for ModerationCog")
+
+    await bot.add_cog(ModerationCog(bot))
+    log.info("Moderation loaded")

@@ -160,7 +160,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 080 | Feature Flags & Runtime Configuration: OpenFeature & Flagsmith | Python, Docker (Flagsmith) | Infra, DevOps & Observability | `not-started` |
 | 081a | Predictive Coding Networks: Foundations & Backprop Comparison | Python (PyTorch) | ML Systems | `completed` |
 | 081b | Predictive Coding Networks: Where PCNs Diverge from Backprop | Python (PyTorch) | ML Systems | `not-started` |
-| 082 | Discord Bot Engineering: Gateway, Interactions & UI Components | Python (discord.py) | API Design & Protocols | `not-started` |
+| 082 | Discord Bot Engineering: Gateway, Interactions & UI Components | Python (discord.py) | API Design & Protocols | `completed` |
 | 083a | Self-Evolving Persona Agent: Foundations | Python (LangGraph, instructor, Ollama) | AI & LLM Engineering | `not-started` |
 | 083b | Self-Evolving Persona Agent: ACE Loop & Self-Improvement | Python (LangGraph, instructor, sentence-transformers, Ollama) | AI & LLM Engineering | `not-started` |
 
