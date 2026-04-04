@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp&perline=15" />
+  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp,wasm,linux,discord&perline=18" />
 </p>
 
 <b> _**This repository is not to show the things that I made, but the things that I have been interested into learning, and my progress learning them**_ </b>
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-0%20%2F%20129%20practices-blue?style=flat-square" alt="Progress: 0/129">
+  <img src="https://img.shields.io/badge/Progress-0%20%2F%20132%20practices-blue?style=flat-square" alt="Progress: 0/132">
 </p>
 
 > **This is the `template` branch** — all exercises are in `not-started` state, ready for you to implement. Check out [`master`](../../tree/master) to see progress and completed practices.
@@ -178,6 +178,12 @@ python clean_all.py
   <td>016</td>
   <td>REST API Design Principles</td>
   <td><img src="https://skillicons.dev/icons?i=py,fastapi" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>082</td>
+  <td>Discord Bot Engineering: Gateway, Interactions & UI Components</td>
+  <td><img src="https://skillicons.dev/icons?i=py,discord" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
@@ -568,6 +574,24 @@ python clean_all.py
   <td>054c</td>
   <td>Google ADK: Callbacks, Evaluation & Streaming</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"> <img src="https://go-skill-icons.vercel.app/api/icons?i=google" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>067</td>
+  <td>GraphRAG: Knowledge Graph-Enhanced RAG</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>083a</td>
+  <td>Self-Evolving Persona Agent: Foundations</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>083b</td>
+  <td>Self-Evolving Persona Agent: ACE Loop & Self-Improvement</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>

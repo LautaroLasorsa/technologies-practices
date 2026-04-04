@@ -1,0 +1,9 @@
+[project]
+name = "practice-082-discord-bot"
+version = "0.1.0"
+description = "Discord Bot Engineering: Gateway, Interactions & UI Components"
+requires-python = ">=3.12"
+dependencies = [
+    "discord.py>=2.4",
+    "python-dotenv>=1.0",
+]
