@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp,wasm,linux&perline=17" />
+  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp,wasm,linux,discord&perline=18" />
 </p>
 
 <b> _**This repository is not to show the things that I made, but the things that I have been interested into learning, and my progress learning them**_ </b>
@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-18%20%2F%20129%20practices-blue?style=flat-square" alt="Progress: 18/129">
+  <img src="https://img.shields.io/badge/Progress-18%20%2F%20132%20practices-blue?style=flat-square" alt="Progress: 18/132">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -178,6 +178,12 @@ python clean_all.py
   <td>016</td>
   <td>REST API Design Principles</td>
   <td><img src="https://skillicons.dev/icons?i=py,fastapi" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>082</td>
+  <td>Discord Bot Engineering: Gateway, Interactions & UI Components</td>
+  <td><img src="https://skillicons.dev/icons?i=py,discord" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
@@ -633,6 +639,18 @@ python clean_all.py
 <tr>
   <td>067</td>
   <td>GraphRAG: Knowledge Graph-Enhanced RAG</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>083a</td>
+  <td>Self-Evolving Persona Agent: Foundations</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>083b</td>
+  <td>Self-Evolving Persona Agent: ACE Loop & Self-Improvement</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>—</td>
 </tr>

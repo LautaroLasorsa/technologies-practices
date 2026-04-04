@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Practice-specific: generated data
+data/conversations/
+data/reflections/
+data/snapshots/
+data/playbook.md
+
+# Keep seed data and sample conversations committed
+!data/playbook_seed.md
+!data/sample_conversations/
+
+# uv
+uv.lock

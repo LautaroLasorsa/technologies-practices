@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Practice-specific: generated data (memory + logs are runtime artifacts)
+data/memory/
+data/logs/
+data/config.json
+data/persona.json
+
+# Keep the example persona committed
+!data/persona_example.json
+
+# uv
+uv.lock

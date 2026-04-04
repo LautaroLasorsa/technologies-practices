@@ -1,0 +1,14 @@
+[project]
+name = "practice-083b-persona-agent-ace"
+version = "0.1.0"
+description = "Self-Evolving Persona Agent: ACE Loop & Self-Improvement"
+requires-python = ">=3.12"
+dependencies = [
+    "langgraph",
+    "langchain-core",
+    "instructor",
+    "openai",
+    "pydantic>=2.0",
+    "sentence-transformers",
+    "matplotlib",
+]

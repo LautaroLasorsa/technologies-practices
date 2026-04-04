@@ -1,0 +1,5 @@
+# Dependencies are managed via pyproject.toml + uv.
+# This file is provided for reference only.
+# Use: uv add "discord.py>=2.4" python-dotenv
+discord.py>=2.4
+python-dotenv>=1.0
