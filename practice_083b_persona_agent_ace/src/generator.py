@@ -26,8 +26,8 @@ import uuid
 from pathlib import Path
 
 import instructor
-from openai import OpenAI
 
+from src.llm_config import get_instructor_client, get_openai_client
 from src.models import ACEConfig, Conversation, ConversationTurn
 from src.playbook import Playbook
 
@@ -100,9 +100,8 @@ Respond naturally as Mira would. Your response should feel like a real person te
 
 
 def _create_instructor_client(config: ACEConfig) -> instructor.Instructor:
-    """Create an instructor-patched OpenAI client for structured output."""
-    base_client = OpenAI(base_url=config.ollama_base_url, api_key="ollama")
-    return instructor.from_openai(base_client, mode=instructor.Mode.JSON)
+    """Create an instructor-patched client for the configured LLM provider."""
+    return get_instructor_client()
 
 
 def _build_system_prompt(playbook: Playbook) -> str:
@@ -159,7 +158,7 @@ def generate_conversation(
             )
         except Exception:
             # Fallback: plain completion without structured output
-            plain_client = OpenAI(base_url=config.ollama_base_url, api_key="ollama")
+            plain_client = get_openai_client()
             completion = plain_client.chat.completions.create(
                 model=config.model,
                 messages=messages,

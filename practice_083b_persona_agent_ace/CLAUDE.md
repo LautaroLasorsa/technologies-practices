@@ -283,6 +283,37 @@ All commands run from `practice_083b_persona_agent_ace/`.
 | | `uv run python -m src.evaluator` | Score sample conversations with the human-likeness rubric |
 | **Cleanup** | `python clean.py` | Remove generated data, caches, and Docker volumes |
 
+## LLM Configuration
+
+By default the practice uses a local **Ollama** instance (started via `docker compose up -d`). You can switch to any OpenAI-compatible provider — or Anthropic — without touching any source file.
+
+### Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | `ollama` \| `lmstudio` \| `openai` \| `anthropic` \| `google` |
+| `LLM_MODEL` | `qwen2.5:3b` | Model name passed to the provider |
+| `LLM_BASE_URL` | *(provider default)* | Override the API base URL |
+| `LLM_API_KEY` | *(empty)* | Required for cloud providers |
+
+### Quick-start for alternative providers
+
+```bash
+# Copy the example and edit
+cp .env.example .env
+
+# OpenAI
+LLM_PROVIDER=openai LLM_MODEL=gpt-4o LLM_API_KEY=sk-... uv run python -m src.main --verify
+
+# Anthropic (requires: uv add anthropic)
+LLM_PROVIDER=anthropic LLM_MODEL=claude-3-5-sonnet-20241022 LLM_API_KEY=sk-ant-... uv run python -m src.main --verify
+
+# LM Studio (local)
+LLM_PROVIDER=lmstudio LLM_MODEL=<model-name> uv run python -m src.main --verify
+```
+
+The factory lives in `src/llm_config.py`. All source files import `get_openai_client()` / `get_instructor_client()` from there rather than constructing clients directly.
+
 ## State
 
 `not-started`

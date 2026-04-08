@@ -1,4 +1,6 @@
-"""Verify Ollama connectivity and model availability.
+"""Verify LLM connectivity and model availability.
+
+Adapts to the configured LLM_PROVIDER (default: ollama).
 
 Run:
     uv run python src/00_verify_setup.py
@@ -8,53 +10,55 @@ import sys
 import urllib.request
 import json
 
+from llm_config import LLM_PROVIDER, LLM_MODEL, get_chat_model
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-REQUIRED_MODEL = "qwen2.5:7b"
+import os
+
+_OLLAMA_BASE_URL = os.getenv("LLM_BASE_URL", "") or "http://localhost:11434"
 
 
 def check_ollama_running() -> bool:
     """Check if Ollama server is reachable."""
     try:
-        req = urllib.request.Request(f"{OLLAMA_BASE_URL}/api/tags")
+        req = urllib.request.Request(f"{_OLLAMA_BASE_URL}/api/tags")
         with urllib.request.urlopen(req, timeout=5) as resp:
             return resp.status == 200
     except Exception as e:
-        print(f"[FAIL] Ollama not reachable at {OLLAMA_BASE_URL}: {e}")
+        print(f"[FAIL] Ollama not reachable at {_OLLAMA_BASE_URL}: {e}")
         print("       Run: docker compose up -d")
         return False
 
 
 def check_model_available() -> bool:
-    """Check if the required model is downloaded."""
+    """Check if the required model is downloaded in Ollama."""
     try:
-        req = urllib.request.Request(f"{OLLAMA_BASE_URL}/api/tags")
+        req = urllib.request.Request(f"{_OLLAMA_BASE_URL}/api/tags")
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode())
             model_names = [m["name"] for m in data.get("models", [])]
             # Check both exact match and prefix match (e.g. "qwen2.5:7b" in "qwen2.5:7b")
             for name in model_names:
-                if name == REQUIRED_MODEL or name.startswith(REQUIRED_MODEL.split(":")[0]):
+                if name == LLM_MODEL or name.startswith(LLM_MODEL.split(":")[0]):
                     print(f"[OK]   Model found: {name}")
                     return True
-            print(f"[FAIL] Model '{REQUIRED_MODEL}' not found. Available: {model_names}")
-            print(f"       Run: docker exec ollama ollama pull {REQUIRED_MODEL}")
+            print(f"[FAIL] Model '{LLM_MODEL}' not found. Available: {model_names}")
+            print(f"       Run: docker exec ollama ollama pull {LLM_MODEL}")
             return False
     except Exception as e:
         print(f"[FAIL] Could not list models: {e}")
         return False
 
 
-def check_model_responds() -> bool:
-    """Send a simple prompt to verify the model generates output."""
+def check_model_responds_ollama() -> bool:
+    """Send a simple prompt via Ollama HTTP API to verify the model generates output."""
     try:
         payload = json.dumps({
-            "model": REQUIRED_MODEL,
+            "model": LLM_MODEL,
             "prompt": "Say 'hello' and nothing else.",
             "stream": False,
         }).encode()
         req = urllib.request.Request(
-            f"{OLLAMA_BASE_URL}/api/generate",
+            f"{_OLLAMA_BASE_URL}/api/generate",
             data=payload,
             headers={"Content-Type": "application/json"},
         )
@@ -66,6 +70,23 @@ def check_model_responds() -> bool:
                 return True
             print("[FAIL] Model returned empty response")
             return False
+    except Exception as e:
+        print(f"[FAIL] Model inference failed: {e}")
+        return False
+
+
+def check_model_responds_langchain() -> bool:
+    """Send a simple prompt via LangChain to verify model connectivity."""
+    try:
+        llm = get_chat_model(temperature=0)
+        from langchain_core.messages import HumanMessage
+        response = llm.invoke([HumanMessage(content="Say 'hello' and nothing else.")])
+        text = response.content.strip() if hasattr(response, "content") else str(response)
+        if text:
+            print(f"[OK]   Model responds: \"{text[:80]}\"")
+            return True
+        print("[FAIL] Model returned empty response")
+        return False
     except Exception as e:
         print(f"[FAIL] Model inference failed: {e}")
         return False
@@ -91,17 +112,30 @@ def check_langchain_imports() -> bool:
     return all_ok
 
 
+def build_checks_for_provider() -> list:
+    """Return the ordered list of (name, check_fn) pairs for the active provider."""
+    if LLM_PROVIDER == "ollama":
+        return [
+            ("Ollama server", check_ollama_running),
+            ("Model available", check_model_available),
+            ("Python packages", check_langchain_imports),
+            ("Model inference", check_model_responds_ollama),
+        ]
+    else:
+        return [
+            ("Python packages", check_langchain_imports),
+            ("Model inference", check_model_responds_langchain),
+        ]
+
+
 def main() -> None:
     print("=" * 60)
     print("Practice 031a — Setup Verification")
+    print(f"Provider : {LLM_PROVIDER}")
+    print(f"Model    : {LLM_MODEL}")
     print("=" * 60)
 
-    checks = [
-        ("Ollama server", check_ollama_running),
-        ("Model available", check_model_available),
-        ("Python packages", check_langchain_imports),
-        ("Model inference", check_model_responds),
-    ]
+    checks = build_checks_for_provider()
 
     results = []
     for name, check_fn in checks:

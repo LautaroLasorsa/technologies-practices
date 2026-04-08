@@ -182,6 +182,19 @@ Running `dspy.Evaluate` on both baseline and optimized programs provides concret
 
 DSPy represents a paradigm shift in LLM development — from manual prompt engineering to systematic optimization. Understanding this approach is increasingly important as LLM applications move from prototypes to production, where reproducibility and measurable improvement matter. Foundation for advanced DSPy (030b) and LangGraph integration (030c).
 
+## LLM Configuration
+
+By default the practice runs against local Ollama (`qwen2.5:7b`). To switch providers, copy `.env.example` to `.env` and set the variables below before running any script.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | `ollama` \| `lmstudio` \| `openai` \| `anthropic` \| `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name without the provider prefix |
+| `LLM_BASE_URL` | _(provider default)_ | Override the API base URL |
+| `LLM_API_KEY` | _(empty)_ | API key — required for cloud providers |
+
+All provider routing is centralised in `src/llm_config.py` (`get_lm()` / `configure_lm()`). The `01_first_signature.py` TODO(human) exercise still asks you to construct a `dspy.LM` manually — that's intentional, as the exercise teaches the raw API before the abstraction is used everywhere else.
+
 ## Commands
 
 | Phase | Command | Description |

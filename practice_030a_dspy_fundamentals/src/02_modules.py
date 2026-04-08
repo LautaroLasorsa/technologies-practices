@@ -16,16 +16,13 @@ from typing import Literal
 
 import dspy
 
+from llm_config import configure_lm
+
 
 # -- Setup: configure LM (same as Phase 1) ----------------------------------
 
 def configure_dspy() -> None:
-    lm = dspy.LM(
-        "ollama_chat/qwen2.5:7b",
-        api_base="http://localhost:11434",
-        api_key="",
-    )
-    dspy.configure(lm=lm)
+    configure_lm()
 
 
 # -- Pre-defined class signature for math word problems ----------------------

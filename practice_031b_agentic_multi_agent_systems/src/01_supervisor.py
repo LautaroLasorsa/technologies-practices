@@ -17,18 +17,16 @@ import operator
 from typing import Annotated, Literal
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel, Field
+
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
-llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0.1)
+llm = get_chat_model(temperature=0.1)
 
 # ---------------------------------------------------------------------------
 # Specialist definitions — system prompts that focus each agent

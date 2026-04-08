@@ -9,7 +9,6 @@ This exercise teaches the three core LCEL composition patterns:
 Together these let you build any data flow topology from simple Runnables.
 """
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import (
@@ -17,19 +16,13 @@ from langchain_core.runnables import (
     RunnablePassthrough,
     RunnableLambda,
 )
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Setup: model, parser, and pre-built prompt templates
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
-llm = ChatOllama(
-    model=MODEL_NAME,
-    base_url=OLLAMA_BASE_URL,
-    temperature=0.7,
-)
+llm = get_chat_model(temperature=0.7)
 
 parser = StrOutputParser()
 

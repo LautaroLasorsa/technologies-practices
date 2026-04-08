@@ -7,24 +7,17 @@ This exercise teaches three critical production patterns:
   3. Building resilient chains with fallback strategies
 """
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Setup: model and pre-built schemas
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
-llm = ChatOllama(
-    model=MODEL_NAME,
-    base_url=OLLAMA_BASE_URL,
-    temperature=0,
-)
+llm = get_chat_model(temperature=0)
 
 parser = StrOutputParser()
 

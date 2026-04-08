@@ -205,6 +205,53 @@ All commands run from `practice_029a_langchain_advanced/`.
 |---------|-------------|
 | `uv run python src/05_memory_conversation.py` | Run conversation memory exercises |
 
+## LLM Configuration
+
+All source files use `src/llm_config.py` to instantiate the chat model. Switch providers by setting environment variables — no code changes required.
+
+Copy `.env.example` to `.env` and fill in the values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:3b` | Model name as the provider expects it |
+| `LLM_BASE_URL` | *(provider default)* | Override base URL (optional) |
+| `LLM_API_KEY` | *(empty)* | API key for cloud providers |
+
+**Provider examples:**
+
+```bash
+# Local Ollama (default — no .env needed)
+LLM_PROVIDER=ollama
+LLM_MODEL=qwen2.5:7b
+
+# LM Studio
+LLM_PROVIDER=lmstudio
+LLM_MODEL=qwen2.5-7b-instruct
+
+# OpenAI
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=sk-...
+
+# Anthropic
+LLM_PROVIDER=anthropic
+LLM_MODEL=claude-3-5-haiku-20241022
+LLM_API_KEY=sk-ant-...
+```
+
+Cloud providers need additional packages (installed on demand with a clear error message):
+
+```bash
+uv add langchain-openai    # for openai provider
+uv add langchain-anthropic # for anthropic provider
+uv add langchain-google-genai # for google provider
+```
+
 ## References
 
 - [LangChain Python Docs](https://python.langchain.com/docs/)

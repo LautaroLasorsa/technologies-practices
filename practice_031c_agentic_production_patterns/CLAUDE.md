@@ -12,6 +12,28 @@
 
 Python 3.12+ (uv), Docker (Ollama, Qdrant, Langfuse, PostgreSQL)
 
+## LLM Configuration
+
+All LLM settings are read from environment variables. No code changes are needed to switch providers.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name (provider-specific) |
+| `LLM_BASE_URL` | `http://localhost:11434` | Base URL override (ollama default shown) |
+| `LLM_API_KEY` | _(empty)_ | API key — required for cloud providers, ignored for local |
+
+Copy `.env.example` to `.env` and uncomment the vars you want to change. Export before running:
+
+```bash
+cp .env.example .env
+export $(cat .env | xargs) && uv run python src/02_guardrails.py
+```
+
+Default behavior (no env vars set) connects to Ollama on `http://localhost:11434` with `qwen2.5:7b` — identical to the original hardcoded config.
+
+Note: `src/01_pydantic_agent.py` uses PydanticAI's native model string format (`"ollama:qwen2.5:7b"`) rather than LangChain's ChatOllama — it has its own `OLLAMA_MODEL` constant that can be updated directly.
+
 ## Theoretical Context
 
 ### Production vs Prototype Agents

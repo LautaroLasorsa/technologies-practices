@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Environment
+.env
+
+# Docker volumes / data
+ollama_data/
+
+# IDE
+.zed/

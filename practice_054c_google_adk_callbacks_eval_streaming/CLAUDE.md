@@ -12,6 +12,24 @@
 - Docker (Ollama)
 - `google-adk`, `litellm`
 
+## LLM Configuration
+
+The practice uses `llm_config.py` to select the LLM provider via environment variables. Copy `.env.example` to `.env` and edit as needed.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name without provider prefix |
+| `LLM_BASE_URL` | *(provider default)* | Override the provider's API base URL |
+| `LLM_API_KEY` | *(none)* | API key for cloud providers |
+
+**Default behavior (no `.env` file):** Ollama on `http://localhost:11434` with `qwen2.5:7b` — identical to the original scaffold.
+
+**Cloud provider example:**
+```bash
+LLM_PROVIDER=openai LLM_MODEL=gpt-4o LLM_API_KEY=sk-... uv run python main.py
+```
+
 ## Theoretical Context
 
 ### Callbacks — Hooks Into Agent Execution

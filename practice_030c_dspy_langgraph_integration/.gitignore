@@ -1,0 +1,19 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# uv
+.python-version
+
+# DSPy cache / optimized programs
+*.json
+*.pkl
+
+# OS
+.DS_Store
+Thumbs.db

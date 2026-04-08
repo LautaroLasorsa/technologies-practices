@@ -186,6 +186,19 @@ LangGraph is the production standard for building stateful AI agents. Understand
 - **Architecture skill**: Graph-based state machines transfer to any agent framework — the concepts are universal
 - **Foundation for advanced practices**: This builds toward DSPy integration (030c) and Agentic AI practices (031a-c)
 
+## LLM Configuration
+
+By default the practice uses local Ollama (`http://localhost:11434`, model `qwen2.5:3b`). To switch providers, copy `.env.example` to `.env` and set the variables before running any script.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | `ollama` \| `lmstudio` \| `openai` \| `anthropic` \| `google` |
+| `LLM_MODEL` | `qwen2.5:3b` | Model name valid for the chosen provider |
+| `LLM_BASE_URL` | _(per provider)_ | Override the API base URL |
+| `LLM_API_KEY` | _(empty)_ | Required for `openai`, `anthropic`, `google` |
+
+The factory lives in `src/llm_config.py` (`get_chat_model(**kwargs)`). Cloud provider packages are not installed by default; install as needed (e.g., `uv add langchain-openai`).
+
 ## Commands
 
 All commands run from `practice_029b_langgraph/`.

@@ -20,22 +20,7 @@ import dspy
 from dspy.teleprompt import BootstrapFewShot
 from langgraph.graph import END, START, StateGraph
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-OLLAMA_MODEL = "qwen2.5:7b"
-OLLAMA_BASE_URL = "http://localhost:11434"
-
-
-def configure_dspy() -> None:
-    """Configure DSPy to use the local Ollama model."""
-    lm = dspy.LM(
-        model=f"ollama_chat/{OLLAMA_MODEL}",
-        api_base=f"{OLLAMA_BASE_URL}/v1",
-        api_key="",
-    )
-    dspy.configure(lm=lm)
+from llm_config import configure_lm
 
 
 # ---------------------------------------------------------------------------
@@ -181,7 +166,7 @@ def evaluate_pipeline() -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    configure_dspy()
+    configure_lm()
 
     print("=" * 60)
     print("Phase 5: Optimization Within Graph")

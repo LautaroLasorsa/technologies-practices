@@ -1,0 +1,21 @@
+# Environment variables (may contain API keys)
+.env
+
+# Python
+app/.venv/
+app/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# LangExtract generated output
+*.html
+
+# Docker volumes
+ollama_data/
+
+# OS
+.DS_Store
+Thumbs.db

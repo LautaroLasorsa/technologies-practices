@@ -11,18 +11,15 @@ This exercise teaches the fundamental LangGraph cycle:
 
 from typing_extensions import TypedDict
 
-from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
-
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+from llm_config import get_chat_model
 
 
 # ---------------------------------------------------------------------------
 # LLM setup (provided — not part of the exercise)
 # ---------------------------------------------------------------------------
 
-llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0.7)
+llm = get_chat_model(temperature=0.7)
 
 
 # ---------------------------------------------------------------------------

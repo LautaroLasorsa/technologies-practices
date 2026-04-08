@@ -15,8 +15,7 @@ import json
 import sys
 from pathlib import Path
 
-from openai import OpenAI
-
+from src.llm_config import get_openai_client, LLM_MODEL, LLM_PROVIDER
 from src.models import ACEConfig, IterationSnapshot
 
 
@@ -58,21 +57,23 @@ def verify_setup() -> bool:
         print(f"[FAIL] Playbook parsing failed: {e}")
         return False
 
-    # 4. Ollama connectivity
+    # 4. LLM connectivity
     try:
-        client = OpenAI(base_url=config.ollama_base_url, api_key="ollama")
+        client = get_openai_client()
         models = client.models.list()
         available = [m.id for m in models.data]
-        print(f"[OK] Ollama connected. Models: {available}")
+        print(f"[OK] LLM provider '{LLM_PROVIDER}' connected. Models: {available}")
     except Exception as e:
-        print(f"[FAIL] Cannot connect to Ollama at {config.ollama_base_url}: {e}")
-        print("  Start Ollama: docker compose up -d")
+        print(f"[FAIL] Cannot connect to LLM provider '{LLM_PROVIDER}': {e}")
+        if LLM_PROVIDER == "ollama":
+            print("  Start Ollama: docker compose up -d")
         return False
 
     # 5. Model availability
     if config.model not in available:
-        print(f"[FAIL] Model '{config.model}' not found. Pull it:")
-        print(f"  docker compose exec ollama ollama pull {config.model}")
+        print(f"[FAIL] Model '{config.model}' not found.")
+        if LLM_PROVIDER == "ollama":
+            print(f"  docker compose exec ollama ollama pull {config.model}")
         return False
     print(f"[OK] Model '{config.model}' available")
 

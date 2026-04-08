@@ -14,13 +14,7 @@ from __future__ import annotations
 import asyncio
 import re
 
-from langchain_ollama import ChatOllama
-
-
-# ── Configuration ────────────────────────────────────────────────────
-
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+from llm_config import get_chat_model
 
 MAX_INPUT_LENGTH = 1000
 

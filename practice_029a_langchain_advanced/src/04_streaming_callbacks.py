@@ -11,25 +11,18 @@ import time
 from typing import Any
 from uuid import UUID
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
 from langchain_core.outputs import LLMResult
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Setup: model, prompt, and base chain
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
-llm = ChatOllama(
-    model=MODEL_NAME,
-    base_url=OLLAMA_BASE_URL,
-    temperature=0.7,
-)
+llm = get_chat_model(temperature=0.7)
 
 parser = StrOutputParser()
 

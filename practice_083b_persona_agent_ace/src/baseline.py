@@ -35,8 +35,8 @@ import json
 from pathlib import Path
 
 import instructor
-from openai import OpenAI
 
+from src.llm_config import get_openai_client
 from src.models import ACEConfig, Conversation, IterationSnapshot
 from src.playbook import Playbook, load_seed_playbook, save_playbook, PLAYBOOK_PATH
 
@@ -45,8 +45,8 @@ SNAPSHOTS_DIR = Path(__file__).parent.parent / "data" / "snapshots"
 
 
 def _create_client(config: ACEConfig) -> OpenAI:
-    """Create a plain OpenAI client pointed at Ollama."""
-    return OpenAI(base_url=config.ollama_base_url, api_key="ollama")
+    """Create a plain OpenAI client for the configured LLM provider."""
+    return get_openai_client()
 
 
 def _format_conversations_for_prompt(conversations: list[Conversation]) -> str:
@@ -219,18 +219,18 @@ def _self_test() -> None:
 
     config = ACEConfig()
 
-    # Verify Ollama connectivity
+    # Verify LLM provider connectivity
     try:
         client = _create_client(config)
         models = client.models.list()
         available = [m.id for m in models.data]
         if config.model not in available:
-            print(f"[FAIL] Model '{config.model}' not found. Pull it:")
-            print(f"  docker compose exec ollama ollama pull {config.model}")
+            print(f"[FAIL] Model '{config.model}' not found.")
+            print(f"  If using Ollama: docker compose exec ollama ollama pull {config.model}")
             sys.exit(1)
     except Exception as e:
-        print(f"[FAIL] Cannot connect to Ollama: {e}")
-        print("  Start Ollama: docker compose up -d")
+        print(f"[FAIL] Cannot connect to LLM provider: {e}")
+        print("  If using Ollama: docker compose up -d")
         sys.exit(1)
 
     iterations = 3

@@ -6,22 +6,15 @@ Everything in LangChain v0.3 builds on this — once you understand how three
 Runnables compose into a pipeline, you can build arbitrarily complex chains.
 """
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Setup: model and output parser (boilerplate — already done for you)
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
-llm = ChatOllama(
-    model=MODEL_NAME,
-    base_url=OLLAMA_BASE_URL,
-    temperature=0.7,
-)
+llm = get_chat_model(temperature=0.7)
 
 output_parser = StrOutputParser()
 

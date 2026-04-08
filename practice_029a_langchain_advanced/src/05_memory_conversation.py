@@ -10,24 +10,17 @@ and injects it via RunnableWithMessageHistory. This is more explicit, testable,
 and compatible with LangGraph's persistence model.
 """
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Setup: model, parser, and conversation prompt template
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
-llm = ChatOllama(
-    model=MODEL_NAME,
-    base_url=OLLAMA_BASE_URL,
-    temperature=0.7,
-)
+llm = get_chat_model(temperature=0.7)
 
 parser = StrOutputParser()
 

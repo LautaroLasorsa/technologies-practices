@@ -6,24 +6,21 @@ Builds and runs a trivial 1-node graph as a smoke test.
 
 from typing_extensions import TypedDict
 
-from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
-
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
+from llm_config import get_chat_model, LLM_MODEL, LLM_PROVIDER
 
 
 # ---------------------------------------------------------------------------
-# 1. Test Ollama connectivity
+# 1. Test LLM connectivity
 # ---------------------------------------------------------------------------
 
 def test_ollama_connection() -> None:
-    """Send a single prompt to ChatOllama and print the response."""
-    print("=== Testing Ollama connectivity ===")
-    llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0)
+    """Send a single prompt to the configured LLM and print the response."""
+    print(f"=== Testing LLM connectivity (provider={LLM_PROVIDER}, model={LLM_MODEL}) ===")
+    llm = get_chat_model(temperature=0)
     response = llm.invoke("Say 'LangGraph is ready' and nothing else.")
     print(f"Model response: {response.content}")
-    print("Ollama connection OK.\n")
+    print("LLM connection OK.\n")
 
 
 # ---------------------------------------------------------------------------

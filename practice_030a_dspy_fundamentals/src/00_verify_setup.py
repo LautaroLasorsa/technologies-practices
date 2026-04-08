@@ -10,16 +10,7 @@ Prereq: docker compose up -d && docker exec ollama ollama pull qwen2.5:7b
 
 import dspy
 
-
-def configure_lm() -> dspy.LM:
-    """Configure DSPy to use the local Ollama instance."""
-    lm = dspy.LM(
-        "ollama_chat/qwen2.5:7b",
-        api_base="http://localhost:11434",
-        api_key="",  # Ollama doesn't require an API key
-    )
-    dspy.configure(lm=lm)
-    return lm
+from llm_config import configure_lm
 
 
 def test_basic_call(lm: dspy.LM) -> None:

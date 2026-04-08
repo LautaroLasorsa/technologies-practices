@@ -25,9 +25,9 @@ from __future__ import annotations
 import re
 
 import instructor
-from openai import OpenAI
 from pydantic import BaseModel, Field
 
+from src.llm_config import get_instructor_client
 from src.models import ACEConfig, Conversation, ConversationScore
 from src.playbook import Playbook
 
@@ -136,10 +136,7 @@ class _LLMScore(BaseModel):
 
 def _score_with_llm(conversation: Conversation, config: ACEConfig) -> _LLMScore:
     """Use the LLM to score emotional continuity and persona consistency."""
-    client = instructor.from_openai(
-        OpenAI(base_url=config.ollama_base_url, api_key="ollama"),
-        mode=instructor.Mode.JSON,
-    )
+    client = get_instructor_client()
 
     turns_text = "\n".join(
         f"{'User' if t.role == 'user' else 'Agent'}: {t.content}"

@@ -20,5 +20,8 @@ data/persona.json
 # Keep the example persona committed
 !data/persona_example.json
 
+# Environment / secrets
+.env
+
 # uv
 uv.lock

@@ -26,23 +26,13 @@ Key concepts:
 from __future__ import annotations
 
 import instructor
-from openai import OpenAI
 
+from src.llm_config import create_instructor_client, create_raw_openai_client
 from src.models import AgentConfig, AgentTurn
 
-
-def create_instructor_client(config: AgentConfig) -> instructor.Instructor:
-    """Create an instructor-patched OpenAI client pointed at Ollama.
-
-    Uses instructor.Mode.JSON because Ollama's OpenAI-compatible endpoint
-    supports JSON mode natively. This is more reliable than Mode.TOOLS
-    for small models like Qwen 2.5 3B.
-    """
-    base_client = OpenAI(
-        base_url=config.ollama_base_url,
-        api_key="ollama",  # Required by OpenAI client but unused by Ollama
-    )
-    return instructor.from_openai(base_client, mode=instructor.Mode.JSON)
+# Re-export create_instructor_client so existing callers of
+# `from src.introspection import create_instructor_client` keep working.
+__all__ = ["create_instructor_client", "generate_agent_turn"]
 
 
 def generate_agent_turn(
@@ -102,8 +92,21 @@ def generate_agent_turn(
     #   )
     #   # result is already an AgentTurn instance
     """
-    raise NotImplementedError("Exercise 3: implement generate_agent_turn")
 
+    first_message = {
+        "role": "system",
+        "content": system_prompt
+    }
+
+    messages : list[ChatCompletionMessageParam] = [first_message, * messages]
+
+    return client.chat.completions.create(
+        model = model,
+        messages = messages,
+        response_model = AgentTurn,
+        max_retries = 3,
+        temperature = 0.8,
+    )
 
 # ---------------------------------------------------------------------------
 # Self-test
@@ -114,23 +117,20 @@ def _self_test() -> None:
     from src.models import AgentConfig
 
     config = AgentConfig()
-    print(f"Connecting to Ollama at {config.ollama_base_url}...")
+    print(f"Connecting to {config.provider} at {config.ollama_base_url}...")
 
-    # Test Ollama connectivity first
+    # Test LLM connectivity first
     try:
-        base_client = OpenAI(
-            base_url=config.ollama_base_url,
-            api_key="ollama",
-        )
+        base_client = create_raw_openai_client(config)
         models = base_client.models.list()
         available = [m.id for m in models.data]
-        print(f"[OK] Ollama connected. Available models: {available}")
+        print(f"[OK] {config.provider} connected. Available models: {available}")
         if config.model not in available:
             print(f"[WARN] Model '{config.model}' not found. Pull it with:")
             print(f"  docker compose exec ollama ollama pull {config.model}")
             return
     except Exception as e:
-        print(f"[FAIL] Cannot connect to Ollama: {e}")
+        print(f"[FAIL] Cannot connect to {config.provider}: {e}")
         print("  Start Ollama with: docker compose up -d")
         return
 

@@ -191,6 +191,33 @@ All commands run from `practice_031a_agentic_single_agent_patterns/`.
 |---------|-------------|
 | `uv run python src/05_memory_tools.py` | Run agent with scratchpad memory and dynamic tool creation |
 
+## LLM Configuration
+
+All source files read the LLM provider from environment variables via `src/llm_config.py`. Copy `.env.example` to `.env` and set values to switch providers without touching source code.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name (provider-specific) |
+| `LLM_BASE_URL` | _(provider default)_ | Override base URL (e.g. for local proxies) |
+| `LLM_API_KEY` | — | API key for cloud providers |
+
+**Local (default — no `.env` needed):**
+```bash
+# Uses Ollama at http://localhost:11434 with qwen2.5:7b
+uv run python src/01_react_agent.py
+```
+
+**Cloud provider example:**
+```bash
+LLM_PROVIDER=openai LLM_MODEL=gpt-4o-mini LLM_API_KEY=sk-... uv run python src/01_react_agent.py
+```
+
+Cloud providers require installing the matching package first:
+- OpenAI: `uv add langchain-openai`
+- Anthropic: `uv add langchain-anthropic`
+- Google: `uv add langchain-google-genai`
+
 ## References
 
 - [ReAct Paper — Yao et al. (2022)](https://arxiv.org/abs/2210.03629)

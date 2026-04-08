@@ -83,6 +83,7 @@ def check_ollama_connectivity() -> bool:
     try:
         import urllib.request
         import json
+        from llm_config import LLM_PROVIDER, LLM_MODEL
 
         url = "http://localhost:11434/api/tags"
         req = urllib.request.Request(url, method="GET")
@@ -92,6 +93,7 @@ def check_ollama_connectivity() -> bool:
         models = [m["name"] for m in data.get("models", [])]
         print(f"  Ollama reachable at localhost:11434")
         print(f"  Available models: {models}")
+        print(f"  LLM_PROVIDER={LLM_PROVIDER}, LLM_MODEL={LLM_MODEL}")
 
         has_qwen = any("qwen2.5" in m for m in models)
         if has_qwen:
@@ -107,11 +109,11 @@ def check_ollama_connectivity() -> bool:
 
 
 def check_llm_inference() -> bool:
-    """Quick inference test — send a trivial prompt to ChatOllama."""
+    """Quick inference test — send a trivial prompt via get_chat_model()."""
     try:
-        from langchain_ollama import ChatOllama
+        from llm_config import get_chat_model
 
-        llm = ChatOllama(model="qwen2.5:7b", base_url="http://localhost:11434")
+        llm = get_chat_model()
         response = llm.invoke("Say 'hello' and nothing else.")
         content = response.content.strip()
         print(f"  LLM response: {content[:80]}")

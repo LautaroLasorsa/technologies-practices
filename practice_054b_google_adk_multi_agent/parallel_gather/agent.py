@@ -37,10 +37,11 @@ Key concept — ParallelAgent + SequentialAgent composition:
 """
 
 from google.adk.agents import LlmAgent, ParallelAgent, SequentialAgent
-from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools import ToolContext
 
-MODEL = LiteLlm(model="ollama_chat/qwen2.5:7b", api_base="http://localhost:11434")
+from llm_config import get_model
+
+MODEL = get_model()
 
 
 # ---------------------------------------------------------------------------

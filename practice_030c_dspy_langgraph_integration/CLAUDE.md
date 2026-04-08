@@ -133,6 +133,36 @@ The DSPy + LangGraph combination represents the state of the art for building op
 | **Phase 4** | `uv run python src/04_streaming_e2e.py` | Run streaming end-to-end query system |
 | **Phase 5** | `uv run python src/05_optimize_graph.py` | Optimize DSPy modules and evaluate full pipeline |
 
+## LLM Configuration
+
+All source files read provider settings from environment variables via `src/llm_config.py`. Without a `.env` file the practice runs with the original Ollama defaults, so no changes are required to start.
+
+### Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name (provider-specific defaults apply when blank) |
+| `LLM_BASE_URL` | *(per provider)* | Override the API base URL |
+| `LLM_API_KEY` | *(empty for local)* | Required for cloud providers |
+
+### Switching providers
+
+1. Copy `.env.example` to `.env`
+2. Set `LLM_PROVIDER` and `LLM_API_KEY` (and optionally `LLM_MODEL`)
+3. Install the matching LangChain package if using a cloud provider:
+   - OpenAI: `uv add langchain-openai`
+   - Anthropic: `uv add langchain-anthropic`
+   - Google: `uv add langchain-google-genai`
+4. Run any phase script — both DSPy and LangChain clients pick up the same vars
+
+### Factory functions (`src/llm_config.py`)
+
+| Function | Returns | Used by |
+|----------|---------|---------|
+| `configure_lm()` | `None` (calls `dspy.configure`) | All `*_dspy*.py` phases |
+| `get_chat_model()` | `BaseChatModel` instance | `00_verify_setup.py` |
+
 ## References
 - DSPy Tools: https://dspy.ai/learn/programming/tools/
 - DSPy ReAct: https://dspy.ai/api/modules/ReAct/

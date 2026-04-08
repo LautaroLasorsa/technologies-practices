@@ -19,16 +19,14 @@ from __future__ import annotations
 import asyncio
 import os
 
-from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langfuse.callback import CallbackHandler as LangfuseCallbackHandler
 
+from llm_config import get_chat_model
+
 
 # ── Configuration ────────────────────────────────────────────────────
-
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
 
 # Langfuse connection — after signing up at http://localhost:3000, go to
 # Settings > API Keys to create a key pair. You can either set env vars

@@ -20,15 +20,14 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
 from typing_extensions import TypedDict
+
+from llm_config import get_chat_model
 
 
 # ── Configuration ────────────────────────────────────────────────────
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
 MAX_ITERATIONS = 6
 
 SCRATCHPAD_SYSTEM_PROMPT = """You are a research assistant with a scratchpad for notes.
@@ -123,7 +122,7 @@ def read_scratchpad() -> str:
 SCRATCHPAD_TOOLS = [web_search, note_to_scratchpad, read_scratchpad]
 SCRATCHPAD_TOOLS_BY_NAME = {t.name: t for t in SCRATCHPAD_TOOLS}
 
-scratchpad_llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0)
+scratchpad_llm = get_chat_model(temperature=0)
 
 
 # ── TODO(human): Implement the scratchpad agent ─────────────────────
@@ -253,7 +252,7 @@ def run_tool(name: str, args: str) -> str:
 DYNAMIC_TOOLS = [create_tool, run_tool]
 DYNAMIC_TOOLS_BY_NAME = {t.name: t for t in DYNAMIC_TOOLS}
 
-dynamic_llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0)
+dynamic_llm = get_chat_model(temperature=0)
 
 
 # ── TODO(human): Implement the dynamic tool agent ───────────────────

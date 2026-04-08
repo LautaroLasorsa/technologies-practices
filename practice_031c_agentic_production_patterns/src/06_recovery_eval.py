@@ -13,7 +13,7 @@ import asyncio
 import random
 from typing import Any
 
-from langchain_ollama import ChatOllama
+from llm_config import get_chat_model
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -23,11 +23,6 @@ from tenacity import (
 )
 import logging
 
-
-# ── Configuration ────────────────────────────────────────────────────
-
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

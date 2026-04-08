@@ -1,0 +1,13 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# DSPy compiled programs / caches
+*.json
+*.pkl

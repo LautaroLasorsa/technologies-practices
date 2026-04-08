@@ -13,19 +13,13 @@ from __future__ import annotations
 import asyncio
 from typing import Annotated, Any, Literal
 
-from langchain_ollama import ChatOllama
+from llm_config import get_chat_model
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.types import interrupt, Command
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
-
-
-# ── Configuration ────────────────────────────────────────────────────
-
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
 
 
 # ── State & Models ───────────────────────────────────────────────────

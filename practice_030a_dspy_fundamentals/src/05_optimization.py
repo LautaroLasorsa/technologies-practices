@@ -18,16 +18,13 @@ Run: uv run python src/05_optimization.py
 import dspy
 from dspy.teleprompt import BootstrapFewShot
 
+from llm_config import configure_lm
+
 
 # -- Setup: configure LM ----------------------------------------------------
 
 def configure_dspy() -> None:
-    lm = dspy.LM(
-        "ollama_chat/qwen2.5:7b",
-        api_base="http://localhost:11434",
-        api_key="",
-    )
-    dspy.configure(lm=lm)
+    configure_lm()
 
 
 # -- Reuse SentimentAnalyzer and data from previous phases -------------------

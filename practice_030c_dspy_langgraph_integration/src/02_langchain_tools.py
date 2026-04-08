@@ -11,22 +11,7 @@ Run: uv run python src/02_langchain_tools.py
 import dspy
 from dspy import Tool
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-OLLAMA_MODEL = "qwen2.5:7b"
-OLLAMA_BASE_URL = "http://localhost:11434"
-
-
-def configure_dspy() -> None:
-    """Configure DSPy to use the local Ollama model."""
-    lm = dspy.LM(
-        model=f"ollama_chat/{OLLAMA_MODEL}",
-        api_base=f"{OLLAMA_BASE_URL}/v1",
-        api_key="",
-    )
-    dspy.configure(lm=lm)
+from llm_config import configure_lm
 
 
 # ---------------------------------------------------------------------------
@@ -85,7 +70,7 @@ def test_langchain_tool_integration() -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    configure_dspy()
+    configure_lm()
 
     print("=" * 60)
     print("Phase 2: LangChain Tool Integration")

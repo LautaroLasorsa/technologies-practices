@@ -17,17 +17,15 @@ from __future__ import annotations
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama
 from langgraph.prebuilt import create_react_agent
+
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
-llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0.1)
+llm = get_chat_model(temperature=0.1)
 
 # ---------------------------------------------------------------------------
 # Specialist system prompts (reused from Phase 1)

@@ -1,0 +1,15 @@
+# Environment variables (contains API keys)
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Docker volumes (created by docker compose)
+volumes/
+
+# Generated outputs
+*.log
