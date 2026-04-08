@@ -31,6 +31,7 @@ from langgraph.graph import END, START, StateGraph
 
 from src.models import AgentTurn, Emotion, EmotionalState
 
+from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
 # LangGraph State
@@ -63,6 +64,10 @@ class PersonaState(TypedDict):
 # ---------------------------------------------------------------------------
 # Emotion Update Node
 # ---------------------------------------------------------------------------
+
+class EmotionUpdate(BaseModel):
+    new_emotion: Emotion
+    new_intensity : float = Field(default=0.5, ge=0.0, le=1.0)
 
 def update_emotion(state: PersonaState) -> dict:
     """Determine the agent's new emotional state based on user message + current emotion.
@@ -127,8 +132,8 @@ def update_emotion(state: PersonaState) -> dict:
     # but bucketing into "mild" (<0.4), "moderate" (0.4-0.7), "strong" (>0.7)
     # for routing decisions.
     """
-    raise NotImplementedError("Exercise 4: implement update_emotion")
 
+    prompt = "Current Emotion: "
 
 # ---------------------------------------------------------------------------
 # Emotion-based routing

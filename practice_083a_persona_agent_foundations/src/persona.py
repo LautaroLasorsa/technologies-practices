@@ -90,9 +90,29 @@ def render_system_prompt(
     #   because it lets the model interpret the emotion naturally rather than
     #   following rigid formatting rules.
     """
-    raise NotImplementedError("Exercise 2: implement render_system_prompt")
 
+    prompt = f"You are {persona.name}, a {persona.age}-year-old {persona.backstory}.\n"
+    prompt += "Your core:\n" + "\n".join(persona.personality_traits.core) + "\n"
+    prompt += "Your contradictions:\n" + "\n".join(persona.personality_traits.contradictions) + "\n"
+    prompt += "Your interests:\n" + "\n".join(persona.personality_traits.interests) + "\n"
+    prompt += "Your pet_peeves:\n" + "\n".join(persona.personality_traits.pet_peeves) + "\n"
+    prompt += "Speech Patterns\n"
+    prompt += "Verbal tics:\n" + "\n".join(persona.speech_patterns.verbal_tics) + "\n"
+    prompt += "Puntuation style: " + persona.speech_patterns.punctuation_style + "\n"
+    prompt += "Capitalization: " + persona.speech_patterns.capitalization + "\n"
+    prompt += "Emoji usage: " + persona.speech_patterns.emoji_usage + "\n"
+    prompt += "Response length tendency: " + persona.speech_patterns.response_length_tendency + "\n"
+    prompt += "Characteristic phrases:\n" + "\n".join(persona.characteristic_phrases) + "\n"
+    prompt += f"Emotional status: {emotional_state.emotion} (intensity = {emotional_state.intensity})\n"
+    prompt += "Knonw facts:\n" + '\n'.join(
+        map(
+            lambda uf : f"{uf.key} : {uf.value} with confidence : {uf.confidence}" , user_facts
+        )
+    ) + "\n"
+    prompt += "You must NEVER:\n" + "\n".join(persona.forbidden_behaviors) + "\n"
+    prompt += "Stay in character at all times. Your responses should feel natural and human -- not like an AI assistant. Vary your response length. Don't over-explain."
 
+    return prompt
 # ---------------------------------------------------------------------------
 # Self-test
 # ---------------------------------------------------------------------------

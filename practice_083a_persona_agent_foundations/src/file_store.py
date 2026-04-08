@@ -53,12 +53,14 @@ the filesystem directly.
 # FileStore methods. The _read_json/_write_json helpers and persona/config
 # methods are provided as reference for the pattern -- implement the rest
 # following the same conventions.
+"""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Any
+import datetime
 
 from src.models import (
     AgentConfig,
@@ -189,7 +191,14 @@ class FileStore:
         # just "default" or a simple alphanumeric string. Over-engineering the
         # path sanitization isn't necessary here.
         """
-        raise NotImplementedError("Exercise 1: implement load_user_facts")
+
+        path = self._memory_dir / f"{user_id}.json"
+        json_raw = self._read_json(path)
+
+        if json_raw is None:
+            return UserFactStore(user_id=user_id)
+
+        return UserFactStore.model_validate(json_raw)
 
     def save_user_facts(self, fact_store: UserFactStore) -> None:
         """Save the fact store for a user to data/memory/<user_id>.json.
@@ -211,7 +220,9 @@ class FileStore:
         # If you were building a multi-user system, you'd need file locking
         # or a proper database.
         """
-        raise NotImplementedError("Exercise 1: implement save_user_facts")
+        path = self._memory_dir / f"{fact_store.user_id}.json"
+        fact_store.last_updated = str(datetime.datetime.now().isoformat())
+        self._write_json(path, fact_store.model_dump())
 
     # ------------------------------------------------------------------
     # Conversation Logs (Exercise 1 -- TODO(human))
@@ -240,7 +251,10 @@ class FileStore:
         # Hint: a good convention is f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{user_id}"
         # This gives human-readable, sortable, unique-enough IDs.
         """
-        raise NotImplementedError("Exercise 1: implement start_new_conversation")
+        chat_id = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{user_id}"
+        conversation = ConversationLog(conversation_id = chat_id, user_id = user_id)
+
+        return conversation
 
     def append_conversation_turn(
         self, conversation: ConversationLog, turn: ConversationTurn
@@ -263,8 +277,9 @@ class FileStore:
         # The write happens synchronously after each turn. This means if the process
         # crashes, you lose at most the current turn -- all previous turns are on disk.
         """
-        raise NotImplementedError("Exercise 1: implement append_conversation_turn")
-
+        conversation.turns.append(turn)
+        file_path = self._logs_dir / f"conversation_{conversation.conversation_id}.json"
+        self._write_json(file_path, conversation.model_dump())
 
 # ---------------------------------------------------------------------------
 # Self-test
