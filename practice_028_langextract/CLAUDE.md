@@ -11,6 +11,26 @@
 - Python 3.12+ (uv)
 - Docker / Docker Compose (Ollama container)
 
+## LLM Configuration
+
+All LLM settings are read from environment variables. No code changes are needed to switch providers.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `gemma3:4b` | Model name (provider-specific) |
+| `LLM_BASE_URL` | `http://localhost:11434` | Base URL override (ollama default shown) |
+| `LLM_API_KEY` | _(empty)_ | API key — required for cloud providers, ignored for local |
+| `LLM_TIMEOUT` | `300` | Inference timeout in seconds |
+
+Copy `.env.example` to `.env` and uncomment the vars you want to change. Export before running:
+
+```bash
+export $(cat .env | xargs) && cd app && uv run python basic_extraction.py
+```
+
+Default behavior (no env vars set) connects to Ollama on `http://localhost:11434` with `gemma3:4b` — identical to the original hardcoded config.
+
 ## Theoretical Context
 
 ### What Is LangExtract?

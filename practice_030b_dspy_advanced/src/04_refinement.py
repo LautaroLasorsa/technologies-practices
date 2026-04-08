@@ -27,20 +27,19 @@ _basic_rag = importlib.import_module("02_basic_rag")
 
 COLLECTION_NAME = _basic_rag.COLLECTION_NAME
 EMBEDDING_MODEL_NAME = _basic_rag.EMBEDDING_MODEL_NAME
-MODEL_ID = _basic_rag.MODEL_ID
-OLLAMA_BASE = _basic_rag.OLLAMA_BASE
 QDRANT_HOST = _basic_rag.QDRANT_HOST
 QDRANT_PORT = _basic_rag.QDRANT_PORT
 AnswerWithContext = _basic_rag.AnswerWithContext
 BasicRAG = _basic_rag.BasicRAG
 QdrantRetriever = _basic_rag.QdrantRetriever
 
+from llm_config import configure_lm  # noqa: E402
+
 
 # -- Setup -------------------------------------------------------------------
 
 def configure_dspy() -> None:
-    lm = dspy.LM(MODEL_ID, api_base=OLLAMA_BASE, api_key="")
-    dspy.configure(lm=lm)
+    configure_lm()
 
 
 def create_rag_pipeline() -> BasicRAG:

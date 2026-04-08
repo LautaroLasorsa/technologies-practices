@@ -11,23 +11,23 @@ Prereq: docker compose up -d && docker exec ollama ollama pull qwen2.5:7b
 import dspy
 from qdrant_client import QdrantClient
 
+from llm_config import LLM_MODEL, LLM_PROVIDER, configure_lm
 
-OLLAMA_BASE = "http://localhost:11434"
+
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
-MODEL_ID = "ollama_chat/qwen2.5:7b"
 
 
 def verify_dspy_connection() -> None:
     """Configure DSPy with local Ollama and run a test query."""
     print("Testing DSPy + Ollama connection...")
-    lm = dspy.LM(MODEL_ID, api_base=OLLAMA_BASE, api_key="")
-    dspy.configure(lm=lm)
+    lm = configure_lm()
 
     predictor = dspy.Predict("question -> answer")
     result = predictor(question="What is the third planet from the Sun?")
 
-    print(f"  Model:    {lm.model}")
+    print(f"  Provider: {LLM_PROVIDER}")
+    print(f"  Model:    {LLM_MODEL}")
     print(f"  Question: What is the third planet from the Sun?")
     print(f"  Answer:   {result.answer}")
     print("  DSPy connection OK\n")

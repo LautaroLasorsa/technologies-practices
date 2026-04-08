@@ -139,6 +139,91 @@ Build and query a knowledge graph from a small corpus of interconnected articles
 - **Knowledge graphs + LLMs**: The intersection of structured knowledge and generative AI is a rapidly growing area — understanding GraphRAG teaches transferable concepts (entity extraction, community detection, graph-augmented retrieval)
 - **Complements practices 029a/029b**: Understanding GraphRAG's architecture deepens your RAG knowledge beyond the basic retrieval patterns covered in the LangChain/LangGraph practices
 
+## LLM Configuration
+
+This practice supports any OpenAI-compatible LLM provider. Configuration is split between two layers:
+
+### Python Exercise Scripts (`src/*.py`)
+
+Scripts import from `src/llm_config.py`, which reads the following environment variables. Copy `.env.example` to `.env` and adjust as needed — without a `.env` the scripts default to Ollama on localhost.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider name (`ollama`, `lmstudio`, `openai`, `groq`) |
+| `LLM_MODEL` | `qwen2.5:7b` | Model identifier passed to the API |
+| `LLM_BASE_URL` | `http://localhost:11434` | Chat endpoint base URL |
+| `LLM_API_KEY` | `ollama` | API key (any string for local providers) |
+| `EMBEDDING_PROVIDER` | `ollama` | Provider for embeddings |
+| `EMBEDDING_MODEL` | `nomic-embed-text` | Embedding model identifier |
+| `EMBEDDING_BASE_URL` | `http://localhost:11434` | Embedding endpoint base URL |
+| `EMBEDDING_API_KEY` | `ollama` | API key for embedding endpoint |
+
+### GraphRAG CLI (`graphrag index` / `graphrag query`)
+
+The `graphrag` CLI reads **`settings.yaml`**, not the env vars above. After running `graphrag init --root .`, edit the generated `settings.yaml`. Provider-specific snippets:
+
+**Ollama (default):**
+```yaml
+models:
+  default_chat_model:
+    type: openai_chat
+    model: qwen2.5:7b
+    api_base: http://localhost:11434/v1
+    api_key: ollama
+  default_embedding_model:
+    type: openai_embedding
+    model: nomic-embed-text
+    api_base: http://localhost:11434/v1
+    api_key: ollama
+```
+
+**LM Studio:**
+```yaml
+models:
+  default_chat_model:
+    type: openai_chat
+    model: <model-id-from-lmstudio>
+    api_base: http://localhost:1234/v1
+    api_key: lmstudio
+  default_embedding_model:
+    type: openai_embedding
+    model: <embedding-model-id>
+    api_base: http://localhost:1234/v1
+    api_key: lmstudio
+```
+
+**OpenAI:**
+```yaml
+models:
+  default_chat_model:
+    type: openai_chat
+    model: gpt-4o-mini
+    api_key: ${GRAPHRAG_API_KEY}
+  default_embedding_model:
+    type: openai_embedding
+    model: text-embedding-3-small
+    api_key: ${GRAPHRAG_API_KEY}
+```
+
+**Groq** (Groq has no embedding API — pair with a local embedding model):
+```yaml
+models:
+  default_chat_model:
+    type: openai_chat
+    model: llama-3.3-70b-versatile
+    api_base: https://api.groq.com/openai/v1
+    api_key: <your-groq-key>
+  default_embedding_model:
+    type: openai_embedding
+    model: nomic-embed-text
+    api_base: http://localhost:11434/v1
+    api_key: ollama
+```
+
+Full reference: [GraphRAG Configuration Docs](https://microsoft.github.io/graphrag/config/yaml/)
+
+---
+
 ## Commands
 
 All commands run from `practice_067_graphrag/`.

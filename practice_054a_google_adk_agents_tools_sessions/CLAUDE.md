@@ -196,4 +196,52 @@ State management is where ADK shines over raw LLM calls. The `user:` prefix patt
 | Setup | `uv sync` | Install Python dependencies |
 | Dev | `uv run adk web .` | Launch ADK Web UI for interactive testing |
 | Dev | `uv run python main.py` | Run agent programmatically (CLI mode) |
+| Dev | `cp .env.example .env` | Create local env file (then edit as needed) |
 | Teardown | `docker compose down -v` | Stop and clean up containers |
+
+## LLM Configuration
+
+The practice supports multiple LLM providers via environment variables. The default (no env vars needed) uses **Ollama with qwen2.5:7b** — behaviour is identical to before.
+
+### How it works
+
+`llm_config.py` at the practice root exposes a `get_model()` factory that reads three env vars and returns the correct `LiteLlm` instance:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name without provider prefix |
+| `LLM_BASE_URL` | _(provider default)_ | Override the provider's base URL |
+| `LLM_API_KEY` | _(empty)_ | API key; sets the provider-specific env var LiteLLM expects |
+
+### Switching providers
+
+```bash
+# Ollama (default — no changes needed)
+uv run python main.py
+
+# OpenAI
+LLM_PROVIDER=openai LLM_MODEL=gpt-4o-mini LLM_API_KEY=sk-... uv run python main.py
+
+# Anthropic
+LLM_PROVIDER=anthropic LLM_MODEL=claude-3-haiku-20240307 LLM_API_KEY=sk-ant-... uv run python main.py
+
+# Google Gemini
+LLM_PROVIDER=google LLM_MODEL=gemini-2.0-flash LLM_API_KEY=AIza... uv run python main.py
+
+# LM Studio (OpenAI-compatible, local)
+LLM_PROVIDER=lmstudio LLM_MODEL=lmstudio-community/qwen2.5-7b uv run python main.py
+```
+
+Or copy `.env.example` to `.env`, fill in the values, and the practice picks them up automatically.
+
+### Important: LiteLLM prefix convention
+
+LiteLLM identifies providers by the prefix on the model string:
+
+| Provider | Model string format | Notes |
+|----------|--------------------|----|
+| Ollama | `ollama_chat/<model>` | Use `ollama_chat/`, NOT `ollama/` — the plain prefix hits a non-chat endpoint causing infinite tool-call loops |
+| OpenAI | `openai/<model>` | |
+| Anthropic | `anthropic/<model>` | |
+| Google | `gemini/<model>` | |

@@ -1,0 +1,19 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# uv
+.python-version
+
+# Editor
+.zed/
+.idea/
+.vscode/

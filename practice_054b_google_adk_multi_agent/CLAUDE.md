@@ -201,6 +201,32 @@ LoopAgent repeats its child agent until either a condition function returns Fals
 - **ADK vs LangGraph**: Understanding ADK's tree-based approach complements your LangGraph graph-based knowledge — know both, pick the right one per problem
 - **Production readiness**: These orchestration patterns are what Google uses internally and recommends for Vertex AI deployments
 
+## LLM Configuration
+
+All exercises share a single provider factory in `llm_config.py`. Set environment variables to switch providers without touching agent code.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name without provider prefix |
+| `LLM_BASE_URL` | _(provider default)_ | Override the provider's API base URL |
+| `LLM_API_KEY` | _(none)_ | API key for cloud providers |
+
+Copy `.env.example` to `.env` and fill in values for non-default providers.
+
+**Examples:**
+
+```bash
+# Default — Ollama (no env vars needed)
+uv run python main.py
+
+# OpenAI GPT-4o
+LLM_PROVIDER=openai LLM_MODEL=gpt-4o LLM_API_KEY=sk-... uv run python main.py
+
+# Anthropic Claude 3 Haiku
+LLM_PROVIDER=anthropic LLM_MODEL=claude-3-haiku-20240307 LLM_API_KEY=... uv run python main.py
+```
+
 ## Commands
 
 | Phase | Command | Description |
@@ -208,6 +234,7 @@ LoopAgent repeats its child agent until either a condition function returns Fals
 | Setup | `docker compose up -d` | Start Ollama container |
 | Setup | `docker exec ollama ollama pull qwen2.5:7b` | Pull local model |
 | Setup | `uv sync` | Install Python dependencies |
+| Config | `cp .env.example .env` | Create local env config (edit to switch providers) |
 | Dev | `uv run adk web .` | Launch ADK Web UI for multi-agent debugging |
 | Dev | `uv run python main.py` | Run orchestration programmatically |
 | Teardown | `docker compose down -v` | Stop and clean up containers |

@@ -1,0 +1,19 @@
+# Environment — contains API keys
+.env
+
+# GraphRAG output artifacts (large Parquet + LanceDB files)
+output/
+cache/
+logs/
+
+# GraphRAG auto-generated config (created by `graphrag init`)
+settings.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/

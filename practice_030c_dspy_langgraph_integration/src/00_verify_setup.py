@@ -5,20 +5,14 @@ Checks that DSPy, LangGraph, and Ollama are all installed and reachable.
 
 import sys
 
-OLLAMA_MODEL = "qwen2.5:7b"
-OLLAMA_BASE_URL = "http://localhost:11434"
+from llm_config import configure_lm, get_chat_model
 
 
 def verify_dspy() -> None:
-    """Verify DSPy is importable and can configure an Ollama LM."""
+    """Verify DSPy is importable and can configure an LM."""
     import dspy  # noqa: F811
 
-    lm = dspy.LM(
-        model=f"ollama_chat/{OLLAMA_MODEL}",
-        api_base=f"{OLLAMA_BASE_URL}/v1",
-        api_key="",
-    )
-    dspy.configure(lm=lm)
+    configure_lm()
 
     # Quick generation test
     result = dspy.ChainOfThought("question -> answer")(
@@ -50,12 +44,10 @@ def verify_langgraph() -> None:
 
 
 def verify_langchain_ollama() -> None:
-    """Verify LangChain can reach the Ollama server."""
-    from langchain_ollama import ChatOllama
-
-    llm = ChatOllama(model=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL)
+    """Verify LangChain can reach the configured chat model."""
+    llm = get_chat_model()
     response = llm.invoke("Say 'hello' and nothing else.")
-    print(f"  [ChatOllama] Response: {response.content[:80]}")
+    print(f"  [ChatModel]  Response: {response.content[:80]}")
 
 
 def verify_dspy_langchain_extra() -> None:

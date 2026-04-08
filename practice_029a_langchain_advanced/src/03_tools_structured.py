@@ -10,21 +10,15 @@ This exercise teaches three critical production patterns:
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama
 from pydantic import BaseModel, Field
+
+from llm_config import get_chat_model
 
 # ---------------------------------------------------------------------------
 # Setup: model and pre-built schemas
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:3b"
-
-llm = ChatOllama(
-    model=MODEL_NAME,
-    base_url=OLLAMA_BASE_URL,
-    temperature=0,
-)
+llm = get_chat_model(temperature=0)
 
 parser = StrOutputParser()
 

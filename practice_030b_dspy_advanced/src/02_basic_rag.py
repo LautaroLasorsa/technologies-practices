@@ -16,23 +16,26 @@ import dspy
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 
+from llm_config import configure_lm
+
 
 # -- Configuration -----------------------------------------------------------
 
-OLLAMA_BASE = "http://localhost:11434"
-MODEL_ID = "ollama_chat/qwen2.5:7b"
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 COLLECTION_NAME = "solar_system"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
+# Keep these for backwards-compatibility with modules that import them
+OLLAMA_BASE = "http://localhost:11434"
+MODEL_ID = "ollama_chat/qwen2.5:7b"
+
 
 # -- Setup: DSPy + clients --------------------------------------------------
 
 def configure_dspy() -> None:
-    """Configure DSPy with the local Ollama LM."""
-    lm = dspy.LM(MODEL_ID, api_base=OLLAMA_BASE, api_key="")
-    dspy.configure(lm=lm)
+    """Configure DSPy with the LM selected via environment variables."""
+    configure_lm()
 
 
 def create_clients() -> tuple[QdrantClient, SentenceTransformer]:

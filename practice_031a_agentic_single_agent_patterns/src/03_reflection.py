@@ -14,15 +14,14 @@ Run:
 from typing import Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
 from typing_extensions import TypedDict
+
+from llm_config import get_chat_model
 
 
 # ── Configuration ────────────────────────────────────────────────────
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
 QUALITY_THRESHOLD = 7
 MAX_ITERATIONS = 3
 
@@ -72,7 +71,7 @@ class ReflectionState(TypedDict):
 
 # ── LLM ──────────────────────────────────────────────────────────────
 
-llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0)
+llm = get_chat_model(temperature=0)
 
 
 # ── TODO(human): Implement these two functions + conditional edge ────

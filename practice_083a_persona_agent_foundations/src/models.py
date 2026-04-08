@@ -11,11 +11,12 @@ All data structures used across modules are defined here:
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 # ---------------------------------------------------------------------------
@@ -163,12 +164,42 @@ class AgentTurn(BaseModel):
 # ---------------------------------------------------------------------------
 
 class AgentConfig(BaseModel):
-    """Runtime configuration for the agent."""
-    model: str = "qwen2.5:3b"
-    ollama_base_url: str = "http://localhost:11434/v1"
+    """Runtime configuration for the agent.
+
+    LLM provider is selected via environment variables (or data/config.json).
+    Supported providers: "ollama" (default), "lmstudio", "openai", "anthropic".
+    When no env vars are set, defaults to Ollama on localhost:11434 — same as before.
+    """
+    provider: str = Field(
+        default_factory=lambda: os.getenv("LLM_PROVIDER", "ollama"),
+        description="LLM provider: ollama | lmstudio | openai | anthropic",
+    )
+    model: str = Field(
+        default_factory=lambda: os.getenv("LLM_MODEL", "qwen3:8b"),
+    )
+    base_url: str = Field(
+        default_factory=lambda: os.getenv("LLM_BASE_URL", ""),
+        description="Override the provider's default base URL. Leave empty to use the provider default.",
+    )
+    api_key: str = Field(
+        default_factory=lambda: os.getenv("LLM_API_KEY", ""),
+        description="API key for the provider. Not required for local providers.",
+    )
     max_history_turns: int = 20
     fact_extraction_enabled: bool = True
     humanization_enabled: bool = True
     typing_speed_cps: float = 30.0  # characters per second base rate
     min_delay_seconds: float = 0.5
     max_delay_seconds: float = 5.0
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def ollama_base_url(self) -> str:
+        """Backward-compatible alias: the effective base URL for the current provider."""
+        if self.base_url:
+            return self.base_url
+        defaults = {
+            "ollama": "http://localhost:11434/v1",
+            "lmstudio": "http://localhost:1234/v1",
+        }
+        return defaults.get(self.provider, "")

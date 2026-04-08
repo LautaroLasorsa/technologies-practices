@@ -243,6 +243,28 @@ All commands run from `practice_083a_persona_agent_foundations/`.
 | | `uv run python -m src.memory` | Test fact extraction and persistence |
 | | `uv run python -m src.humanizer` | Test humanization post-processing |
 
+## LLM Configuration
+
+The agent supports multiple LLM providers via environment variables. Copy `.env.example` to `.env` and set the relevant vars before running.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider name: `ollama`, `lmstudio`, `openai`, `anthropic` |
+| `LLM_MODEL` | `qwen3:8b` | Model identifier for the chosen provider |
+| `LLM_BASE_URL` | _(provider default)_ | Override the provider's API base URL |
+| `LLM_API_KEY` | _(empty)_ | API key — required for `openai` and `anthropic` |
+
+**Provider defaults:**
+
+| Provider | Default base URL | Requires key |
+|----------|-----------------|-------------|
+| `ollama` | `http://localhost:11434/v1` | No |
+| `lmstudio` | `http://localhost:1234/v1` | No |
+| `openai` | _(SDK default)_ | Yes |
+| `anthropic` | _(SDK default)_ | Yes — also needs `uv add anthropic` |
+
+All wiring lives in `src/llm_config.py`. With no env vars set, the agent behaves exactly as before (Ollama on localhost).
+
 ## State
 
 `not-started`

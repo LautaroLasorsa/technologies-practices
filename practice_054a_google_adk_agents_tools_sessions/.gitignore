@@ -1,0 +1,15 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+
+# ADK
+.adk/
+
+# Docker volumes / generated data
+*.log

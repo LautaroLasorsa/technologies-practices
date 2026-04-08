@@ -1,0 +1,26 @@
+# Environment secrets — NEVER commit the actual .env
+.env
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# uv
+uv.lock
+
+# Logs
+*.log

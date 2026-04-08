@@ -10,6 +10,8 @@ from typing import Any
 from google.adk.agents import Agent
 from google.adk.tools import ToolContext
 
+from llm_config import get_model
+
 
 # ---------------------------------------------------------------------------
 # Tools
@@ -90,7 +92,7 @@ def delete_task(task_id: int, tool_context: ToolContext) -> dict[str, Any]:
 
 root_agent = Agent(
     name="task_agent",
-    model="ollama_chat/qwen2.5:7b",
+    model=get_model(),
     description="A task-management assistant that helps users track to-do items.",
     instruction=(
         "You are a helpful task-management assistant. You help users create, "

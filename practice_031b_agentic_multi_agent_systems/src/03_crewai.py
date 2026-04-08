@@ -15,19 +15,23 @@ supervisor/swarm from Phases 1-2.
 
 from __future__ import annotations
 
+import os
+
 from crewai import Agent, Crew, LLM, Process, Task
 
 # ---------------------------------------------------------------------------
 # Configuration — CrewAI uses its own LLM class (backed by LiteLLM)
 # ---------------------------------------------------------------------------
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
-
 # CrewAI's LLM class wraps LiteLLM. For Ollama, prefix the model name with "ollama/".
+# Pull provider/model from env vars so this file is consistent with llm_config.py.
+_provider = os.getenv("LLM_PROVIDER", "ollama")
+_model = os.getenv("LLM_MODEL", "qwen2.5:7b")
+_base_url = os.getenv("LLM_BASE_URL", "")
+
 crewai_llm = LLM(
-    model=f"ollama/{MODEL_NAME}",
-    base_url=OLLAMA_BASE_URL,
+    model=f"{_provider}/{_model}",
+    base_url=_base_url or ("http://localhost:11434" if _provider == "ollama" else "http://localhost:1234/v1"),
     temperature=0.1,
 )
 

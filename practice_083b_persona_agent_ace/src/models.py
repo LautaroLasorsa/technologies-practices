@@ -174,10 +174,29 @@ class IterationSnapshot(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 
+def _default_model() -> str:
+    import os
+    return os.getenv("LLM_MODEL", "qwen2.5:3b")
+
+
+def _default_base_url() -> str:
+    import os
+    provider = os.getenv("LLM_PROVIDER", "ollama")
+    url = os.getenv("LLM_BASE_URL", "")
+    if url:
+        return url
+    return "http://localhost:11434/v1" if provider in ("ollama", "") else "http://localhost:1234/v1"
+
+
 class ACEConfig(BaseModel):
-    """Configuration for the ACE loop."""
-    model: str = "qwen2.5:3b"
-    ollama_base_url: str = "http://localhost:11434/v1"
+    """Configuration for the ACE loop.
+
+    Defaults are read from environment variables (see src/llm_config.py).
+    The ollama_base_url field is kept for backward compatibility with code
+    that passes it explicitly; new code should use get_openai_client() directly.
+    """
+    model: str = Field(default_factory=_default_model)
+    ollama_base_url: str = Field(default_factory=_default_base_url)
     batch_size: int = 3
     dedup_threshold: float = 0.85
     prune_ratio: float = 2.0

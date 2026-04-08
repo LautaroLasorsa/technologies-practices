@@ -40,8 +40,8 @@ import json
 from pathlib import Path
 
 import instructor
-from openai import OpenAI
 
+from src.llm_config import get_instructor_client, get_openai_client
 from src.models import (
     ACEConfig,
     Conversation,
@@ -56,9 +56,8 @@ REFLECTIONS_DIR = Path(__file__).parent.parent / "data" / "reflections"
 
 
 def _create_instructor_client(config: ACEConfig) -> instructor.Instructor:
-    """Create an instructor-patched client for structured Reflector output."""
-    base_client = OpenAI(base_url=config.ollama_base_url, api_key="ollama")
-    return instructor.from_openai(base_client, mode=instructor.Mode.JSON)
+    """Create an instructor-patched client for the configured LLM provider."""
+    return get_instructor_client()
 
 
 def _format_conversation(conversation: Conversation) -> str:
@@ -236,9 +235,9 @@ def _self_test() -> None:
 
     config = ACEConfig()
 
-    # Verify Ollama
+    # Verify LLM provider connectivity
     try:
-        client = OpenAI(base_url=config.ollama_base_url, api_key="ollama")
+        client = get_openai_client()
         models = client.models.list()
         available = [m.id for m in models.data]
         if config.model not in available:

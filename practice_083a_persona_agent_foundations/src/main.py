@@ -20,12 +20,10 @@ from __future__ import annotations
 import argparse
 import sys
 
-from openai import OpenAI
-
 from src.emotional_fsm import compile_graph, PersonaState
 from src.file_store import FileStore
 from src.humanizer import apply_delay, humanize_response
-from src.introspection import create_instructor_client
+from src.llm_config import create_instructor_client, create_raw_openai_client
 from src.memory import extract_user_facts, format_facts_for_prompt, merge_facts
 from src.models import (
     AgentConfig,
@@ -61,14 +59,14 @@ def verify_setup() -> bool:
     config = store.load_config()
     print(f"[OK] Config loaded: model={config.model}")
 
-    # 4. Ollama connectivity
+    # 4. LLM provider connectivity
     try:
-        base_client = OpenAI(base_url=config.ollama_base_url, api_key="ollama")
+        base_client = create_raw_openai_client(config)
         models = base_client.models.list()
         available = [m.id for m in models.data]
-        print(f"[OK] Ollama connected. Models: {available}")
+        print(f"[OK] {config.provider} connected at {config.ollama_base_url}. Models: {available}")
     except Exception as e:
-        print(f"[FAIL] Cannot connect to Ollama at {config.ollama_base_url}: {e}")
+        print(f"[FAIL] Cannot connect to {config.provider} at {config.ollama_base_url}: {e}")
         print("  Start Ollama: docker compose up -d")
         return False
 

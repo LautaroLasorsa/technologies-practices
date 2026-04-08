@@ -37,8 +37,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from task_agent.agent import add_task, complete_task, delete_task, list_tasks
-
-MODEL = "ollama_chat/qwen2.5:7b"
+from llm_config import get_model
 
 
 # ============================================================================
@@ -252,7 +251,7 @@ async def run_evaluation() -> list[EvalResult]:
     # Steps:
     #   1. Create the agent (same as task_agent but standalone):
     #      ``agent = Agent(
-    #            name="eval_agent", model=MODEL,
+    #            name="eval_agent", model=get_model(),
     #            instruction="You are a task-management assistant...",
     #            tools=[add_task, list_tasks, complete_task, delete_task])``
     #

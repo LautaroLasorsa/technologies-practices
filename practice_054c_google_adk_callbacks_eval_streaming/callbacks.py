@@ -36,6 +36,7 @@ from google.adk.tools import BaseTool, ToolContext
 from google.genai import types
 
 from task_agent.agent import add_task, complete_task, delete_task, list_tasks
+from llm_config import get_model
 
 # ============================================================================
 # Exercise 1 — Logging Callbacks
@@ -287,7 +288,7 @@ def _create_agent_with_callbacks(
 
     return Agent(
         name="task_agent",
-        model="ollama_chat/qwen2.5:7b",
+        model=get_model(),
         description="A task-management assistant with callback hooks.",
         instruction=(
             "You are a helpful task-management assistant. You help users "

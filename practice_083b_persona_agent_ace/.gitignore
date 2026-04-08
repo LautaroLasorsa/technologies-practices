@@ -5,6 +5,9 @@ __pycache__/
 .venv/
 *.egg-info/
 
+# Environment / secrets
+.env
+
 # IDE
 .idea/
 .vscode/

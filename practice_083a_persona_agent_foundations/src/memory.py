@@ -203,25 +203,23 @@ def format_facts_for_prompt(facts: list[UserFact], min_confidence: float = 0.5) 
 
 def _self_test() -> None:
     """Test fact extraction and merging."""
-    from openai import OpenAI
-
     from src.models import AgentConfig
 
     config = AgentConfig()
 
-    # Test Ollama connectivity
+    # Test LLM connectivity
+    from src.llm_config import create_instructor_client, create_raw_openai_client
+
     try:
-        base_client = OpenAI(base_url=config.ollama_base_url, api_key="ollama")
+        base_client = create_raw_openai_client(config)
         models = base_client.models.list()
         available = [m.id for m in models.data]
         if config.model not in available:
             print(f"[WARN] Model '{config.model}' not available. Pull it first.")
             return
     except Exception as e:
-        print(f"[FAIL] Cannot connect to Ollama: {e}")
+        print(f"[FAIL] Cannot connect to {config.provider}: {e}")
         return
-
-    from src.introspection import create_instructor_client
 
     client = create_instructor_client(config)
 

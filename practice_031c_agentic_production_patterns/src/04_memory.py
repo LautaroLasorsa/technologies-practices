@@ -13,15 +13,16 @@ import asyncio
 import uuid
 from typing import Any
 
-from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from llm_config import get_chat_model
 
 
 # ── Configuration ────────────────────────────────────────────────────
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
 EMBEDDING_MODEL = "qwen2.5:7b"  # Ollama can generate embeddings too
 
 QDRANT_URL = "http://localhost:6333"
@@ -35,7 +36,7 @@ COLLECTION_NAME = "agent_memory"
 
 qdrant = QdrantClient(url=QDRANT_URL)
 embeddings = OllamaEmbeddings(base_url=OLLAMA_BASE_URL, model=EMBEDDING_MODEL)
-llm = ChatOllama(base_url=OLLAMA_BASE_URL, model=MODEL_NAME)
+llm = get_chat_model()
 
 
 # ── Collection Setup ─────────────────────────────────────────────────

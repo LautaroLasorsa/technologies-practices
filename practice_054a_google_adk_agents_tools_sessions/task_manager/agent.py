@@ -9,17 +9,20 @@ so the LLM knows *when* and *how* to call each tool.
 """
 
 from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools import ToolContext
+
+from llm_config import get_model
 
 
 # ---------------------------------------------------------------------------
 # Model configuration
 # ---------------------------------------------------------------------------
+# The model is configured via environment variables in llm_config.py.
+# Default: Ollama with qwen2.5:7b (no env vars needed).
 # The "ollama_chat/" prefix routes through LiteLLM's Ollama chat-completion
 # endpoint.  Do NOT use "ollama/" — that causes infinite tool-call loops
 # because it hits the plain completion API which doesn't handle tool schemas.
-MODEL = LiteLlm(model="ollama_chat/qwen2.5:7b")
+MODEL = get_model()
 
 
 # ---------------------------------------------------------------------------

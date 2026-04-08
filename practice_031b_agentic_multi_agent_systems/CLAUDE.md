@@ -168,6 +168,29 @@ Build multi-agent systems using three architectures: centralized supervisor, dec
 
 Multi-agent systems are the dominant paradigm for complex AI applications — Gartner projects 40% of enterprise apps will use agent-based architectures by end of 2026. Understanding the trade-offs between centralized (supervisor), decentralized (swarm), and team-based (crew) patterns is essential for designing effective AI systems. This practice builds directly on 031a (single-agent ReAct) by scaling from one agent to coordinated teams.
 
+## LLM Configuration
+
+All source files use `src/llm_config.py` — a multi-provider factory that reads environment variables. Default behavior (no `.env` file) uses local Ollama exactly as before.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | Provider: `ollama`, `lmstudio`, `openai`, `anthropic`, `google` |
+| `LLM_MODEL` | `qwen2.5:7b` | Model name (must exist on the chosen provider) |
+| `LLM_BASE_URL` | *(provider default)* | Override the base URL (`http://localhost:11434` for Ollama) |
+| `LLM_API_KEY` | *(empty)* | API key for cloud providers |
+
+**To switch providers:**
+1. `cp .env.example .env`
+2. Edit `.env` with your provider and API key
+3. Run any phase script — it picks up the env vars automatically
+
+**Cloud providers require extra packages** (installed on demand):
+- `openai` → `uv add langchain-openai`
+- `anthropic` → `uv add langchain-anthropic`
+- `google` → `uv add langchain-google-genai`
+
+**Note on CrewAI (Phase 3):** CrewAI uses its own `LLM` class backed by LiteLLM. `03_crewai.py` reads the same `LLM_PROVIDER`/`LLM_MODEL` env vars and passes them as `"{provider}/{model}"` to `LLM(model=...)`, which is the LiteLLM format.
+
 ## Commands
 
 All commands run from `practice_031b_agentic_multi_agent_systems/`.

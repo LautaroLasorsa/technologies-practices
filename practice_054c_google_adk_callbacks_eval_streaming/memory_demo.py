@@ -43,8 +43,7 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from task_agent.agent import add_task, complete_task, delete_task, list_tasks
-
-MODEL = "ollama_chat/qwen2.5:7b"
+from llm_config import get_model
 
 
 async def _send_message(
@@ -87,7 +86,7 @@ async def demo_with_memory() -> None:
     #
     #   3. Create the agent (same task agent):
     #      ``agent = Agent(
-    #            name="task_agent", model=MODEL,
+    #            name="task_agent", model=get_model(),
     #            instruction=(
     #                "You are a helpful task-management assistant. "
     #                "You help users create, list, complete, and delete tasks. "

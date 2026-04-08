@@ -23,15 +23,14 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama
 from langgraph.graph import END, START, StateGraph
 from typing_extensions import TypedDict
+
+from llm_config import get_chat_model
 
 
 # ── Configuration ────────────────────────────────────────────────────
 
-OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "qwen2.5:7b"
 MAX_ITERATIONS = 5
 
 SYSTEM_PROMPT = """You are a helpful assistant with access to tools.
@@ -98,7 +97,7 @@ class AgentState(TypedDict):
 
 # ── LLM ──────────────────────────────────────────────────────────────
 
-llm = ChatOllama(model=MODEL_NAME, base_url=OLLAMA_BASE_URL, temperature=0)
+llm = get_chat_model(temperature=0)
 
 
 # ── TODO(human): Implement these three functions ─────────────────────

@@ -198,6 +198,43 @@ Compiled programs contain optimized prompts and demonstrations. This exercise te
 
 RAG is the most common LLM application pattern in production. DSPy's output refinement modules (Refine/BestOfN) provide unique quality guarantees — automatic self-correction driven by reward functions, with no equivalent in other frameworks. MIPROv2 represents state-of-the-art prompt optimization via Bayesian search. These skills are essential for building production LLM systems that are reliable, measurable, and improvable. Prerequisite for DSPy+LangGraph integration (030c).
 
+## LLM Configuration
+
+The practice supports multiple LLM providers via environment variables. Default behavior (no configuration) uses local Ollama with `qwen2.5:7b` — identical to the original setup.
+
+### Selecting a provider
+
+Copy `.env.example` to `.env` and set the variables:
+
+```bash
+# Local Ollama (default — no .env needed)
+LLM_PROVIDER=ollama
+LLM_MODEL=qwen2.5:7b
+
+# LM Studio
+LLM_PROVIDER=lmstudio
+LLM_MODEL=<model-name-in-lmstudio>
+
+# OpenAI
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=sk-...
+
+# Anthropic
+LLM_PROVIDER=anthropic
+LLM_MODEL=claude-3-5-haiku-20241022
+LLM_API_KEY=sk-ant-...
+
+# Google Gemini
+LLM_PROVIDER=google
+LLM_MODEL=gemini-1.5-flash
+LLM_API_KEY=AIza...
+```
+
+The configuration lives in `src/llm_config.py`. All source files call `configure_lm()` from that module — no per-file changes are needed when switching providers.
+
+**Embedding model** (sentence-transformers `all-MiniLM-L6-v2`) always runs locally and is independent of the LLM provider.
+
 ## Commands
 
 All commands run from `practice_030b_dspy_advanced/`.
