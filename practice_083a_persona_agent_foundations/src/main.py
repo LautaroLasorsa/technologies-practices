@@ -32,7 +32,9 @@ from src.models import (
     EmotionalState,
 )
 from src.persona import render_system_prompt
+from dotenv import load_dotenv
 
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Verification
@@ -249,6 +251,7 @@ def run_chat(user_id: str, show_internals: bool) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+
     parser = argparse.ArgumentParser(description="Self-Evolving Persona Agent")
     parser.add_argument("--verify", action="store_true", help="Verify setup and exit")
     parser.add_argument("--user-id", default="default", help="User ID for memory isolation")

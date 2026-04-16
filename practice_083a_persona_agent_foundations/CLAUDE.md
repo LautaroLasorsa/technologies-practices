@@ -179,12 +179,18 @@ Wire `instructor` over Ollama's OpenAI-compatible endpoint to produce structured
 
 Build a LangGraph `StateGraph` where emotion is a first-class state variable. The `update_emotion` node examines the user's message and current emotional state to determine a new emotion. Conditional edges route to different response behaviors based on mood.
 
-**What you'll implement:**
-- `update_emotion(state)` -- Given last user message + current emotion, determine new emotion and intensity
-- Conditional edge routing function that selects response behavior based on emotional state
-- The complete LangGraph graph: `START -> update_emotion -> [response_engaged | response_annoyed | response_reflective | response_default] -> END`
+**Design choice (committed in the scaffold): RULE-BASED transitions.**
+The alternative is LLM-based classification (extra instructor call per turn). Rule-based wins here because: (1) the `AgentTurn` in Ex 3 already captures the LLM's self-reported emotion for log nuance, so the FSM doesn't need to duplicate that; (2) transitions become deterministic and unit-testable without mocks; (3) latency stays at one LLM call per turn. The trade-off — rule-based can't catch subtle sarcasm — is acceptable because the FSM drives *structural* routing, not sentiment analysis.
 
-**Why it matters:** Emotion as a state variable means the agent's mood persists across turns and influences generation *structurally* (different nodes, different prompts) rather than just lexically (different words in the same prompt). An annoyed agent doesn't just say angry things -- it gives shorter responses, drops pleasantries, and uses flat punctuation. An engaged agent elaborates, asks follow-ups, and uses more expressive language. The conditional routing makes these behavioral differences explicit and testable.
+**What you'll implement:**
+- `update_emotion(state)` -- Given last user message + current emotion, determine new emotion, intensity, and `turns_in_emotion`. Uses the pre-scaffolded `_detect_signal()` helper and the transition recipe documented in the TODO(human) block: reinforce on same-signal, transition on different-signal, drift-to-neutral when no signal for > 4 turns.
+
+**What's already scaffolded (so you focus on transitions):**
+- `_detect_signal(message)` -- keyword-based signal detection with documented priority order (rudeness > enthusiasm > humor > curiosity > low-effort > reflective-on-long).
+- `route_by_emotion(state)` -- intensity-bucket routing (mild < 0.4, strong > 0.7). Once `update_emotion` sets the state correctly, routing is a table lookup.
+- The complete LangGraph: `START -> update_emotion -> [conditional] -> response_{default,engaged,annoyed,reflective} -> END`.
+
+**Why it matters:** Emotion as a state variable means the agent's mood persists across turns and influences generation *structurally* (different nodes, different prompts) rather than just lexically (different words in the same prompt). An annoyed agent doesn't just say angry things -- it gives shorter responses, drops pleasantries, and uses flat punctuation. An engaged agent elaborates, asks follow-ups, and uses more expressive language. The conditional routing makes these behavioral differences explicit and testable. The drift-to-neutral rule specifically prevents the agent from getting stuck in an emotional corner — a common failure mode for naive "emotion persists forever" designs.
 
 ### Exercise 5 -- Two-Tier Memory (File-Based) (~20 min)
 
@@ -267,4 +273,4 @@ All wiring lives in `src/llm_config.py`. With no env vars set, the agent behaves
 
 ## State
 
-`not-started`
+`completed`

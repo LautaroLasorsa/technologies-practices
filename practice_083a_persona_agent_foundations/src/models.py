@@ -17,7 +17,8 @@ from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field, computed_field
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Emotion

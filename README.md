@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-19%20%2F%20132%20practices-blue?style=flat-square" alt="Progress: 19/132">
+  <img src="https://img.shields.io/badge/Progress-20%20%2F%20132%20practices-blue?style=flat-square" alt="Progress: 19/132">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -643,10 +643,10 @@ python clean_all.py
   <td>—</td>
 </tr>
 <tr>
-  <td>083a</td>
-  <td>Self-Evolving Persona Agent: Foundations</td>
+  <td><b>083a</b></td>
+  <td><b>Self-Evolving Persona Agent: Foundations</b></td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>083b</td>

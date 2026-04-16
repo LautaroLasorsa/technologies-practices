@@ -98,13 +98,13 @@ def render_system_prompt(
     prompt += "Your pet_peeves:\n" + "\n".join(persona.personality_traits.pet_peeves) + "\n"
     prompt += "Speech Patterns\n"
     prompt += "Verbal tics:\n" + "\n".join(persona.speech_patterns.verbal_tics) + "\n"
-    prompt += "Puntuation style: " + persona.speech_patterns.punctuation_style + "\n"
+    prompt += "Punctuation style: " + persona.speech_patterns.punctuation_style + "\n"
     prompt += "Capitalization: " + persona.speech_patterns.capitalization + "\n"
     prompt += "Emoji usage: " + persona.speech_patterns.emoji_usage + "\n"
     prompt += "Response length tendency: " + persona.speech_patterns.response_length_tendency + "\n"
     prompt += "Characteristic phrases:\n" + "\n".join(persona.characteristic_phrases) + "\n"
     prompt += f"Emotional status: {emotional_state.emotion} (intensity = {emotional_state.intensity})\n"
-    prompt += "Knonw facts:\n" + '\n'.join(
+    prompt += "Known facts:\n" + '\n'.join(
         map(
             lambda uf : f"{uf.key} : {uf.value} with confidence : {uf.confidence}" , user_facts
         )

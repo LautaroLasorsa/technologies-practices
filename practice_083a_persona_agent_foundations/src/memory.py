@@ -124,8 +124,35 @@ def extract_user_facts(
     #   Input:  "haha that's funny"
     #   Output: []
     """
-    raise NotImplementedError("Exercise 5: implement extract_user_facts")
 
+    prompt=f"""
+    You are a fact extractor. You must produce a list of facts.
+    Return an empty list of you find no fact in the message.
+    Only extract clear facts, do not speculate.
+    Use the confidence parameter, low confidence (0.3-0.5) for inferences and high (0.8-1.0) for explicit statements
+
+    Output format: {ExtractedFacts.model_json_schema()}
+    """
+
+    facts  = client.chat.completions.create(
+        model=model,
+        messages = [
+             {"role": "system", "content": prompt},
+             {"role": "user", "content":user_message}
+        ],
+        response_model=ExtractedFacts,
+        max_retries=2,
+        temperature=0.1
+    )
+
+    return [
+        UserFact(
+            key = f.key,
+            value = f.value,
+            confidence = f.confidence,
+            source_message=user_message
+        ) for f in facts.facts
+    ]
 
 # ---------------------------------------------------------------------------
 # Fact Merging
@@ -174,7 +201,17 @@ def merge_facts(existing: UserFactStore, new_facts: list[UserFact]) -> UserFactS
     #   For each fact (existing + new), the newest one wins.
     #   Then convert back to a list.
     """
-    raise NotImplementedError("Exercise 5: implement merge_facts")
+
+    user_facts = dict[str, UserFact]()
+    for fact in existing.facts + new_facts:
+        if fact.key not in user_facts or fact.extracted_at > user_facts[fact.key].extracted_at:
+            user_facts[fact.key] = fact
+
+    return UserFactStore(
+        user_id = existing.user_id,
+        facts = list(user_facts.values())
+    )
+
 
 
 # ---------------------------------------------------------------------------

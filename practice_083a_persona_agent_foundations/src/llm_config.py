@@ -19,7 +19,8 @@ import instructor
 from openai import OpenAI
 
 from src.models import AgentConfig
-
+from dotenv import load_dotenv
+load_dotenv()
 # ---------------------------------------------------------------------------
 # Public factory
 # ---------------------------------------------------------------------------

@@ -31,7 +31,40 @@ from langgraph.graph import END, START, StateGraph
 
 from src.models import AgentTurn, Emotion, EmotionalState
 
-from pydantic import BaseModel, Field
+# ---------------------------------------------------------------------------
+# Emotion transition rules (design decision: RULE-BASED, not LLM-based)
+# ---------------------------------------------------------------------------
+# Rationale:
+#   - Deterministic, instant, debuggable (you can trace why the agent went
+#     from NEUTRAL -> ANNOYED just by reading the input)
+#   - The LLM already self-reports its felt emotion in AgentTurn (Ex 3),
+#     so nuance is captured separately in logs.
+#   - The FSM's job is STRUCTURAL routing (which response node to use),
+#     not sentiment analysis of the user.
+#
+# Signal sets are keyword triggers. Order of priority matters: rudeness
+# wins over curiosity (an angry question is still angry). Check ANNOYED
+# triggers first, then other positive/active signals, then low-energy
+# signals. Drift-to-neutral handles "nothing interesting happened" cases.
+
+RUDENESS_SIGNALS = {"whatever", "that's dumb", "stupid", "shut up", "boring",
+                    "who cares", "don't care", "useless"}
+ENTHUSIASM_SIGNALS = {"amazing", "awesome", "love", "!!", "incredible",
+                      "brilliant", "fantastic", "wow"}
+CURIOSITY_SIGNALS = {"why", "how", "what if", "?", "how come", "explain",
+                     "wonder"}
+HUMOR_SIGNALS = {"lol", "haha", "lmao", "joke", "funny", ":)", "xd"}
+LOW_EFFORT_SIGNALS = {"ok", "sure", "k", "yeah", "fine", "mhm", "uh huh"}
+
+# Intensity bucket thresholds for routing
+MILD = 0.4
+STRONG = 0.7
+
+# How many turns before drift-to-neutral kicks in
+DRIFT_AFTER_TURNS = 4
+DRIFT_PER_TURN = 0.1
+NEUTRAL_THRESHOLD = 0.2
+
 
 # ---------------------------------------------------------------------------
 # LangGraph State
@@ -62,106 +95,144 @@ class PersonaState(TypedDict):
 
 
 # ---------------------------------------------------------------------------
-# Emotion Update Node
+# Helpers (scaffolded -- not part of TODO)
 # ---------------------------------------------------------------------------
 
-class EmotionUpdate(BaseModel):
-    new_emotion: Emotion
-    new_intensity : float = Field(default=0.5, ge=0.0, le=1.0)
+def _detect_signal(message: str) -> Emotion | None:
+    """Scan the (lowercased) message for keyword triggers.
+
+    Priority order: rudeness > enthusiasm > humor > curiosity > low-effort.
+    Rudeness wins because an angry question is still angry. Low-effort is
+    last because it's the weakest signal (might be misread).
+
+    Returns the Emotion the signal shifts toward, or None if no signal hit.
+    """
+    msg = message.lower()
+    if any(tok in msg for tok in RUDENESS_SIGNALS):
+        return Emotion.ANNOYED
+    if any(tok in msg for tok in ENTHUSIASM_SIGNALS):
+        return Emotion.ENGAGED
+    if any(tok in msg for tok in HUMOR_SIGNALS):
+        return Emotion.AMUSED
+    if any(tok in msg for tok in CURIOSITY_SIGNALS):
+        return Emotion.CURIOUS
+    # Low-effort detection: short message AND contains a low-effort token
+    if len(msg.split()) <= 3 and any(tok == msg.strip(" .!?") or tok in msg.split()
+                                     for tok in LOW_EFFORT_SIGNALS):
+        return Emotion.TIRED
+    # Reflective: long message, no question marks
+    if len(msg.split()) > 30 and "?" not in msg:
+        return Emotion.REFLECTIVE
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Emotion Update Node
+# ---------------------------------------------------------------------------
 
 def update_emotion(state: PersonaState) -> dict:
     """Determine the agent's new emotional state based on user message + current emotion.
 
-    # TODO(human): Implement emotion transition logic
-    #
-    # This is the CORE of the emotional state machine. Given the user's message
-    # and the agent's current emotion, determine what the agent feels NOW.
+    # TODO(human): Implement the emotion transition logic using the rule-based
+    # approach. This is the CORE of the emotional state machine -- it decides
+    # both WHICH response node the graph routes to and HOW intense the response is.
     #
     # Inputs (from state):
     #   - state["user_message"]: the latest user message
     #   - state["emotion"]: current Emotion enum value
     #   - state["intensity"]: current intensity (0.0 to 1.0)
-    #   - state["turns_in_emotion"]: how many turns the agent has been in this emotion
+    #   - state["turns_in_emotion"]: how many turns agent has been in this emotion
     #
     # Outputs (return dict with these keys):
     #   - "emotion": new Emotion value
     #   - "intensity": new intensity (0.0 to 1.0)
     #   - "turns_in_emotion": reset to 0 if emotion changed, else increment
     #
-    # Strategy -- there are two approaches, and you should choose one:
+    # ALGORITHM (follow this recipe):
     #
-    # APPROACH A: Rule-based (simpler, more predictable)
-    #   Use keyword/pattern matching on the user message to detect:
-    #     - Questions ("?", "why", "how") -> shift toward CURIOUS
-    #     - Enthusiasm ("!", "amazing", "love") -> shift toward ENGAGED
-    #     - Rudeness/dismissiveness ("whatever", "that's dumb") -> shift toward ANNOYED
-    #     - Deep/philosophical messages (long, no questions) -> shift toward REFLECTIVE
-    #     - Short/low-effort messages ("ok", "sure", "k") -> shift toward TIRED
-    #     - Humor/jokes ("lol", "haha") -> shift toward AMUSED
-    #   Combine with current state:
-    #     - Already ANNOYED + more rudeness -> increase intensity
-    #     - Already ANNOYED + kindness -> decrease intensity, if low enough -> NEUTRAL
-    #     - Any emotion held for too many turns -> drift back toward NEUTRAL
-    #       (recovery_speed from persona's emotional_defaults)
+    #   1. Call _detect_signal(state["user_message"]) to get a candidate Emotion
+    #      (or None if no signal was detected).
     #
-    # APPROACH B: LLM-based (more nuanced, less predictable)
-    #   Call the instructor client to classify the emotion transition:
-    #     - Include current emotion + user message in the prompt
-    #     - Use a small Pydantic model: {new_emotion: Emotion, new_intensity: float}
-    #     - This gives more nuanced transitions but adds an LLM call per turn
-    #   Pros: handles subtlety (sarcasm, passive aggression, mixed signals)
-    #   Cons: slower, more expensive, less deterministic
+    #   2. If a signal was detected:
+    #        a. If signal_emotion == current emotion: REINFORCE
+    #             -> keep the emotion, boost intensity by +0.15 (capped at 1.0),
+    #                increment turns_in_emotion
+    #        b. If signal_emotion != current emotion: TRANSITION
+    #             -> switch to the new emotion with intensity 0.6,
+    #                reset turns_in_emotion to 0
     #
-    # RECOMMENDATION for a 3B model: use APPROACH A (rule-based) for the emotion
-    # transition, then let the LLM's structured introspection (Exercise 3) handle
-    # the nuance in the response. Rule-based transitions are fast, predictable, and
-    # debuggable. The LLM already gets the emotion as input when generating the
-    # response -- that's where nuance matters.
+    #   3. If no signal was detected (the "nothing interesting happened" case):
+    #        a. If already at NEUTRAL: stay NEUTRAL, keep intensity, increment turns.
+    #        b. Otherwise, apply DRIFT-TO-NEUTRAL:
+    #           - Increment turns_in_emotion
+    #           - If turns_in_emotion > DRIFT_AFTER_TURNS (4):
+    #               reduce intensity by DRIFT_PER_TURN (0.1)
+    #           - If intensity drops below NEUTRAL_THRESHOLD (0.2):
+    #               snap to Emotion.NEUTRAL with intensity 0.5,
+    #               reset turns_in_emotion to 0
     #
-    # Implementation hint:
-    #   - Lowercase the message for keyword matching
-    #   - Use sets for keyword groups: CURIOUS_SIGNALS = {"why", "how", "what if", "?"}
-    #   - Check for signals in order of priority (rudeness > enthusiasm > curiosity)
-    #   - Apply a "drift to neutral" rule: if turns_in_emotion > 4, reduce intensity
-    #     by 0.1 per turn. If intensity drops below 0.2, reset to NEUTRAL.
-    #   - Return the partial state update dict
+    #   4. Return a dict with {"emotion", "intensity", "turns_in_emotion"}.
     #
-    # Design question: should intensity be a float (continuous) or discrete levels
-    # (low/medium/high)? Float gives finer control but makes routing harder.
-    # Discrete levels are easier to route on. Consider using float internally
-    # but bucketing into "mild" (<0.4), "moderate" (0.4-0.7), "strong" (>0.7)
-    # for routing decisions.
+    # WHY THIS DESIGN:
+    #   - Signal detection is separated into _detect_signal (already written
+    #     for you) so this function focuses on transition logic, not keyword
+    #     matching. Single Level of Abstraction Principle.
+    #   - Reinforcement (+0.15) vs transition (=0.6) creates distinct
+    #     "getting more annoyed" vs "suddenly annoyed" behaviors.
+    #   - Drift-to-neutral after 4 turns prevents the agent from getting
+    #     stuck in an emotion forever when the user stops triggering signals.
+    #
+    # TEST YOUR IMPLEMENTATION by running:
+    #   uv run python -m src.emotional_fsm
+    # The _self_test at the bottom exercises all transition cases.
     """
 
-    prompt = "Current Emotion: "
+    candidate_emotion = _detect_signal(state["user_message"])
 
+    if candidate_emotion == state["emotion"]:
+        state["intensity"] = (0.8 * state["intensity"] + 0.2)
+        state["turns_in_emotion"] += 1
+    elif candidate_emotion:
+        state["emotion"] = candidate_emotion
+        state["intensity"] = 0.6
+        state["turns_in_emotion"] = 0
+    else:
+        state["turns_in_emotion"] += 1
+        if not state["emotion"] == Emotion.NEUTRAL:
+            if state["turns_in_emotion"] > DRIFT_AFTER_TURNS:
+                state["intensity"] -= 0.1
+                if state["intensity"] < NEUTRAL_THRESHOLD:
+                    state["emotion"] = Emotion.NEUTRAL
+                    state["intensity"] = 0.5
+                    state["turns_in_emotion"] = 0
+
+    return {"emotion":state["emotion"], "intensity":state["intensity"], "turns_in_emotion":state["turns_in_emotion"]}
 # ---------------------------------------------------------------------------
 # Emotion-based routing
 # ---------------------------------------------------------------------------
 
 def route_by_emotion(state: PersonaState) -> str:
-    """Route to a response node based on the current emotional state.
+    """Route to a response node based on current emotion + intensity bucket.
 
-    # TODO(human): Implement conditional routing based on emotion
-    #
-    # This function is used as the routing_fn in add_conditional_edges().
-    # It examines state["emotion"] and state["intensity"] and returns the
-    # NAME of the next node to execute.
-    #
-    # Routing rules (suggested -- feel free to modify):
-    #   - ANNOYED with intensity > 0.6 -> "response_annoyed"
-    #   - ENGAGED or CURIOUS with intensity > 0.5 -> "response_engaged"
-    #   - REFLECTIVE with intensity > 0.4 -> "response_reflective"
-    #   - Everything else -> "response_default"
-    #
-    # The return value must be a string matching a node name in the graph.
-    #
-    # Design note: you could also route based on intensity thresholds within
-    # the same emotion. E.g., mildly annoyed -> response_default (with an
-    # annoyed tint), strongly annoyed -> response_annoyed (short, flat).
-    # Start simple and add complexity if the behavior feels too uniform.
+    Scaffolded: this is the mechanical half of Exercise 4. The interesting
+    work is in update_emotion (above), which determines WHAT emotion state
+    we land in. Routing is just a table lookup on that state.
+
+    Bucketing rule: only STRONG (intensity > STRONG=0.7) or MODERATE
+    (> MILD=0.4) feelings get a dedicated response node. Mild feelings
+    fall through to the default node (a "hint" of emotion, not a
+    structural change).
     """
-    raise NotImplementedError("Exercise 4: implement route_by_emotion")
+    emotion = state["emotion"]
+    intensity = state["intensity"]
+
+    if emotion == Emotion.ANNOYED and intensity > MILD:
+        return "response_annoyed"
+    if emotion in (Emotion.ENGAGED, Emotion.CURIOUS, Emotion.AMUSED) and intensity > MILD:
+        return "response_engaged"
+    if emotion == Emotion.REFLECTIVE and intensity > MILD:
+        return "response_reflective"
+    return "response_default"
 
 
 # ---------------------------------------------------------------------------

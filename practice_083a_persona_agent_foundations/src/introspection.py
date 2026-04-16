@@ -98,11 +98,11 @@ def generate_agent_turn(
         "content": system_prompt
     }
 
-    messages : list[ChatCompletionMessageParam] = [first_message, * messages]
+    full_messages = [first_message, *messages]
 
     return client.chat.completions.create(
         model = model,
-        messages = messages,
+        messages = full_messages,
         response_model = AgentTurn,
         max_retries = 3,
         temperature = 0.8,

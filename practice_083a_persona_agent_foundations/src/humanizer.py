@@ -26,7 +26,7 @@ from __future__ import annotations
 import time
 
 from src.models import AgentConfig, Emotion
-
+import random
 
 def humanize_response(
     text: str,
@@ -100,8 +100,46 @@ def humanize_response(
     #   Calculate delay separately (it doesn't modify text).
     #   Keep the code simple -- this is a 10-minute exercise, not a thesis.
     """
-    raise NotImplementedError("Exercise 6: implement humanize_response")
 
+    base_delay = len(text) / config.typing_speed_cps
+
+    emotional_delay = base_delay * {
+        Emotion.ENGAGED:0.7,
+        Emotion.AMUSED:0.7,
+        Emotion.ANNOYED:0.5,
+        Emotion.REFLECTIVE:1.5,
+        Emotion.TIRED:1.3,
+        Emotion.NEUTRAL:1,
+        Emotion.CURIOUS:1
+        }[emotion]
+
+    delay = emotional_delay * random.uniform(0.8,1.2)
+
+    limit = 500 if emotion in (Emotion.ANNOYED, Emotion.TIRED) else 800
+
+    if len(text) > limit:
+        last_boundary = max( text.rfind(delimiter, 0, limit) for delimiter in ".?!")
+        if last_boundary == -1:
+            last_boundary = limit
+        text = text[:last_boundary]
+        match emotion:
+            case Emotion.ANNOYED: text += " anyways."
+            case Emotion.TIRED: text += "..."
+
+    (prob, tic) = {
+        Emotion.ENGAGED: (0.1, "honestly, "),
+        Emotion.AMUSED:  (0.2, "ok so "),
+        Emotion.ANNOYED: (0.05, "no hesitation\n"),
+        Emotion.REFLECTIVE:(0.4, "hm "),
+        Emotion.TIRED: (0.3, "ugh "),
+        Emotion.NEUTRAL: (0.15, "well, "),
+        Emotion.CURIOUS: (0.3, "wait --")
+        }[emotion]
+
+    if random.uniform(0,1) < prob:
+        text = tic + text
+
+    return (text, delay)
 
 def apply_delay(delay_seconds: float) -> None:
     """Sleep for the specified duration. Separated for testability."""
