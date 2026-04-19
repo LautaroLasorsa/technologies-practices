@@ -30,7 +30,7 @@ _PRACTICE_ROOT = Path(__file__).resolve().parent.parent
 if str(_PRACTICE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PRACTICE_ROOT))
 
-from src.raft_types import (  # noqa: E402
+from src._00_raft_types import (  # noqa: E402
     AppendEntriesArgs,
     AppendEntriesReply,
     LogEntry,
@@ -39,21 +39,12 @@ from src.raft_types import (  # noqa: E402
     RequestVoteArgs,
     RequestVoteReply,
 )
-from src.node import RaftNode, create_cluster  # noqa: E402
-
-# Import election module to ensure handle_request_vote is attached
-import importlib.util as _ilu
-
-_election_spec = _ilu.spec_from_file_location(
-    "leader_election",
-    Path(__file__).resolve().parent / "02_leader_election.py",
+from src._01_node_state_machine import RaftNode, create_cluster  # noqa: E402
+from src._02_leader_election import (  # noqa: E402
+    print_cluster_state,
+    run_election,
+    simulate_election_with_timeout,
 )
-_election_mod = _ilu.module_from_spec(_election_spec)
-_election_spec.loader.exec_module(_election_mod)
-
-run_election = _election_mod.run_election
-simulate_election_with_timeout = _election_mod.simulate_election_with_timeout
-print_cluster_state = _election_mod.print_cluster_state
 
 logger = logging.getLogger("raft.replication")
 
@@ -118,14 +109,24 @@ logger = logging.getLogger("raft.replication")
 #         jump back efficiently instead of decrementing one-by-one.
 #
 #       If our log HAS an entry at prev_log_index but the TERM DOESN'T MATCH:
-#         REJECT with conflict_term = self.log_term_at(args.prev_log_index).
-#         Set conflict_index to the FIRST index with that conflicting term
-#         (scan backward from prev_log_index to find the start of the
-#         conflicting term). Delete all entries from conflict_index onward.
-#         WHY: The conflicting entries came from a deposed leader. We delete
-#         them to make room for the new leader's entries. The conflict_term
-#         and conflict_index hints let the leader skip past all entries from
-#         that stale term in one step (optimization from Section 5.3).
+#         REJECT WITHOUT TRUNCATING. Set in the reply:
+#           - conflict_term = self.log_term_at(args.prev_log_index)
+#           - conflict_index = the FIRST index on our log with that term
+#             (scan backward from prev_log_index to find where conflict_term
+#             began on our log).
+#         These two fields are the Section 5.3 optimization hints -- they let
+#         the leader jump next_index back past our entire run of conflict_term
+#         in a single retry, instead of decrementing one step at a time.
+#         WHY NOT TRUNCATE HERE: entries between conflict_index and
+#         prev_log_index-1 could still be COMMITTED (e.g., the leader has
+#         the same conflict_term entries earlier in its log, matching ours,
+#         and only diverges further down). Deleting them would risk wiping
+#         out entries that our state machine has already applied, breaking
+#         non-idempotent operations. Leader Completeness guarantees only the
+#         entry AT prev_log_index (with our conflict_term) is definitely
+#         uncommitted -- but there's no benefit to deleting just that one
+#         here; it will be cleanly overwritten in Step 5 when the leader
+#         retries with a matching prev_log_index and sends new entries.
 #
 #       If the terms MATCH: consistency check passes, proceed to Step 5.
 #

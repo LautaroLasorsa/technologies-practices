@@ -25,7 +25,7 @@ _PRACTICE_ROOT = Path(__file__).resolve().parent.parent
 if str(_PRACTICE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PRACTICE_ROOT))
 
-from src.raft_types import (  # noqa: E402
+from src._00_raft_types import (  # noqa: E402
     AppendEntriesArgs,
     AppendEntriesReply,
     LogEntry,
@@ -34,7 +34,7 @@ from src.raft_types import (  # noqa: E402
     RequestVoteArgs,
     RequestVoteReply,
 )
-from src.node import RaftNode, create_cluster  # noqa: E402
+from src._01_node_state_machine import RaftNode, create_cluster  # noqa: E402
 
 logger = logging.getLogger("raft.election")
 

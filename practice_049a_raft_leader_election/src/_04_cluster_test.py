@@ -27,7 +27,7 @@ _PRACTICE_ROOT = Path(__file__).resolve().parent.parent
 if str(_PRACTICE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PRACTICE_ROOT))
 
-from src.raft_types import (  # noqa: E402
+from src._00_raft_types import (  # noqa: E402
     AppendEntriesArgs,
     AppendEntriesReply,
     LogEntry,
@@ -36,21 +36,13 @@ from src.raft_types import (  # noqa: E402
     RequestVoteArgs,
     RequestVoteReply,
 )
-from src.node import RaftNode, create_cluster  # noqa: E402
-
-# Import replication module (which also imports election module, attaching all methods)
-import importlib.util as _ilu
-
-_repl_spec = _ilu.spec_from_file_location(
-    "log_replication",
-    Path(__file__).resolve().parent / "03_log_replication.py",
+from src._01_node_state_machine import RaftNode, create_cluster  # noqa: E402
+# Importing _03 transitively loads _02, so all RPC handlers are attached to RaftNode.
+from src._03_log_replication import (  # noqa: E402
+    print_cluster_state,
+    run_election,
+    simulate_election_with_timeout,
 )
-_repl_mod = _ilu.module_from_spec(_repl_spec)
-_repl_spec.loader.exec_module(_repl_mod)
-
-run_election = _repl_mod.run_election
-simulate_election_with_timeout = _repl_mod.simulate_election_with_timeout
-print_cluster_state = _repl_mod.print_cluster_state
 
 logger = logging.getLogger("raft.cluster")
 
