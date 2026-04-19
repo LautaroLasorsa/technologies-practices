@@ -25,7 +25,7 @@ _PRACTICE_ROOT = Path(__file__).resolve().parent.parent
 if str(_PRACTICE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PRACTICE_ROOT))
 
-from src.raft_types import (  # noqa: E402
+from src._00_raft_types import (  # noqa: E402
     AppendEntriesArgs,
     AppendEntriesReply,
     LogEntry,
@@ -34,7 +34,7 @@ from src.raft_types import (  # noqa: E402
     RequestVoteArgs,
     RequestVoteReply,
 )
-from src.node import RaftNode, create_cluster  # noqa: E402
+from src._01_node_state_machine import RaftNode, create_cluster  # noqa: E402
 
 logger = logging.getLogger("raft.election")
 
@@ -118,11 +118,25 @@ logger = logging.getLogger("raft.election")
 #     arrives and reject the second (Condition A fails).
 
 def handle_request_vote(self: RaftNode, args: RequestVoteArgs) -> RequestVoteReply:
-    raise NotImplementedError(
-        "TODO(human): Implement RequestVote RPC handler. "
-        "Check term, vote availability, and log up-to-dateness."
-    )
+    if args.term > self.current_term:
+        self.step_down(args.term)
 
+    if (args.term < self.current_term or
+        self.voted_for is not None and self.voted_for != args.candidate_id or
+        (args.last_log_term, args.last_log_index) < (self.last_log_term, self.last_log_index)
+    ) :
+        reply = RequestVoteReply(
+            self.current_term,
+            False,
+            self.node_id
+        )
+        logger.info(reply)
+        return reply
+
+
+    self.voted_for = args.candidate_id
+    logger.info(f"Node {self.node_id} voted for {args.candidate_id} in term {self.current_term}")
+    return RequestVoteReply(term=self.current_term, vote_granted=True, voter_id=self.node_id)
 
 # Attach the method to RaftNode (monkey-patch for exercise modularity)
 RaftNode.handle_request_vote = handle_request_vote
@@ -173,12 +187,29 @@ RaftNode.handle_request_vote = handle_request_vote
 # in parallel and processes replies asynchronously. We iterate sequentially
 # for clarity, which doesn't affect correctness (only performance).
 
-async def run_election(nodes: list[RaftNode], candidate_id: int) -> int | None:
-    raise NotImplementedError(
-        "TODO(human): Run a single election round. "
-        "Candidate sends RequestVote to all peers, checks majority."
-    )
+def _node_with_id(nodes: list[RaftNode], node_id:int) -> RaftNode:
+    for node in nodes:
+        if node.node_id == node_id:
+            return node
+    assert False
 
+async def run_election(nodes: list[RaftNode], candidate_id: int) -> int | None:
+    candidate = _node_with_id(nodes, candidate_id)
+    rva = candidate.become_candidate()
+    for peer in candidate.peers:
+        reply = handle_request_vote(_node_with_id(nodes,peer), rva)
+        if reply.vote_granted:
+            candidate.votes_received.add(peer)
+        elif reply.term > candidate.current_term:
+            candidate.step_down(reply.term)
+            return None
+
+    if len(candidate.votes_received) >= candidate.config.majority:
+        candidate.become_leader()
+        logger.info(f"Election result: {candidate_id} won with {len(candidate.votes_received)} votes")
+        return candidate_id
+    logger.info(f"Election result: {candidate_id} lost with {len(candidate.votes_received)} votes")
+    return None
 
 # TODO(human): Implement simulate_election_with_timeout(nodes, config) -> int
 #
@@ -235,12 +266,20 @@ async def run_election(nodes: list[RaftNode], candidate_id: int) -> int | None:
 async def simulate_election_with_timeout(
     nodes: list[RaftNode], config: RaftConfig
 ) -> int:
-    raise NotImplementedError(
-        "TODO(human): Run full election with randomized timeouts. "
-        "Handle split votes by retrying with new terms."
-    )
+    for _ in range(10):
+        timeout = [random.uniform(config.election_timeout_min_s, config.election_timeout_max_s) for i in range(len(nodes))]
+        nodes_ids = list(range(len(nodes)))
+        nodes_ids.sort(key= lambda id: timeout[id])
 
-
+        for node_id in nodes_ids:
+            result = await run_election(nodes, node_id)
+            if result:
+                for node in nodes:
+                    if node.node_id != result:
+                        node.leader_id = result
+                        node.current_term = nodes[result].current_term
+                return result
+    assert False
 # ======================================================================
 # Verification helpers
 # ======================================================================

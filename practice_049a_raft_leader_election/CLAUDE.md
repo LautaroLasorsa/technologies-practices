@@ -154,7 +154,7 @@ Run the pre-built types module to verify the data structures compile and self-te
 
 ```
 uv sync
-uv run python src/00_raft_types.py
+uv run python src/_00_raft_types.py
 ```
 
 This file defines all Raft message types (RequestVoteArgs, RequestVoteReply, AppendEntriesArgs, AppendEntriesReply), node states (FOLLOWER, CANDIDATE, LEADER), log entries, and cluster configuration. Read through it to understand the data model before implementing behavior.
@@ -165,7 +165,7 @@ This file defines all Raft message types (RequestVoteArgs, RequestVoteReply, App
 
 The `RaftNode` class manages a single node's persistent and volatile state, and implements the state transitions described in Raft paper Figure 2 (server rules). This is the foundation -- every subsequent exercise builds on these transitions.
 
-File: `src/01_node_state_machine.py`
+File: `src/_01_node_state_machine.py`
 
 Four TODO(human) blocks:
 - `__init__` -- Initialize all Raft state (persistent: currentTerm, votedFor, log; volatile: commitIndex, lastApplied, state; leader-specific: nextIndex, matchIndex)
@@ -175,7 +175,7 @@ Four TODO(human) blocks:
 
 **Why this matters**: These four transitions are the heartbeat of Raft. Getting them right ensures the term monotonicity invariant and the single-leader-per-term property. Every RPC handler in the next exercises calls `step_down()` when it sees a higher term.
 
-Run: `uv run python src/01_node_state_machine.py`
+Run: `uv run python src/_01_node_state_machine.py`
 
 ### Phase 3: Leader Election (~25 min)
 
@@ -183,7 +183,7 @@ Run: `uv run python src/01_node_state_machine.py`
 
 Build the vote-granting logic and the election simulation loop. This exercise teaches the election restriction (only up-to-date candidates win), the randomized timeout mechanism (prevents split votes), and how majority quorums guarantee at most one leader per term.
 
-File: `src/02_leader_election.py`
+File: `src/_02_leader_election.py`
 
 Three TODO(human) blocks:
 - `handle_request_vote()` -- Process a RequestVote RPC: check term, check vote availability, check log up-to-dateness. This is the core safety mechanism for leader election.
@@ -192,7 +192,7 @@ Three TODO(human) blocks:
 
 **Why this matters**: Leader election is Raft's first subproblem. The election restriction (candidates must have up-to-date logs) is what ensures the Leader Completeness property -- without it, a newly elected leader might be missing committed entries.
 
-Run: `uv run python src/02_leader_election.py`
+Run: `uv run python src/_02_leader_election.py`
 
 ### Phase 4: Log Replication (~25 min)
 
@@ -200,7 +200,7 @@ Run: `uv run python src/02_leader_election.py`
 
 Build the consistency check, log repair mechanism, and commitment rule. This exercise teaches how the leader ensures all followers have identical logs, how conflicting entries are resolved, and how entries become committed via majority replication.
 
-File: `src/03_log_replication.py`
+File: `src/_03_log_replication.py`
 
 Three TODO(human) blocks:
 - `handle_append_entries()` -- Process AppendEntries RPC: term check, consistency check (prevLogIndex/prevLogTerm), append entries, update commitIndex. This is the most complex RPC handler.
@@ -209,7 +209,7 @@ Three TODO(human) blocks:
 
 **Why this matters**: Log replication is where Raft achieves its core goal: all nodes execute the same commands in the same order. The consistency check and log repair mechanism ensure the Log Matching property. The commitment rule (only commit current-term entries) prevents a subtle safety bug described in Raft paper Section 5.4.2.
 
-Run: `uv run python src/03_log_replication.py`
+Run: `uv run python src/_03_log_replication.py`
 
 ### Phase 5: Integration Test (~15 min)
 
@@ -217,14 +217,14 @@ Run: `uv run python src/03_log_replication.py`
 
 Bring everything together: run a 5-node Raft cluster, submit client commands, inject a network partition, verify that safety properties hold throughout.
 
-File: `src/04_cluster_test.py`
+File: `src/_04_cluster_test.py`
 
 One TODO(human) block:
 - `run_cluster()` -- Create nodes, elect a leader, replicate commands, optionally inject a network partition, verify consistency after healing. This tests the full Raft lifecycle.
 
 **Why this matters**: Individual components may work correctly in isolation but fail when composed. This integration test verifies that leader election, log replication, and failure recovery work together. The partition test specifically validates that the minority partition cannot make progress (no leader without majority) while the majority partition continues operating normally.
 
-Run: `uv run python src/04_cluster_test.py`
+Run: `uv run python src/_04_cluster_test.py`
 
 ## Motivation
 
@@ -240,12 +240,12 @@ All commands run from `practice_049a_raft_leader_election/`.
 | Command | Description |
 |---------|-------------|
 | `uv sync` | Install dependencies (none external -- pure Python) |
-| `uv run python src/00_raft_types.py` | Run type definitions self-test |
-| `uv run python src/01_node_state_machine.py` | Test node state transitions (Exercise 1) |
-| `uv run python src/02_leader_election.py` | Run leader election simulation (Exercise 2) |
-| `uv run python src/03_log_replication.py` | Run log replication simulation (Exercise 3) |
-| `uv run python src/04_cluster_test.py` | Full cluster integration test (Exercise 4) |
+| `uv run python src/_00_raft_types.py` | Run type definitions self-test |
+| `uv run python src/_01_node_state_machine.py` | Test node state transitions (Exercise 1) |
+| `uv run python src/_02_leader_election.py` | Run leader election simulation (Exercise 2) |
+| `uv run python src/_03_log_replication.py` | Run log replication simulation (Exercise 3) |
+| `uv run python src/_04_cluster_test.py` | Full cluster integration test (Exercise 4) |
 
 ## State
 
-`not-started`
+`completed`

@@ -26,12 +26,12 @@ import logging
 import sys
 from pathlib import Path
 
-# Ensure the practice root is on sys.path so `from src.raft_types import ...` works.
+# Ensure the practice root is on sys.path so `from src._00_raft_types import ...` works.
 _PRACTICE_ROOT = Path(__file__).resolve().parent.parent
 if str(_PRACTICE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PRACTICE_ROOT))
 
-from src.raft_types import (  # noqa: E402
+from src._00_raft_types import (  # noqa: E402
     AppendEntriesArgs,
     AppendEntriesReply,
     LogEntry,
@@ -120,10 +120,22 @@ class RaftNode:
     # Figure 2 column headers.
 
     def __init__(self, node_id: int, config: RaftConfig, peers: list[int]) -> None:
-        raise NotImplementedError(
-            "TODO(human): Initialize all Raft node state. "
-            "See Raft paper Figure 2 for the complete list of state variables."
-        )
+
+        self.node_id = node_id
+        self.config = config
+        self.peers = peers
+        self.current_term: int = 0
+        self.voted_for: int | None = None
+        self.log : list[LogEntry] = []
+
+        self.state: NodeState = NodeState.FOLLOWER
+        self.leader_id : int | None = None
+        self.commit_index: int = 0
+        self.last_applied: int = 0
+
+        self.next_index = dict[int,int]()
+        self.match_index = dict[int,int]()
+        self.votes_received = set[int]()
 
     # ------------------------------------------------------------------
     # Helpers for log access
@@ -204,9 +216,20 @@ class RaftNode:
     # split votes are resolved.
 
     def become_candidate(self) -> RequestVoteArgs:
-        raise NotImplementedError(
-            "TODO(human): Transition to CANDIDATE state. "
-            "Increment term, vote for self, return RequestVoteArgs."
+
+        self.current_term += 1
+        self.state = NodeState.CANDIDATE
+        self.voted_for = self.node_id
+        self.vote_received = {self.node_id}
+        self.leader_id = None
+
+        logger.info(f"Node {self.node_id} became CANDIDATE for term {self.current_term}")
+
+        return RequestVoteArgs(
+            term = self.current_term,
+            candidate_id = self.node_id,
+            last_log_index = self.last_log_index,
+            last_log_term = self.last_log_term
         )
 
     # TODO(human): Implement become_leader(self) -> None
@@ -251,10 +274,12 @@ class RaftNode:
     # new elections. This is handled by the caller, not by this method.
 
     def become_leader(self) -> None:
-        raise NotImplementedError(
-            "TODO(human): Transition to LEADER state. "
-            "Initialize next_index and match_index for each peer."
-        )
+        self.state = NodeState.LEADER
+        self.leader_id = self.node_id
+
+        self.next_index = {peer: self.last_log_index+1 for peer in self.peers}
+        self.match_index = {peer:0 for peer in self.peers}
+        logger.info(f"Node {self.node_id} became LEADER for term {self.current_term}")
 
     # TODO(human): Implement step_down(self, term: int) -> None
     #
@@ -304,10 +329,14 @@ class RaftNode:
     #   still the legitimate leader) and the cluster would have two leaders.
 
     def step_down(self, term: int) -> None:
-        raise NotImplementedError(
-            "TODO(human): Step down to FOLLOWER if term > current_term. "
-            "Update term, clear votedFor, clear leader_id."
-        )
+        if term <= self.current_term: return
+        old_term = self.current_term
+        self.current_term = term
+        self.state = NodeState.FOLLOWER
+        self.voted_for = None
+        self.leader_id = None
+        self.votes_received = set()
+        logger.info(f"Node {self.node_id} stepping down: term {self.current_term} (was {old_term})")
 
     # ------------------------------------------------------------------
     # String representation

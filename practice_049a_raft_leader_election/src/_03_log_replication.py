@@ -30,7 +30,7 @@ _PRACTICE_ROOT = Path(__file__).resolve().parent.parent
 if str(_PRACTICE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PRACTICE_ROOT))
 
-from src.raft_types import (  # noqa: E402
+from src._00_raft_types import (  # noqa: E402
     AppendEntriesArgs,
     AppendEntriesReply,
     LogEntry,
@@ -39,21 +39,12 @@ from src.raft_types import (  # noqa: E402
     RequestVoteArgs,
     RequestVoteReply,
 )
-from src.node import RaftNode, create_cluster  # noqa: E402
-
-# Import election module to ensure handle_request_vote is attached
-import importlib.util as _ilu
-
-_election_spec = _ilu.spec_from_file_location(
-    "leader_election",
-    Path(__file__).resolve().parent / "02_leader_election.py",
+from src._01_node_state_machine import RaftNode, create_cluster  # noqa: E402
+from src._02_leader_election import (  # noqa: E402
+    print_cluster_state,
+    run_election,
+    simulate_election_with_timeout,
 )
-_election_mod = _ilu.module_from_spec(_election_spec)
-_election_spec.loader.exec_module(_election_mod)
-
-run_election = _election_mod.run_election
-simulate_election_with_timeout = _election_mod.simulate_election_with_timeout
-print_cluster_state = _election_mod.print_cluster_state
 
 logger = logging.getLogger("raft.replication")
 
@@ -118,14 +109,24 @@ logger = logging.getLogger("raft.replication")
 #         jump back efficiently instead of decrementing one-by-one.
 #
 #       If our log HAS an entry at prev_log_index but the TERM DOESN'T MATCH:
-#         REJECT with conflict_term = self.log_term_at(args.prev_log_index).
-#         Set conflict_index to the FIRST index with that conflicting term
-#         (scan backward from prev_log_index to find the start of the
-#         conflicting term). Delete all entries from conflict_index onward.
-#         WHY: The conflicting entries came from a deposed leader. We delete
-#         them to make room for the new leader's entries. The conflict_term
-#         and conflict_index hints let the leader skip past all entries from
-#         that stale term in one step (optimization from Section 5.3).
+#         REJECT WITHOUT TRUNCATING. Set in the reply:
+#           - conflict_term = self.log_term_at(args.prev_log_index)
+#           - conflict_index = the FIRST index on our log with that term
+#             (scan backward from prev_log_index to find where conflict_term
+#             began on our log).
+#         These two fields are the Section 5.3 optimization hints -- they let
+#         the leader jump next_index back past our entire run of conflict_term
+#         in a single retry, instead of decrementing one step at a time.
+#         WHY NOT TRUNCATE HERE: entries between conflict_index and
+#         prev_log_index-1 could still be COMMITTED (e.g., the leader has
+#         the same conflict_term entries earlier in its log, matching ours,
+#         and only diverges further down). Deleting them would risk wiping
+#         out entries that our state machine has already applied, breaking
+#         non-idempotent operations. Leader Completeness guarantees only the
+#         entry AT prev_log_index (with our conflict_term) is definitely
+#         uncommitted -- but there's no benefit to deleting just that one
+#         here; it will be cleanly overwritten in Step 5 when the leader
+#         retries with a matching prev_log_index and sends new entries.
 #
 #       If the terms MATCH: consistency check passes, proceed to Step 5.
 #
@@ -175,11 +176,47 @@ logger = logging.getLogger("raft.replication")
 # removes everything from 1-based 'index' onward.
 
 def handle_append_entries(self: RaftNode, args: AppendEntriesArgs) -> AppendEntriesReply:
-    raise NotImplementedError(
-        "TODO(human): Implement AppendEntries RPC handler. "
-        "Check term, consistency, append entries, update commit index."
-    )
+    if args.term < self.current_term:
+        return AppendEntriesReply(term=self.current_term, success=False, follower_id=self.node_id)
 
+    if args.term > self.current_term or self.state == NodeState.CANDIDATE:
+        self.step_down(args.term)
+
+    self.leader_id = args.leader_id
+
+    if args.prev_log_index > 0:
+        if len(self.log) < args.prev_log_index:
+            return AppendEntriesReply(term=self.current_term, success=False, follower_id=self.node_id, conflict_index = len(self.log)+1, conflict_term= 0)
+        if args.prev_log_term != self.log_term_at(args.prev_log_index):
+            conflict_index = args.prev_log_index
+            conflict_term = self.log_term_at(args.prev_log_index)
+            while conflict_index >= 0 and self.log_term_at(conflict_index-1)>=conflict_term:
+                conflict_index -= 1
+            #self.log = self.log[:conflict_index]
+            reply = AppendEntriesReply(term=self.current_term, success=False, follower_id=self.node_id, conflict_index = conflict_index, conflict_term= conflict_term)
+            # logger.info(str(reply))
+            return reply
+
+    entries = sorted(args.entries, key = lambda e: e.index)
+    for entry in args.entries:
+        if self.log_entry_at(entry.index) is None:
+            self.log.append(entry)
+
+        if self.log_term_at(entry.index) == entry.term:
+            continue
+
+        self.log = self.log[:entry.index-1]
+        self.log.append(entry)
+
+    if args.leader_commit > self.commit_index:
+        self.commit_index = min(args.leader_commit, entries[-1].index if entries else args.leader_commit)
+
+    return AppendEntriesReply(
+             term=self.current_term,
+             success=True,
+             follower_id=self.node_id,
+             match_index=self.last_log_index,
+         )
 
 RaftNode.handle_append_entries = handle_append_entries
 
@@ -270,11 +307,41 @@ RaftNode.handle_append_entries = handle_append_entries
 #   O(log_length) to O(num_conflicting_terms) in the worst case.
 
 def replicate_to_follower(self: RaftNode, follower: RaftNode) -> bool:
-    raise NotImplementedError(
-        "TODO(human): As leader, send AppendEntries to a follower. "
-        "Handle success (update next/match index) and failure (log repair)."
-    )
+    follower_id = follower.node_id
 
+    while True:
+        prev_log_index = self.next_index[follower_id] - 1 if follower_id in self.next_index else self.last_log_index
+        prev_log_term = self.log_term_at(prev_log_index)
+        entries = self.log[prev_log_index:]
+        args = AppendEntriesArgs(
+            term = self.current_term,
+            leader_id = self.node_id,
+            prev_log_index = prev_log_index,
+            prev_log_term = prev_log_term,
+            entries=entries,
+            leader_commit = self.commit_index
+        )
+
+        reply = handle_append_entries(follower,args)
+
+        if reply.term > self.current_term:
+            self.step_down(reply.term)
+            return False
+
+        if reply.success:
+            self.next_index[follower_id] = reply.match_index + 1
+            self.match_index[follower_id] = reply.match_index
+            logger.info(f"Leader {self.node_id}: replicated to Node {follower_id}, match_index={reply.match_index}")
+            return True
+
+        if reply.conflict_term > 0:
+            while self.next_index[follower_id] > 1 and  self.log_term_at(self.next_index[follower_id]-1) > reply.conflict_term:
+                self.next_index[follower_id] -= 1
+            if self.log_term_at(self.next_index[follower_id]-1) != reply.conflict_term:
+                self.next_index[follower_id] = reply.conflict_index
+        else:
+            self.next_index[follower_id] = reply.conflict_index
+        logger.debug(f"Leader {self.node_id}: log mismatch with Node {follower_id}, backing up to next_index={self.next_index[follower_id]}")
 
 RaftNode.replicate_to_follower = replicate_to_follower
 
@@ -338,10 +405,19 @@ RaftNode.replicate_to_follower = replicate_to_follower
 # commit_index. All entries below it are implicitly committed too.
 
 def advance_commit_index(self: RaftNode) -> int:
-    raise NotImplementedError(
-        "TODO(human): As leader, find the highest N where majority has "
-        "replicated it AND log[N].term == currentTerm. Set commit_index = N."
-    )
+
+    test_index = self.last_log_index
+    while test_index > self.commit_index:
+        matched = 1
+        for peer in self.peers:
+            if self.match_index[peer] >= test_index:
+                matched += 1
+        if matched >= self.config.majority and self.log_term_at(test_index) == self.current_term:
+            self.commit_index = test_index
+            break
+        test_index -= 1
+
+    return self.commit_index
 
 
 RaftNode.advance_commit_index = advance_commit_index

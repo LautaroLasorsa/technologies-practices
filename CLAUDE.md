@@ -116,7 +116,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 046 | Robust Optimization | Python | OR: Applied (Python) | `not-started` |
 | 047 | Bayesian Optimization | Python | OR: Applied (Python) | `not-started` |
 | 048 | Integrated OR: Supply Chain | Python | OR: Applied (Python) | `not-started` |
-| 049a | Raft Consensus: Leader Election & Log Replication | Python | Distributed Systems Patterns | `not-started` |
+| 049a | Raft Consensus: Leader Election & Log Replication | Python | Distributed Systems Patterns | `completed` |
 | 049b | Raft Consensus: Safety & Failure Recovery | Python | Distributed Systems Patterns | `not-started` |
 | 050 | CRDTs: Conflict-Free Replicated Data Types | Python | Distributed Systems Patterns | `completed` |
 | 051 | Distributed Coordination: etcd | Python, Docker (etcd) | Distributed Systems Patterns | `not-started` |
