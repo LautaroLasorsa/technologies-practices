@@ -158,12 +158,14 @@ In production, resilience patterns are often applied at **two levels**: applicat
 
 ## Description
 
-Build a **Resilience Testing Lab** that implements three core resilience patterns from scratch and combines them into a layered defense. An unreliable HTTP service (simulated with aiohttp) serves as the target, with configurable failure modes (healthy, degraded, down). You implement:
+Build a **Resilience Testing Lab** that implements the core resilience patterns and composes them into a layered defense. An unreliable HTTP service (simulated with aiohttp) serves as the target, with configurable failure modes (healthy, degraded, down). You implement:
 
-1. **Circuit Breaker** — A state machine (CLOSED/OPEN/HALF_OPEN) that monitors downstream failures and fails fast when the downstream is broken.
-2. **Bulkhead** — Semaphore-based dependency isolation that prevents a slow dependency from starving resources for other dependencies.
-3. **Distributed Rate Limiter** — Token bucket and sliding window algorithms backed by Redis for shared state across processes.
-4. **Combined Resilience Layer** — Stack all three patterns into a single `ResilientClient` that applies rate limiting, bulkhead isolation, and circuit breaking in sequence.
+1. **Circuit Breaker** — A state machine (CLOSED/OPEN/HALF_OPEN) that monitors downstream failures and fails fast when the downstream is broken. Three small focused TODOs: the time-based `state` auto-transition, `_handle_success`, and `_handle_failure`.
+2. **Bulkhead** — Semaphore-based dependency isolation that prevents a slow dependency from starving resources for other dependencies. One focused TODO: the `call()` method with timeout-acquire + try/finally release.
+3. **Rate Limiter (provided)** — A working Redis token-bucket limiter is provided as a finished component. Rate limiting algorithms (fixed window, sliding window log/counter, token bucket) and their Lua scripts are covered in depth in practice 078, so this practice does not re-implement them.
+4. **Combined Resilience Layer** — Stack rate limiter, bulkhead, and circuit breaker into a single `ResilientClient`. One focused TODO: the composition in `call()` mapping each layer's exception to a rejection reason.
+
+All demos, load tests, and plotting are scaffolded — you implement the core pattern mechanics, not the measurement harness.
 
 ### Architecture
 
@@ -197,57 +199,54 @@ Each layer can independently reject a request. The order matters: rate limiting 
 
 ## Instructions
 
-### Phase 1: Setup & Infrastructure (~10 min)
+### Phase 1: Setup & Infrastructure (~5 min)
 
-1. Start Redis: `docker compose up -d` from the practice root
-2. Verify Redis is running: `docker compose ps`
+1. Start Redis: `docker compose up -d`
+2. Verify Redis: `docker compose ps` (redis container should be running)
 3. Install Python dependencies: `uv sync`
-4. Start the unreliable service in one terminal: `uv run python src/00_unreliable_service.py`
-5. Test it: open another terminal, `curl http://localhost:8089/health` should return `{"status": "ok"}`
-6. Switch modes: `curl -X POST http://localhost:8089/admin/mode/degraded` and try `/api/data` several times
+4. Start the unreliable service in a dedicated terminal: `uv run python -m src._00_unreliable_service`
+5. Quick sanity check: `curl http://localhost:8089/health` → `{"status": "ok"}`
 
 ### Phase 2: Circuit Breaker (~25 min)
 
-1. Open `src/01_circuit_breaker.py` and study the structure
-2. **`class CircuitBreaker`** — This is the core exercise. You implement a finite state machine that wraps async function calls. The breaker tracks failure/success counts in CLOSED state, rejects immediately in OPEN state, and probes cautiously in HALF_OPEN state. This teaches you how circuit breakers convert slow failures (30s timeouts) into fast failures (<1ms rejections), and why the HALF_OPEN state is essential — without it, the breaker would never recover.
-3. **`demo_circuit_breaker()`** — This function drives the breaker through its full lifecycle: CLOSED -> OPEN -> HALF_OPEN -> CLOSED. By switching the unreliable service between modes and watching the breaker react, you build intuition for how threshold and timeout parameters affect behavior. The timing information shows why recovery_timeout matters — too short and you flap, too long and you stay isolated unnecessarily.
-4. Run: `uv run python src/01_circuit_breaker.py` (with `00_unreliable_service.py` running in another terminal)
-5. Observe the state transitions and metrics output
-6. Key question: If your downstream service takes 10 seconds to restart, what recovery_timeout would you choose and why?
+1. Open `src/_01_circuit_breaker.py`
+2. **TODO 1 — `state` property**: Implement the lazy, time-based `OPEN → HALF_OPEN` auto-transition. This is how real circuit breakers (resilience4j, Polly) avoid background timers — every state read checks the clock.
+3. **TODO 2 — `_handle_success()`**: CLOSED resets the failure counter; HALF_OPEN counts successful probes and closes when enough have succeeded. This is how a breaker *recovers*.
+4. **TODO 3 — `_handle_failure()`**: CLOSED increments the failure counter and trips to OPEN at threshold; HALF_OPEN goes back to OPEN on any probe failure. This is how a breaker *trips* and *re-trips*.
+5. The `call()` method is scaffolded — it reads state, rejects fast when OPEN, and dispatches to your two handlers. Read it to see how the three TODOs fit together.
+6. Run: `uv run python -m src._01_circuit_breaker` (with the unreliable service running)
+7. Watch the state transitions print as the breaker moves CLOSED → OPEN → HALF_OPEN → CLOSED.
+8. Key question: If the downstream service needs 10s to restart, what `recovery_timeout` would you choose and why?
 
-### Phase 3: Bulkhead (~20 min)
+### Phase 3: Bulkhead (~15 min)
 
-1. Open `src/02_bulkhead.py` and study the structure
-2. **`class Bulkhead`** — Implement semaphore-based isolation. The key insight is using `asyncio.wait_for()` with a timeout on semaphore acquisition — this prevents callers from waiting indefinitely for a slot. Track `active_calls` to visualize concurrency in real time. This teaches you why shared resource pools are dangerous: a single slow dependency can consume all slots.
-3. **`demo_bulkhead_isolation()`** — The contrast between "with bulkhead" and "without bulkhead" is the core learning. Without isolation, the slow dependency's calls crowd out fast dependency calls. With isolation, each dependency is contained to its own concurrency pool. Measuring fast_api latency in both scenarios makes the benefit concrete and measurable.
-4. Run: `uv run python src/02_bulkhead.py` (with `00_unreliable_service.py` running)
-5. Compare the metrics: how does fast_api latency differ with vs without bulkhead?
-6. Key question: How would you decide the max_concurrent value for a bulkhead in production?
+1. Open `src/_02_bulkhead.py`
+2. **TODO — `Bulkhead.call()`**: Acquire the semaphore with `asyncio.wait_for(..., timeout=max_wait_time)`. On `TimeoutError`, record a rejection and raise `BulkheadFullError`. Execute `func` in a `try/finally` so the slot is always released. Track `peak_concurrent` and `call_latencies`.
+3. The isolation demo (with vs without bulkhead, on a degraded service) is scaffolded.
+4. Run: `uv run python -m src._02_bulkhead`
+5. Compare the printed metrics — `fast_api` average latency should be dramatically lower when bulkheads isolate the fast dependency from the slow one.
+6. Key question: How would you decide `max_concurrent` for a production bulkhead?
 
-### Phase 4: Distributed Rate Limiting (~25 min)
+### Phase 4: Rate Limiter (provided, ~5 min)
 
-1. Open `src/03_rate_limiter.py` and study the structure. Ensure Redis is running.
-2. **`class TokenBucketRateLimiter`** — Implement the token bucket algorithm using a Redis Lua script. The Lua script must atomically: (a) calculate tokens to refill based on elapsed time, (b) cap tokens at bucket capacity, (c) try to consume the requested tokens, (d) save the new state. Atomicity is critical — without it, concurrent requests could both read the same token count and both pass, exceeding the limit. This teaches you why distributed rate limiting cannot use simple INCR.
-3. **`class SlidingWindowRateLimiter`** — Implement the sliding window counter using Redis sorted sets. Each request adds a timestamped entry; entries outside the window are pruned; the count of remaining entries determines if the request is allowed. Using MULTI/EXEC (pipeline) for atomicity teaches you Redis transactions and why they differ from Lua scripts.
-4. **`demo_rate_limiting()`** — Send bursts of requests through both limiters and compare their behavior. The token bucket allows bursts (up to capacity), while the sliding window enforces a smoother rate. Plotting allowed requests per second over time makes the algorithmic difference visible and concrete.
-5. Run: `uv run python src/03_rate_limiter.py`
-6. Observe the comparison plots saved to `plots/`
-7. Key question: Your API receives 1000 req/sec normally but spikes to 5000 req/sec during events. Which algorithm handles this better?
+1. Open `src/_03_rate_limiter.py` — skim it, there are **no TODOs**. This module provides a finished `TokenBucketRateLimiter` backed by Redis + Lua for exercise 4 to compose with.
+2. Rate limiting algorithms and their atomic Lua scripts are covered in depth in **practice 078** (fixed window, sliding window log, sliding window counter, token bucket) — don't re-implement them here.
+3. Sanity check (optional): `uv run python -m src._03_rate_limiter` runs a burst through the bucket to confirm Redis is reachable.
 
 ### Phase 5: Combined Resilience Layer (~20 min)
 
-1. Open `src/04_combined_resilience.py` and study the structure
-2. **`class ResilientClient`** — This is where the three patterns compose. The call chain is: rate_limiter.allow() -> bulkhead.call() -> circuit_breaker.call() -> actual_function(). Each layer can reject independently, and the `ResilientClient` tracks which layer rejected each request. This teaches you that resilience is not a single pattern but a layered strategy, and that the order of layers matters (cheapest checks first, most expensive last).
-3. **`load_test()`** — Drive realistic traffic through the `ResilientClient` while the unreliable service cycles through modes. Collecting per-request results (timestamp, latency, success, rejection reason) builds a dataset for analysis. This teaches you how to evaluate resilience in practice — not just "does it work" but "what is the user-visible impact during failures."
-4. Run: `uv run python src/04_combined_resilience.py` (with `00_unreliable_service.py` running)
-5. Examine the dashboard plot saved to `plots/`
+1. Open `src/_04_combined_resilience.py`
+2. **TODO — `ResilientClient.call()`**: Compose the three layers in cost-ascending order: `rate_limiter.require()` first, then `bulkhead.call(circuit_breaker.call, func, *args, **kwargs)`. Map each layer's exception to a rejection reason (`"rate_limit"`, `"bulkhead"`, `"circuit_open"`, `"error"`) via `self._record(...)`, then re-raise. On success, record and return the value.
+3. The load test (mode-timeline, RPS generator, dashboard plot) is scaffolded.
+4. Run: `uv run python -m src._04_combined_resilience`
+5. Inspect `plots/combined_resilience_dashboard.png` — scatter of outcomes over time, circuit breaker state timeline, cumulative outcomes, and a rejection pie.
 6. Key question: In what order should you tune the three patterns? Which parameters affect each other?
 
 ### Phase 6: Reflection (~5 min)
 
-1. Compare implementing resilience in application code vs using a service mesh (Envoy/Istio). When would you choose each?
-2. How would you test resilience patterns in CI/CD? (Hint: chaos engineering, fault injection)
-3. What metrics would you monitor in production to detect that resilience patterns are activating?
+1. Application-level resilience vs service-mesh resilience (Envoy/Istio) — when would you choose each?
+2. How would you test resilience in CI/CD? (chaos engineering, fault injection)
+3. What production metrics indicate a resilience pattern is activating?
 
 ## Motivation
 
@@ -281,7 +280,7 @@ All commands are run from `practice_052_resilience_patterns/`.
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/00_unreliable_service.py` | Start the simulated unreliable HTTP service on port 8089 |
+| `uv run python -m src._00_unreliable_service` | Start the simulated unreliable HTTP service on port 8089 |
 | `curl http://localhost:8089/health` | Check service health (always responds) |
 | `curl http://localhost:8089/api/data` | Call the unreliable endpoint (subject to current failure mode) |
 | `curl -X POST http://localhost:8089/admin/mode/healthy` | Switch service to healthy mode (100% success, fast responses) |
@@ -292,10 +291,10 @@ All commands are run from `practice_052_resilience_patterns/`.
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/01_circuit_breaker.py` | Run circuit breaker exercise (requires unreliable service running) |
-| `uv run python src/02_bulkhead.py` | Run bulkhead exercise (requires unreliable service running) |
-| `uv run python src/03_rate_limiter.py` | Run rate limiter exercise (requires Redis running) |
-| `uv run python src/04_combined_resilience.py` | Run combined resilience exercise (requires both unreliable service and Redis) |
+| `uv run python -m src._01_circuit_breaker` | Run circuit breaker exercise (requires unreliable service running) |
+| `uv run python -m src._02_bulkhead` | Run bulkhead exercise (requires unreliable service running) |
+| `uv run python -m src._03_rate_limiter` | Sanity check the provided token-bucket limiter (requires Redis running) |
+| `uv run python -m src._04_combined_resilience` | Run combined resilience exercise (requires both unreliable service and Redis) |
 
 ## State
 
