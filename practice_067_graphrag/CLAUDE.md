@@ -102,7 +102,7 @@ Build and query a knowledge graph from a small corpus of interconnected articles
    - `docker exec graphrag_ollama ollama pull qwen2.5:7b` (chat model)
    - `docker exec graphrag_ollama ollama pull nomic-embed-text` (embedding model)
 2. Install Python dependencies with `uv sync`
-3. Run `uv run python src/00_verify_setup.py` to confirm Ollama connectivity
+3. Run `uv run python -m src._00_verify_setup` to confirm Ollama connectivity
 4. Initialize the GraphRAG project: `uv run graphrag init --root .`
    This creates `settings.yaml` and `.env`. The input corpus is already provided.
 5. **Configure `settings.yaml` for Ollama.** This is the critical setup step — you need to point GraphRAG at your local Ollama instance instead of OpenAI. Edit the generated `settings.yaml`:
@@ -120,17 +120,26 @@ Build and query a knowledge graph from a small corpus of interconnected articles
 2. While indexing runs, review the input corpus in `input/` to understand the entities and relationships you expect the pipeline to extract. The corpus describes a fictional tech ecosystem in "Meridian City" with companies, people, partnerships, and events.
 3. After indexing completes, verify the output: `ls output/` should show Parquet files (entities, relationships, communities, community_reports, text_units, documents) and a `lancedb/` directory.
 
-### Phase 3: Knowledge Graph Inspection (~25 min)
+### Phase 3: Knowledge Graph Inspection (~20 min)
 
-1. **Exercise (`src/01_inspect_knowledge_graph.py`):** Load the extracted entities and relationships from Parquet, build a NetworkX directed graph, and compute structural metrics. This teaches you what the LLM-based extraction pipeline actually produces — you'll see which entities it found, how they connect, and which are the "hubs" of the knowledge graph. Understanding graph structure is essential for knowing whether your extraction configuration (entity types, chunk size, model choice) is working well.
+1. Open `src/_01_inspect_knowledge_graph.py`.
+2. **TODO 1 — `build_graph()`**: Build an `nx.DiGraph` from the entity and relationship DataFrames. Nodes = entities (keyed by `title`, carrying `type` and `description`); edges = relationships (carrying `description` and `combined_degree`). This is the bridge between GraphRAG's Parquet artifacts and standard graph-analysis tooling.
+3. **TODO 2 — `top_by_centrality()`**: Use `nx.degree_centrality(G)` and return the top-*n* (title, score) pairs. Degree centrality identifies the "hub" entities that tie the graph together — a quick sanity check that the extractor picked up the right organising entities for your corpus.
+4. Run: `uv run python -m src._01_inspect_knowledge_graph`. The scaffolded orchestrator prints graph stats, entity-type distribution, top hubs, and top relationships by `combined_degree`.
 
-### Phase 4: Community Analysis (~20 min)
+### Phase 4: Community Analysis (~15 min)
 
-1. **Exercise (`src/02_community_analysis.py`):** Analyze the community hierarchy and inspect community reports. This teaches the key innovation behind Global Search — how the Leiden algorithm clusters entities and how LLM-generated summaries capture the themes of each cluster. You'll see the hierarchical structure (fine-grained to broad communities) that enables answering questions at different levels of abstraction.
+1. Open `src/_02_community_analysis.py`.
+2. **TODO 1 — `level_stats()`**: Group communities by `level` and return `{level: (count, avg_entities)}`. This summarises the Leiden hierarchy — how many clusters exist at each granularity and how big they are on average.
+3. **TODO 2 — `entities_in_community()`**: Given a single community row, look its `entity_ids` up in the entities table and return the matching `title` values. This is how you cross-reference a Leiden cluster back to the concrete entities it grouped.
+4. Run: `uv run python -m src._02_community_analysis`. The scaffolded orchestrator prints level stats, the top 3 community reports (by rank/rating), and lists the entities in the highest-rated community.
 
 ### Phase 5: Query Mode Comparison (~20 min)
 
-1. **Exercise (`src/03_query_comparison.py`):** Run a set of questions through local, global, and basic search modes and compare results side-by-side. This is the payoff exercise — you'll see concretely how graph-based retrieval (local/global) outperforms naive chunk retrieval (basic) for different question types, and build intuition for when to use each mode.
+1. Open `src/_03_query_comparison.py`.
+2. **TODO — `run_question_across_modes()`**: For a given question, run `run_graphrag_query(question, mode)` for each mode in `MODES` (`local`, `global`, `basic`) and return `{mode: response}`. Print a progress line per call since queries are slow on local models.
+3. Run: `uv run python -m src._03_query_comparison`. The scaffolded orchestrator prints per-question side-by-side responses and a tabulated summary table.
+4. Key question: which question types benefit most from `local` vs `global` in practice? Did the local 7B model's answers line up with theory?
 
 ## Motivation
 
@@ -242,7 +251,7 @@ All commands run from `practice_067_graphrag/`.
 | Command | Description |
 |---------|-------------|
 | `uv sync` | Install Python dependencies from `pyproject.toml` |
-| `uv run python src/00_verify_setup.py` | Verify Ollama connection and model availability |
+| `uv run python -m src._00_verify_setup` | Verify Ollama connection and model availability |
 | `uv run graphrag init --root .` | Initialize GraphRAG project (creates settings.yaml, .env) |
 
 ### Indexing
@@ -265,10 +274,10 @@ All commands run from `practice_067_graphrag/`.
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/00_verify_setup.py` | Verify Ollama setup before starting |
-| `uv run python src/01_inspect_knowledge_graph.py` | Exercise 1: Load and analyze extracted entities/relationships |
-| `uv run python src/02_community_analysis.py` | Exercise 2: Analyze community hierarchy and reports |
-| `uv run python src/03_query_comparison.py` | Exercise 3: Compare local vs global vs basic search |
+| `uv run python -m src._00_verify_setup` | Verify Ollama setup before starting |
+| `uv run python -m src._01_inspect_knowledge_graph` | Exercise 1: Build NetworkX graph, rank entities by centrality |
+| `uv run python -m src._02_community_analysis` | Exercise 2: Summarise Leiden hierarchy, cross-reference top community |
+| `uv run python -m src._03_query_comparison` | Exercise 3: Run local / global / basic search and tabulate responses |
 
 ## References
 
