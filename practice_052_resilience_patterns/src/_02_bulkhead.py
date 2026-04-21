@@ -80,8 +80,29 @@ class Bulkhead:
         #       self.metrics.rejected_calls += 1
         #       raise BulkheadFullError(self.name, self.max_concurrent)
         #   # then track concurrency, execute func in try/finally, release semaphore
-        raise NotImplementedError("TODO(human): implement Bulkhead.call")
 
+        timeout = max(self.max_wait_time, 0.001)
+        t0 = time.time()
+        self.metrics.total_calls+=1
+        try:
+            await asyncio.wait_for(self._semaphore.acquire(), timeout = timeout)
+            self._active_calls+=1
+        except asyncio.TimeoutError:
+            self.metrics.rejected_calls += 1
+            raise BulkheadFullError(self.name, self.max_concurrent)
+
+        try:
+            self.metrics.peak_concurrent = max(self.metrics.peak_concurrent, self._active_calls)
+            result =  await func(*args,**kwargs)
+            self.metrics.successful_calls += 1
+            return result
+        except Exception:
+            self.metrics.failed_calls +=1
+            raise
+        finally:
+            self._active_calls-=1
+            self.metrics.call_latencies.append((time.time()-t0)*1000)
+            self._semaphore.release()
 
 # -- HTTP helpers (scaffolded) --------------------------------------------
 

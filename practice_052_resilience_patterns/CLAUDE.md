@@ -298,4 +298,4 @@ All commands are run from `practice_052_resilience_patterns/`.
 
 ## State
 
-`not-started`
+`completed`

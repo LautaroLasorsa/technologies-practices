@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-21%20%2F%20132%20practices-blue?style=flat-square" alt="Progress: 21/132">
+  <img src="https://img.shields.io/badge/Progress-22%20%2F%20132%20practices-blue?style=flat-square" alt="Progress: 22/132">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -367,10 +367,10 @@ python clean_all.py
   <td>—</td>
 </tr>
 <tr>
-  <td>052</td>
-  <td>Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting</td>
+  <td><b>052</b></td>
+  <td><b>Resilience Patterns: Circuit Breaker, Bulkhead & Rate Limiting</b></td>
   <td><img src="https://skillicons.dev/icons?i=py,docker,redis" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td><b>053</b></td>

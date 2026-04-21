@@ -92,8 +92,9 @@ class CircuitBreaker:
         # TODO(human): if self._state is OPEN and enough time has passed since
         # self._opened_at, transition to HALF_OPEN (reset the half-open success
         # counter, then _transition_to). Return self._state either way.
-        raise NotImplementedError("TODO(human): implement state property")
-
+        if self._state == CircuitState.OPEN and (time.time() - self._opened_at) > self.recovery_timeout:
+            self._transition_to(CircuitState.HALF_OPEN)
+        return self._state
     # -- TODO 2 ----------------------------------------------------------------
 
     def _handle_success(self) -> None:
@@ -105,7 +106,17 @@ class CircuitBreaker:
           breaker and reset counters.
         """
         # TODO(human): implement the CLOSED and HALF_OPEN branches described above.
-        raise NotImplementedError("TODO(human): implement _handle_success")
+        self._failure_count = 0
+        match self.state:
+            case CircuitState.CLOSED:
+                pass
+            case CircuitState.HALF_OPEN:
+                self._success_count_half_open += 1
+                if self._success_count_half_open == self.half_open_max_calls:
+                    self._transition_to(CircuitState.CLOSED)
+            case CircuitState.OPEN:
+                pass
+
 
     # -- TODO 3 ----------------------------------------------------------------
 
@@ -118,7 +129,16 @@ class CircuitBreaker:
           `_opened_at` (the probe window is over; start a new recovery wait).
         """
         # TODO(human): implement the CLOSED and HALF_OPEN branches described above.
-        raise NotImplementedError("TODO(human): implement _handle_failure")
+        self._success_count_half_open = 0
+        match self.state:
+            case CircuitState.CLOSED:
+                self._failure_count += 1
+                if self._failure_count == self.failure_threshold:
+                    self._transition_to(CircuitState.OPEN)
+                    self._opened_at = time.time()
+            case CircuitState.HALF_OPEN:
+                self._transition_to(CircuitState.OPEN)
+                self._opened_at = time.time()
 
     # -- Scaffolded orchestrator -----------------------------------------------
 

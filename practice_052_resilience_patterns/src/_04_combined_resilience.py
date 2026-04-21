@@ -96,15 +96,27 @@ class ResilientClient:
         record with success=True and return the value.
         """
         start = time.time()
-        # TODO(human): implement the composition.
-        # Catch in order: RateLimitExceededError -> "rate_limit",
-        #                 BulkheadFullError      -> "bulkhead",
-        #                 CircuitOpenError       -> "circuit_open",
-        #                 CircuitBreakerCallError or Exception -> "error".
-        # The nested call is:
-        #   await self.bulkhead.call(self.circuit_breaker.call, func, *args, **kwargs)
-        raise NotImplementedError("TODO(human): implement ResilientClient.call")
 
+
+        try:
+            await self.rate_limiter.require(self.rate_limit_key)
+            result = await self.bulkhead.call(self.circuit_breaker.call,func,*args,**kwargs)
+            self._record(start, True, None, None)
+            return result
+        except Exception as e:
+
+            reason:str|None = None
+            match e:
+                case RateLimitExceededError():
+                    reason = "rate_limit"
+                case CircuitOpenError():
+                    reason = "circuit_open"
+                case BulkheadFullError():
+                    reason = "bulkhead"
+                case _:
+                    reason = "error"
+            self._record(start, False, reason, str(e))
+            raise
 
 # -- HTTP helpers (scaffolded) --------------------------------------------
 
