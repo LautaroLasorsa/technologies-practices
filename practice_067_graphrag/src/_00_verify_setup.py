@@ -1,10 +1,14 @@
-"""Verify that the configured LLM provider is running and required models are available."""
+"""Verify that the configured LLM provider is running and required models are available.
+
+Run:
+    uv run python -m src._00_verify_setup
+"""
 
 import urllib.request
 import json
 import sys
 
-from llm_config import (
+from .llm_config import (
     LLM_PROVIDER,
     LLM_MODEL,
     LLM_BASE_URL,
