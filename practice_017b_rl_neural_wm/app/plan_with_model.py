@@ -102,6 +102,37 @@ def collect_real_rollout(
     return {"states": states, "rewards": rewards, "dones": dones}
 
 
+def rollout_step_errors(
+    real: dict[str, list],
+    imagined: dict[str, list],
+) -> list[float]:
+    """Return per-step state MSE between a real and an imagined rollout.
+
+    Rollouts may end at different lengths (real episode terminates, imagined
+    may go further). Only compare steps where both sides have data.
+    """
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This is the measurement that exposes compounding error: at step 1 the
+    # MSE is tiny, but it grows step-by-step even if the model is *locally*
+    # accurate. Separating it from the aggregation loop keeps both halves
+    # short and testable.
+
+    # TODO(human): Build and return the list of per-step MSEs.
+    #
+    # Steps:
+    #   1. Figure out the shortest common length:
+    #      n = min(len(real["states"]), len(imagined["states"])) - 1
+    #   2. For step in range(n):
+    #      - real_s = np.asarray(real["states"][step + 1], dtype=np.float32)
+    #      - imag_s = imagined["states"][step + 1]
+    #        if isinstance(imag_s, torch.Tensor):
+    #            imag_s = imag_s.cpu().numpy()
+    #        imag_s = np.asarray(imag_s, dtype=np.float32)
+    #      - append np.mean((real_s - imag_s) ** 2) to a list
+    #   3. Return the list
+    raise NotImplementedError("TODO(human): Implement rollout_step_errors")
+
+
 def evaluate_model_accuracy(
     model: WorldModel,
     env: gym.Env,
@@ -115,7 +146,7 @@ def evaluate_model_accuracy(
         1. Reset the environment to get a real starting state
         2. Sample random actions
         3. Run the same actions through both the real env and the world model
-        4. Compute per-step MSE between predicted and real states
+        4. Accumulate per-step errors via rollout_step_errors(real, imagined)
 
     Args:
         model: Trained WorldModel.
@@ -126,29 +157,28 @@ def evaluate_model_accuracy(
 
     Returns:
         Dictionary with:
-            "per_step_mse": Array of shape (rollout_length,) -- average state MSE at each step
-            "cumulative_error": Array of shape (rollout_length,) -- cumulative error over steps
+            "per_step_mse": Array of shape (<=rollout_length,) — average state MSE at each step
+            "cumulative_error": Array of shape (<=rollout_length,) — cumulative error over steps
     """
-    # TODO(human): Implement model accuracy evaluation.
+    # TODO(human): Aggregate per-step errors across num_rollouts trajectories.
     #
     # Steps:
-    #   1. Initialize: all_step_errors = list of empty lists, one per step
-    #   2. For each rollout in range(num_rollouts):
-    #      a. Reset env, get start_state
-    #      b. Sample random actions: [env.action_space.sample() for _ in range(rollout_length)]
-    #      c. Collect real rollout: collect_real_rollout(env, start_state, actions)
-    #      d. Collect imagined rollout: imagine_rollout(model, start_state_tensor, actions, device)
-    #      e. For each step where both rollouts have data:
-    #         - Compute MSE between real_states[step+1] and imagined_states[step+1]
-    #           (convert tensors to numpy if needed, use np.mean((real - pred)**2))
-    #         - Append to all_step_errors[step]
-    #   3. Compute per_step_mse: np.array([np.mean(errors) for errors in all_step_errors if errors])
-    #   4. Compute cumulative_error: np.cumsum(per_step_mse)
+    #   1. all_step_errors: list[list[float]] = [[] for _ in range(rollout_length)]
+    #   2. For _ in range(num_rollouts):
+    #      a. state, _ = env.reset(); start_state = np.array(state, dtype=np.float32)
+    #      b. actions = [env.action_space.sample() for _ in range(rollout_length)]
+    #      c. real = collect_real_rollout(env, start_state, actions)
+    #      d. imagined = imagine_rollout(
+    #             model,
+    #             torch.tensor(start_state, dtype=torch.float32, device=device),
+    #             actions, device,
+    #         )
+    #      e. For step, mse in enumerate(rollout_step_errors(real, imagined)):
+    #             all_step_errors[step].append(mse)
+    #   3. per_step_mse = np.array([np.mean(errs) for errs in all_step_errors if errs])
+    #   4. cumulative_error = np.cumsum(per_step_mse)
     #   5. Return {"per_step_mse": per_step_mse, "cumulative_error": cumulative_error}
-    #
-    # Hint: len(real["states"]) may be < rollout_length+1 if the episode ended early.
-    #       Use min(len(real["states"]), len(imagined["states"])) - 1 as the actual length.
-    raise NotImplementedError("TODO(human): Implement model accuracy evaluation")
+    raise NotImplementedError("TODO(human): Implement evaluate_model_accuracy")
 
 
 def plot_trajectory_comparison(

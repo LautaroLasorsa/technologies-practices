@@ -9,14 +9,58 @@ A PCN does this naturally: clamp the OBSERVED pixels, leave the MISSING
 pixels free, and run inference. The network adjusts the free pixels to
 minimize free energy -- finding the completion that best fits the model.
 
-A backprop MLP cannot do this at all. It's a fixed function x -> y.
-If half the input is missing, it can only produce a (likely bad) classification.
-It has no mechanism to reconstruct the input.
+A backprop MLP cannot do this at all. It's a fixed function x -> y.  If
+half the input is missing, it can only produce a (likely bad) classification
+-- it has no mechanism to reconstruct the input.
+
+Three-way modification of standard inference:
+1. Sensory layer a_0 is PARTIALLY clamped via a binary mask
+   (observed pixels fixed, missing pixels free)
+2. Output layer a_L is FREE -- we want to classify at the same time
+3. Hidden layers update normally
+
+The observed pixels constrain the hidden layers from below; the hidden
+layers constrain the missing pixels from above. The network finds the joint
+state minimizing free energy -- the best joint explanation of what's there
+and what class it belongs to.
+
+You implement two small pieces: the masked a_0 update and the top-level
+`infer_missing_data` that drives inference. Mask construction is pre-built.
 """
 
 import torch
 
 from src.predictive_coding_network import PredictiveCodingNetwork
+
+
+# -- TODO 1 ----------------------------------------------------------------
+
+
+def _masked_sensory_update(
+    network: PredictiveCodingNetwork,
+    activities: list[torch.Tensor],
+    epsilons: list[torch.Tensor],
+    partial_input: torch.Tensor,
+    mask: torch.Tensor,
+    inference_rate: float,
+) -> torch.Tensor:
+    """New value for `activities[0]` with observed pixels clamped.
+
+    Same top-down-only update as in generative mode (no layer below), but
+    only applied to *missing* pixels; observed pixels stay clamped to
+    `partial_input`:
+
+        delta_a_0 = +gamma * (epsilons[0] * f'(W_0 a_0)) @ W_0
+        new_a_0   = mask * partial_input + (1 - mask) * (activities[0] + delta_a_0)
+
+    `mask` is 1 where pixels are observed, 0 where missing; both tensors
+    have shape `(batch, input_dim)`.
+    """
+    # TODO(human): compute the masked sensory update and return it.
+    raise NotImplementedError("Implement _masked_sensory_update()")
+
+
+# -- TODO 2 ----------------------------------------------------------------
 
 
 def infer_missing_data(
@@ -27,75 +71,28 @@ def infer_missing_data(
     inference_rate: float = 0.1,
     device: torch.device = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Infer missing pixels using the PCN's generative model.
+    """Reconstruct missing pixels AND classify simultaneously.
 
-    The mask indicates which pixels are OBSERVED (1) and which are MISSING (0).
-    Observed pixels are clamped; missing pixels are free to be inferred.
+    Returns `(reconstructed_input, predicted_labels)` where
+    `reconstructed_input` is `activities[0]` after inference and
+    `predicted_labels = activities[-1].argmax(dim=1)`.
 
-    Unlike training:
-    - a_0 is PARTIALLY clamped (observed pixels fixed, missing pixels free)
-    - a_L is NOT clamped (we don't know the label -- we want to infer it too!)
-    - Hidden layers are free as usual
+    Algorithm per step:
+    1. Compute all prediction errors (same loop as training inference).
+    2. Update hidden layers l = 1..L-2 with the standard two-term rule.
+    3. Update `activities[-1]` with ONLY the bottom-up term
+       (no layer above it): `a_L += -gamma * epsilons[-1]`.
+    4. Update `activities[0]` via `_masked_sensory_update(...)` --
+       missing pixels get the top-down correction, observed pixels
+       stay clamped to `partial_input`.
 
-    The network simultaneously:
-    1. Reconstructs the missing pixels (adjusts free parts of a_0)
-    2. Classifies the image (adjusts a_L toward a class)
-
-    Args:
-        network: Trained PredictiveCodingNetwork
-        partial_input: Input with missing regions (e.g., zeros), shape (batch, input_dim)
-        mask: Binary mask, 1 = observed, 0 = missing, shape (batch, input_dim)
-        num_inference_steps: How many inference steps to run
-        inference_rate: gamma for inference
-        device: CPU or CUDA
-
-    Returns:
-        (reconstructed_input, predicted_labels):
-        - reconstructed_input: Full image with missing pixels filled in, shape (batch, input_dim)
-        - predicted_labels: Classification from a_L, shape (batch,)
+    Initialise activities via `network._initialize_activities(partial_input)`.
     """
-    # TODO(human): Implement missing data inference.
-    #
-    # Step 1: Initialize activities via forward pass using the partial input
-    #   activities = network._initialize_activities(partial_input)
-    #
-    # Step 2: Run inference loop
-    #   For each step in range(num_inference_steps):
-    #     a. Compute all prediction errors (same as always):
-    #        epsilons = []
-    #        for l in range(len(network.cortical_layers)):
-    #            pred = network.cortical_layers[l].compute_prediction(activities[l])
-    #            eps = network.cortical_layers[l].compute_prediction_error(activities[l+1], pred)
-    #            epsilons.append(eps)
-    #
-    #     b. Update hidden layers (1 to L-2) with the standard formula:
-    #        delta_a_l = -inference_rate * epsilons[l-1]
-    #                    + inference_rate * (epsilons[l] * f'(W_l * a_l)) @ W_l
-    #
-    #     c. Update the OUTPUT layer (a_L) -- it's FREE in this mode:
-    #        delta_a_L = -inference_rate * epsilons[-1]
-    #        activities[-1] = activities[-1] + delta_a_L
-    #        (Only the bottom-up term -- there's no "layer above L")
-    #
-    #     d. Update the SENSORY layer (a_0) -- PARTIALLY:
-    #        Compute the top-down correction for layer 0:
-    #        pre_act_0 = network.cortical_layers[0].pre_activation(activities[0])
-    #        f_prime_0 = network.cortical_layers[0].activation_derivative(pre_act_0)
-    #        delta_a_0 = inference_rate * (epsilons[0] * f_prime_0) @ network.cortical_layers[0].synaptic_weights
-    #        Apply ONLY to missing pixels:
-    #        activities[0] = mask * partial_input + (1 - mask) * (activities[0] + delta_a_0)
-    #        Observed pixels stay clamped to partial_input, missing pixels get updated.
-    #
-    # Step 3: Extract results
-    #   reconstructed = activities[0]
-    #   predicted_labels = activities[-1].argmax(dim=1)
-    #   return (reconstructed, predicted_labels)
-    #
-    # Think about: This is simultaneous top-down and bottom-up inference.
-    # The observed pixels constrain the hidden layers from below. The hidden
-    # layers constrain the missing pixels from above. The network finds the
-    # state that minimizes TOTAL free energy -- the best joint explanation.
-    raise NotImplementedError("TODO(human): Implement missing data inference")
+    # TODO(human): implement the missing-data inference loop.
+    raise NotImplementedError("Implement infer_missing_data()")
+
+
+# -- Scaffolded: mask construction ----------------------------------------
 
 
 def create_masks(input_dim: int, mask_type: str = "top_half", image_size: int = 28) -> torch.Tensor:

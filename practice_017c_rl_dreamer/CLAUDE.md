@@ -140,46 +140,68 @@ These simplifications keep the session under 120 minutes while preserving every 
 
 ## Instructions
 
-### Setup
+### Phase 1: Setup (~2 min)
 
-```bash
-cd practice_017c_rl_dreamer
-uv sync
-```
+1. `cd practice_017c_rl_dreamer`
+2. `uv sync`
 
 ### File structure
 
 ```
 app/
-  rssm.py          -- RSSM world model (TODO: implement core forward passes)
-  encoder.py       -- Observation encoder (TODO: implement forward)
-  decoder.py       -- Obs + reward decoders (partially done, TODO for key parts)
-  actor_critic.py  -- Actor and Critic networks (TODO: implement forward + loss)
-  imagination.py   -- Latent imagination rollouts (TODO: implement rollout loop)
-  world_model.py   -- WorldModel wrapper: bundles encoder, RSSM, decoders
-  replay_buffer.py -- Simple episode replay buffer (fully implemented)
-  train.py         -- Training loop orchestrator (boilerplate implemented)
-  config.py        -- Hyperparameters (fully implemented)
+  encoder.py       -- Observation encoder (1 TODO)
+  decoder.py       -- Obs + reward decoders (1 TODO, reward decoder provided)
+  rssm.py          -- RSSM world model (5 TODOs: the core of Dreamer)
+  actor_critic.py  -- Actor + Critic (3 TODOs: forward + two losses)
+  imagination.py   -- Latent imagination rollouts (2 TODOs)
+  world_model.py   -- WorldModel wrapper: bundles encoder, RSSM, decoders (scaffolded)
+  replay_buffer.py -- Episode replay buffer (scaffolded)
+  train.py         -- Training loop orchestrator (scaffolded)
+  config.py        -- Hyperparameters (scaffolded)
 ```
 
-### Guided implementation order
+### Phase 2: Encoder & Decoder (~10 min)
 
-Work through the TODOs in this order -- each builds on the previous:
+1. Open `app/encoder.py`.
+2. **TODO — `ObservationEncoder._build_network()`**: Return a 2-layer Linear + ELU MLP mapping `obs_dim -> embedding_dim`. The encoder feeds the RSSM posterior; ELU avoids dead neurons along this critical gradient path.
+3. Open `app/decoder.py`.
+4. **TODO — `ObservationDecoder._build_network()`**: Use the provided `_build_mlp` helper to map `latent_dim -> obs_dim`. The reward decoder is provided as reference; the reconstruction loss on obs is what forces the RSSM to learn an informative latent.
 
-1. **`encoder.py`** -- Warmup. Small MLP, straightforward.
-2. **`rssm.py`** -- The heart of Dreamer. Implement the three sub-models (recurrent, representation/posterior, transition/prior) and the `observe_step` / `imagine_step` methods.
-3. **`decoder.py`** -- Complete the observation and reward decoders.
-4. **`actor_critic.py`** -- Actor outputs action distribution; critic estimates state value. Implement forward passes and the loss functions (REINFORCE + entropy for actor, MSE for critic on lambda-returns).
-5. **`imagination.py`** -- The "dreaming" loop. Unroll H steps using only the RSSM prior + actor, compute lambda-returns.
-6. **Run training** -- `uv run python app/train.py`. Watch the reward curve climb.
+### Phase 3: RSSM — the world model core (~35 min)
 
-### Running
+Open `app/rssm.py`. Construction of all sub-networks is scaffolded so you can focus on the dynamics.
 
-```bash
-uv run python app/train.py
-```
+1. **TODO 1 — `recurrent_step()`**: The GRU step. `fc([z_{t-1}, a_{t-1}]) -> ELU -> GRUCell(., prev_h)`. This is the deterministic backbone — it carries sequential information across timesteps.
+2. **TODO 2 — `posterior()`**: `q(z_t | h_t, embedding_t)`. Mean/log_std heads over `Linear(h, embedding)`, clamp `log_std` to `[-5, 2]`, build a `Normal`, and sample with `rsample()` (reparameterization trick — essential for backprop through the world model).
+3. **TODO 3 — `prior()`**: `p(z_t | h_t)` — mirror of the posterior but input is only `h`. This is what makes imagination possible: the prior alone must predict plausible next latents without ever seeing observations.
+4. **TODO 4 — `observe_step()`**: Compose `recurrent_step` + `posterior` + `prior`. The step used during *training* with real observations.
+5. **TODO 5 — `imagine_step()`**: Compose `recurrent_step` + `prior` only. The step used during *dreaming* — no observations in the loop.
 
-Training should solve CartPole-v1 (reward >= 475 over 100 episodes) within ~200-400 world-model training epochs, depending on hyperparameters.
+Key question: why do we keep `z` from the posterior during training but sample from the prior during imagination? (Hint: one has access to the ground-truth observation, the other does not.)
+
+### Phase 4: Actor-Critic in latent space (~20 min)
+
+Open `app/actor_critic.py`. The 2-layer MLPs are pre-built; you focus on the distribution wrapping and the two losses.
+
+1. **TODO 1 — `Actor.forward()`**: Compute logits from `latent`, return `Categorical(logits=logits)`. Returning a distribution (not an action) lets callers use `.sample()` or `.log_prob()` / `.entropy()` as needed.
+2. **TODO 2 — `Actor.loss()`**: REINFORCE + entropy bonus. `-(log_prob * advantage.detach()).mean() - entropy_weight * entropy.mean()`. The `.detach()` on advantages is critical — the actor must not backprop into the critic's return computation.
+3. **TODO 3 — `Critic.loss()`**: `F.mse_loss(critic(latent_states), lambda_returns.detach())`. Targets are fixed regression targets.
+
+### Phase 5: Imagination & Lambda-Returns (~20 min)
+
+Open `app/imagination.py`.
+
+1. **TODO 1 — `compute_lambda_returns()`**: Backward DP computing blended TD / MC returns. Base case `R_H = V_H`; then `R_t = r_t + gamma * ((1 - lambda) * V_{t+1} + lambda * R_{t+1})`. Think of it as a DP pass from right to left.
+2. **TODO 2 — `imagine_rollout()`**: The "dreaming" loop. H steps of `actor -> reward_decoder -> rssm.imagine_step`, then bootstrap with the critic at the final state and call `compute_lambda_returns`. No environment interaction.
+
+### Phase 6: Run training (~30 min)
+
+1. `uv run python -m app.train`
+2. The orchestrator seed-collects random episodes, then loops: collect → train world model → train actor-critic in imagination → evaluate.
+3. Training should reach `reward >= 475` on CartPole-v1 within ~200–400 epochs.
+4. The reward curve and world-model loss are saved to `app/training_curves.png`.
+
+Key question: if the critic's loss goes down but evaluation reward stays flat, which component is likely the bottleneck?
 
 ## Motivation
 
@@ -197,6 +219,8 @@ Training should solve CartPole-v1 (reward >= 475 over 100 episodes) within ~200-
 
 ## Commands
 
+All commands run from `practice_017c_rl_dreamer/`.
+
 ### Setup
 
 | Command | Description |
@@ -207,4 +231,4 @@ Training should solve CartPole-v1 (reward >= 475 over 100 episodes) within ~200-
 
 | Command | Description |
 |---------|-------------|
-| `uv run python app/train.py` | Run the full Dreamer training loop: collect episodes, train world model, train actor-critic via imagination. Saves training curves to `app/training_curves.png` |
+| `uv run python -m app.train` | Run the full Dreamer training loop: seed-collect, train world model, train actor-critic via imagination, evaluate. Saves curves to `app/training_curves.png`. |

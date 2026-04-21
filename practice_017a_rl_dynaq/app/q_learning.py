@@ -1,7 +1,14 @@
 """Tabular Q-Learning agent for discrete environments.
 
-This is the model-free baseline. The agent learns Q(s, a) values purely from
-real environment interactions -- no model, no planning.
+The model-free baseline.  The agent learns Q(s, a) values purely from real
+environment interactions -- no model, no planning.
+
+Three small focused TODOs:
+  - `select_action`: epsilon-greedy exploration
+  - `update`      : one-step Q-learning TD update
+  - `train_episode`: roll out one full episode
+
+The training harness (`train`) and the __main__ runner are scaffolded.
 
 Reference: Sutton & Barto, Section 6.5 (Q-learning: Off-Policy TD Control)
     Q(s, a) += alpha * [r + gamma * max_a' Q(s', a') - Q(s, a)]
@@ -39,66 +46,45 @@ class QLearningAgent:
         self.q_table = np.zeros((n_states, n_actions))
         self.rng = np.random.default_rng(params.seed)
 
+    # -- TODO 1 ----------------------------------------------------------------
+
     def select_action(self, state: int) -> int:
-        """Choose an action using epsilon-greedy policy.
+        """Return an epsilon-greedy action for *state*.
 
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # This exercise teaches the explore/exploit tradeoff fundamental to RL.
-        # Epsilon-greedy is the simplest exploration strategy: occasionally take
-        # random actions to discover new states, but mostly exploit current knowledge.
-
-        TODO(human): Implement epsilon-greedy action selection.
-
-        With probability epsilon, pick a random action (exploration).
-        Otherwise, pick the action with the highest Q-value for this state (exploitation).
-        Use self.rng for randomness (self.rng.random() for uniform, self.rng.integers(self.n_actions) for random action).
-
-        Hint: This is the same explore/exploit tradeoff from multi-armed bandits.
-        Think of it like a CP heuristic: sometimes try a random branch, usually go greedy.
+        With probability `self.params.epsilon` pick a uniform random action
+        (explore); otherwise pick `argmax_a Q(state, a)` (exploit).  Use
+        `self.rng.random()` and `self.rng.integers(self.n_actions)` for
+        reproducibility.
         """
-        raise NotImplementedError("TODO(human): implement epsilon-greedy action selection")
+        # TODO(human): coin-flip epsilon, then either random integer action
+        # or np.argmax over self.q_table[state].
+        raise NotImplementedError("Implement select_action()")
 
-    def update(self, state: int, action: int, reward: float, next_state: int, done: bool) -> None:
-        """Apply one-step Q-learning update.
+    # -- TODO 2 ----------------------------------------------------------------
 
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # This is the core of Q-learning: bootstrapping value estimates from future states.
-        # The temporal-difference error [r + gamma * max Q(s',a') - Q(s,a)] tells you
-        # whether your current estimate was too high or too low, driving convergence.
+    def update(
+        self, state: int, action: int, reward: float, next_state: int, done: bool
+    ) -> None:
+        """Apply one-step Q-learning update in place on `self.q_table`.
 
-        TODO(human): Implement the Q-learning update rule.
-
-        Formula: Q(s,a) += alpha * [r + gamma * max_a' Q(s',a') - Q(s,a)]
-
-        When done is True, the target is just `r` (no future rewards from terminal state).
-
-        Hint: np.max(self.q_table[next_state]) gives max_a' Q(s', a').
+        Target = `reward` when `done`, else `reward + gamma * max_a' Q(s', a')`.
+        TD error = target - Q(s, a).  Update: Q(s, a) += alpha * TD_error.
         """
-        raise NotImplementedError("TODO(human): implement Q-learning update rule")
+        # TODO(human): compute the bootstrapped target (respecting terminal
+        # states) and do the in-place Q(s, a) += alpha * (target - Q(s, a)) update.
+        raise NotImplementedError("Implement update()")
+
+    # -- TODO 3 ----------------------------------------------------------------
 
     def train_episode(self, env: gym.Env) -> float:
-        """Run one episode of Q-learning, returning total reward.
+        """Run one episode end-to-end, returning the total (undiscounted) reward.
 
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # This ties together action selection and Q-value updates into a full RL loop.
-        # Each episode is a trajectory from initial state to terminal state, accumulating
-        # experience that refines the Q-table toward the optimal policy.
-
-        TODO(human): Implement the episode training loop.
-
-        Steps:
-        1. Reset the environment: state, _ = env.reset()
-        2. Loop until done (or truncated):
-           a. Select action with self.select_action(state)
-           b. Step the environment: next_state, reward, terminated, truncated, _ = env.step(action)
-           c. Update Q-values with self.update(state, action, reward, next_state, terminated)
-           d. Accumulate reward
-           e. Set done = terminated or truncated, advance state = next_state
-        3. Return total episode reward
-
-        Hint: CliffWalking optimal reward is -13 (13 steps at -1 each).
+        Reset the env, then loop: select an action, step the env, call
+        `self.update(...)`, accumulate reward, advance state, and stop when
+        `terminated or truncated`.
         """
-        raise NotImplementedError("TODO(human): implement episode training loop")
+        # TODO(human): implement the action -> step -> update -> advance loop.
+        raise NotImplementedError("Implement train_episode()")
 
 
 def train(params: QParams | None = None) -> tuple[QLearningAgent, list[float]]:

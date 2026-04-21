@@ -65,6 +65,14 @@ The planning step is computationally cheap (just table lookups and Q-updates) bu
 
 Implement **Dyna-Q** from scratch to understand the core idea behind model-based reinforcement learning: the agent learns an internal model of the environment and uses it for *planning* (simulated updates) alongside *direct RL* (real experience updates). This is the foundation for modern world-model approaches explored in 017b and 017c.
 
+Three files, seven small focused TODOs:
+
+1. **`app/q_learning.py`** — the model-free baseline. Three TODOs: `select_action`, `update`, `train_episode`.
+2. **`app/environment_model.py`** — the tabular world model. Two TODOs: `update` (store) and `sample` (replay).
+3. **`app/dyna_q.py`** — Dyna-Q on top of Q-learning. Two TODOs: `plan` (n simulated Q-updates) and `train_episode` (real step + model feed + planning).
+
+The training harness (`train(...)`), comparison driver (`compare.py`), and plotting (`visualize.py`) are fully scaffolded — you only write the RL mechanics.
+
 ### What you'll learn
 
 1. **Model-free baseline** -- Tabular Q-learning with epsilon-greedy exploration on a discrete grid world
@@ -94,40 +102,45 @@ Loop (for each episode):
 
 ## Instructions
 
-### Phase 1: Understand the Environment (~10 min)
+### Phase 1: Setup & Environment (~10 min)
 
-1. Explore `CliffWalking-v1`: 4x12 grid, 48 states, 4 actions (up/right/down/left)
-2. Run `uv run python -c "import gymnasium as gym; env = gym.make('CliffWalking-v1'); print(env.observation_space, env.action_space)"` to verify the setup
-3. Key question: Why is CliffWalking ideal for comparing Q-learning vs Dyna-Q? (Hint: think about what happens with limited episodes)
+1. Install dependencies: `uv sync`
+2. Explore `CliffWalking-v1`: 4x12 grid, 48 states, 4 actions (up/right/down/left).
+3. Sanity check: `uv run python -c "import gymnasium as gym; env = gym.make('CliffWalking-v1'); print(env.observation_space, env.action_space)"`.
+4. Key question: Why is CliffWalking ideal for comparing Q-learning vs Dyna-Q? (Hint: think about what happens with limited episodes.)
 
 ### Phase 2: Tabular Q-Learning Agent (~25 min)
 
-1. Open `app/q_learning.py` -- boilerplate is ready, implement the `TODO(human)` sections
-2. **User implements:** `select_action` -- epsilon-greedy action selection
-3. **User implements:** `update` -- Q-learning update rule: `Q(s,a) += alpha * [r + gamma * max Q(s',a') - Q(s,a)]`
-4. **User implements:** `train_episode` -- run one episode collecting (s, a, r, s') transitions
-5. Test: `uv run python app/q_learning.py` -- should print episode rewards converging toward -13 (optimal path length on CliffWalking)
-6. Key question: What does `max_a' Q(s', a')` mean when `s'` is terminal?
+Open `app/q_learning.py`.
+
+1. **TODO 1 — `select_action()`**: Implement epsilon-greedy action selection. With probability `epsilon` pick a uniform random action (exploration), otherwise `argmax_a Q(state, a)` (exploitation). Same explore/exploit tradeoff as multi-armed bandits — sometimes try a random branch, usually go greedy.
+2. **TODO 2 — `update()`**: Implement the one-step Q-learning TD update. Target is `r + gamma * max_a' Q(s', a')`, except on terminal transitions where it collapses to just `r` (no future rewards from the terminal state). This is the core of bootstrapping: the TD error tells you whether your current estimate was too high or too low.
+3. **TODO 3 — `train_episode()`**: Roll out a full episode — reset, loop (select → step → update → advance) until `terminated or truncated`, return total undiscounted reward. This is the RL loop that ties action selection and value updates together.
+4. Run: `uv run python app/q_learning.py`. Episode rewards should converge toward **-13** (optimal path on CliffWalking).
+5. Key question: What does `max_a' Q(s', a')` mean when `s'` is terminal?
 
 ### Phase 3: Tabular Environment Model (~15 min)
 
-1. Open `app/environment_model.py` -- stores observed transitions
-2. **User implements:** `update` -- record `(s, a) -> (r, s', done)` in the model
-3. **User implements:** `sample` -- pick a random previously-observed `(s, a)` and return `(r, s', done)`
-4. Key question: Why does the model only store the *last* observed transition for each `(s, a)` pair? What assumption does this make about the environment?
+Open `app/environment_model.py`.
+
+1. **TODO 1 — `EnvironmentModel.update()`**: Record `(s, a) -> (r, s', done)` as a `Transition` in `self.transitions`, and keep the sampling bookkeeping in sync (`observed_states`, `observed_actions[state]`). Think of it as an adjacency list — for every visited node, remember which edges we've explored. This is the first half of model-based RL: memorize the environment so you can replay it later.
+2. **TODO 2 — `EnvironmentModel.sample()`**: Return a uniformly-random previously-observed `(s, a, r, s', done)`. Pick a random state from `observed_states`, a random action from `observed_actions[state]`, look up the stored `Transition`. This is how the agent "dreams" — free Q-updates from memory with no real environment interaction.
+3. Key question: Why does the model only store the *last* observed transition for each `(s, a)` pair? What assumption does this make about the environment?
 
 ### Phase 4: Dyna-Q Agent (~20 min)
 
-1. Open `app/dyna_q.py` -- extends Q-learning with model + planning
-2. **User implements:** `train_episode` -- like Q-learning but after each real step, do `n` planning steps using the model
-3. Test: `uv run python app/dyna_q.py` -- should converge faster than pure Q-learning
+Open `app/dyna_q.py`. `DynaQAgent` inherits `select_action` and `update` from `QLearningAgent`, so you only add the two new pieces:
+
+1. **TODO 1 — `DynaQAgent.plan()`**: The planning loop. Repeat `self.n_planning_steps` times: sample from the model, run the inherited Q-`update` on that imagined transition. No-op when the model is empty. This is the computational heart of Dyna — extra cheap Q-updates that piggyback on memorized experience.
+2. **TODO 2 — `DynaQAgent.train_episode()`**: Same shape as the Q-learning version, but after every real step, also call `self.model.update(...)` to feed the model, then `self.plan()` to do `n` imagined Q-updates. With `n_planning_steps=0` this must reduce to vanilla Q-learning — that's a good self-check.
+3. Run: `uv run python app/dyna_q.py`. Should converge noticeably faster than Q-learning and print a non-zero `model size` at the end.
 4. Key question: If you set `n=0`, how does Dyna-Q differ from Q-learning?
 
 ### Phase 5: Compare & Visualize (~15 min)
 
-1. Run `uv run python app/compare.py` -- trains both agents, plots learning curves
-2. Observe: Dyna-Q with `n=10` should converge in ~20-30 episodes vs ~100+ for Q-learning
-3. Experiment: try `n=0, 5, 10, 50` and observe diminishing returns
+1. Run `uv run python app/compare.py` (or `uv run python main.py`) — trains Q-Learning and Dyna-Q(`n=10`) head-to-head, then sweeps `n ∈ {0, 5, 10, 50}` and saves plots to `plots/`.
+2. Observe: Dyna-Q with `n=10` should converge in ~20-30 episodes vs ~100+ for Q-learning.
+3. Inspect `plots/learning_curves.png` and `plots/planning_steps.png` — look for diminishing returns as `n` grows.
 4. Discussion: What is the computational tradeoff of more planning steps?
 
 ## Motivation

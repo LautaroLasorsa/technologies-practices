@@ -126,6 +126,46 @@ class DQNAgent:
         """Copy online Q-network weights to target network."""
         self.target_net.load_state_dict(self.q_net.state_dict())
 
+    def _batch_to_tensors(
+        self, batch: TransitionBatch
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Convert a TransitionBatch to tensors on self.device."""
+        return (
+            torch.tensor(batch.states, dtype=torch.float32, device=self.device),
+            torch.tensor(batch.actions, dtype=torch.long, device=self.device),
+            torch.tensor(batch.rewards, dtype=torch.float32, device=self.device),
+            torch.tensor(batch.next_states, dtype=torch.float32, device=self.device),
+            torch.tensor(batch.dones, dtype=torch.float32, device=self.device),
+        )
+
+    def compute_td_target(
+        self,
+        rewards: torch.Tensor,
+        next_states: torch.Tensor,
+        dones: torch.Tensor,
+    ) -> torch.Tensor:
+        """Compute the TD target using the (frozen) target network.
+
+        The Bellman target for DQN is:
+            target = reward + gamma * max_a' Q_target(next_state, a') * (1 - done)
+
+        Returns a tensor of shape (batch,). Must be computed without gradients
+        so backprop does not flow into the target network.
+        """
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This is the bootstrapped target DQN trains against. Using a *frozen*
+        # target network (instead of self.q_net) stabilises training — otherwise
+        # the target moves every step and Q can diverge.
+
+        # TODO(human): Compute the TD target.
+        #
+        # Steps:
+        #   1. Wrap the whole computation in `with torch.no_grad():`
+        #   2. next_q = self.target_net(next_states).max(dim=1).values  # (batch,)
+        #   3. targets = rewards + DQN.gamma * next_q * (1.0 - dones)   # (batch,)
+        #   4. Return targets
+        raise NotImplementedError("TODO(human): Implement compute_td_target")
+
     def train_on_batch(self, batch: TransitionBatch) -> float:
         """Update Q-network on a mini-batch of transitions.
 
@@ -139,33 +179,30 @@ class DQNAgent:
         Returns:
             Loss value as float.
         """
-        # TODO(human): Implement the DQN training step.
+        states, actions, rewards, next_states, dones = self._batch_to_tensors(batch)
+
+        # ── Exercise Context ──────────────────────────────────────────────────
+        # This is the core DQN update: predict Q(s,a), compare against the TD
+        # target, and take a gradient step. The gather(...) trick selects, for
+        # each sample in the batch, the Q-value of the action actually taken.
+
+        # TODO(human): Implement the DQN gradient step.
         #
         # Steps:
-        #   1. Convert batch arrays to tensors on self.device:
-        #      states      = torch.tensor(batch.states, ..., device=self.device)
-        #      actions     = torch.tensor(batch.actions, dtype=torch.long, ...)
-        #      rewards     = torch.tensor(batch.rewards, ...)
-        #      next_states = torch.tensor(batch.next_states, ...)
-        #      dones       = torch.tensor(batch.dones, ...)
+        #   1. Current Q-values for the taken actions:
+        #      q_all = self.q_net(states)                               # (batch, action_dim)
+        #      q_values = q_all.gather(1, actions.unsqueeze(1)).squeeze(1)  # (batch,)
         #
-        #   2. Current Q-values for the taken actions:
-        #      q_values = self.q_net(states)                    # (batch, action_dim)
-        #      q_values = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)  # (batch,)
+        #   2. Targets (no gradient): use self.compute_td_target(rewards, next_states, dones)
         #
-        #   3. Target Q-values (no gradient!):
-        #      with torch.no_grad():
-        #          next_q = self.target_net(next_states).max(dim=1).values  # (batch,)
-        #          targets = rewards + DQN.gamma * next_q * (1.0 - dones)   # (batch,)
-        #
-        #   4. Loss and backprop:
+        #   3. Loss and backprop:
         #      loss = F.mse_loss(q_values, targets)
         #      self.optimizer.zero_grad()
         #      loss.backward()
         #      self.optimizer.step()
         #
-        #   5. Return loss.item()
-        raise NotImplementedError("TODO(human): Implement DQN training step")
+        #   4. Return loss.item()
+        raise NotImplementedError("TODO(human): Implement DQN gradient step")
 
 
 # ---------------------------------------------------------------------------
@@ -250,57 +287,66 @@ def train_dyna_agent(
     return episode_rewards
 
 
+def _simulate_batch(
+    agent: DQNAgent,
+    world_model: WorldModel,
+    buffer: ReplayBuffer,
+    device: torch.device,
+) -> TransitionBatch:
+    """Generate one simulated mini-batch using the world model.
+
+    Sample real starting states from the buffer, pick actions with the agent's
+    current policy, and roll one step forward through the learned dynamics.
+    Return a TransitionBatch that looks just like a real batch so the DQN
+    update path doesn't need to know the difference.
+    """
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This is the "imagination" step of Dyna — fabricating additional training
+    # data with the learned model instead of paying for real environment steps.
+    # The world model is used in no_grad mode: we are *using* it, not training
+    # it here.
+
+    # TODO(human): Build and return a simulated TransitionBatch.
+    #
+    # Steps:
+    #   1. Sample starting states from the buffer:
+    #      start_states = buffer.sample_states(AGENT.batch_size)
+    #
+    #   2. Pick an action per state using the agent's policy:
+    #      actions = np.array([agent.select_action(s) for s in start_states])
+    #
+    #   3. Predict next_state / reward / done with the world model:
+    #      states_t  = torch.tensor(start_states, dtype=torch.float32, device=device)
+    #      actions_t = torch.tensor(actions, dtype=torch.long, device=device)
+    #      with torch.no_grad():
+    #          pred_ns, pred_r, pred_d = world_model(states_t, actions_t)
+    #
+    #   4. Convert predictions to numpy and assemble a TransitionBatch:
+    #      next_states = pred_ns.cpu().numpy()
+    #      rewards     = pred_r.squeeze(-1).cpu().numpy()
+    #      dones       = (pred_d.squeeze(-1).cpu().numpy() > 0.5).astype(np.float32)
+    #      return TransitionBatch(states=start_states, actions=actions,
+    #                             rewards=rewards, next_states=next_states, dones=dones)
+    raise NotImplementedError("TODO(human): Implement _simulate_batch")
+
+
 def _train_on_simulated_data(
     agent: DQNAgent,
     world_model: WorldModel,
     buffer: ReplayBuffer,
     device: torch.device,
 ) -> None:
-    """Generate simulated transitions from the world model and train the DQN.
+    """Run K Dyna updates: simulate a batch, train the DQN on it, repeat.
 
-    For each of K simulated steps:
-        1. Sample a real state from the buffer
-        2. Pick an action (using the agent's current policy)
-        3. Predict (next_state, reward, done) with the world model
-        4. Create a TransitionBatch from the simulated transition
-        5. Train the DQN on it
-
-    Args:
-        agent: The DQN agent.
-        world_model: Trained world model.
-        buffer: Replay buffer (to sample starting states).
-        device: Torch device.
+    K = AGENT.simulated_steps_per_real_step. This is the knob that controls
+    the real/simulated mixing ratio — the central design choice of Dyna.
     """
-    # TODO(human): Implement Dyna-style simulated training.
+    # TODO(human): Loop K times, simulate a batch, train the agent on it.
     #
-    # Steps:
-    #   for _ in range(AGENT.simulated_steps_per_real_step):
-    #       1. Sample a batch of starting states from the buffer:
-    #          start_states = buffer.sample_states(AGENT.batch_size)
-    #
-    #       2. For each state in the batch, use agent.select_action() to pick an action
-    #          actions = np.array([agent.select_action(s) for s in start_states])
-    #
-    #       3. Use the world model to predict next states, rewards, dones:
-    #          - Convert start_states to tensor
-    #          - Convert actions to tensor (long)
-    #          - Forward pass: pred_ns, pred_r, pred_d = world_model(states_t, actions_t)
-    #          - Convert predictions to numpy
-    #
-    #       4. Build a TransitionBatch from the simulated data:
-    #          sim_batch = TransitionBatch(
-    #              states=start_states,
-    #              actions=actions,
-    #              rewards=pred_rewards_np,
-    #              next_states=pred_next_states_np,
-    #              dones=pred_dones_np,   # threshold at 0.5
-    #          )
-    #
-    #       5. Train the agent: agent.train_on_batch(sim_batch)
-    #
-    # Hint: Use torch.no_grad() for the world model forward pass (we don't
-    #       want gradients flowing through the world model during DQN training).
-    raise NotImplementedError("TODO(human): Implement Dyna-style simulated training")
+    # for _ in range(AGENT.simulated_steps_per_real_step):
+    #     sim_batch = _simulate_batch(agent, world_model, buffer, device)
+    #     agent.train_on_batch(sim_batch)
+    raise NotImplementedError("TODO(human): Implement the Dyna K-step loop")
 
 
 def _retrain_world_model(world_model: WorldModel, buffer: ReplayBuffer) -> None:
