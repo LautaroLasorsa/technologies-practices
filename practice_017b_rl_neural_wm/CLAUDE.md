@@ -118,39 +118,44 @@ Real Environment (CartPole-v1)
 
 ### Phase 2: Neural World Model (~25 min)
 
-1. Open `app/world_model.py` and study the `WorldModel` class skeleton
-2. **User implements:** The MLP architecture in `__init__` -- an encoder that processes (state, one-hot action) through hidden layers, plus separate heads for next-state prediction, reward prediction, and done prediction
-3. **User implements:** The `forward` method -- encode input, pass through each head, return predictions
-4. **User implements:** The `compute_loss` method -- MSE for state/reward, BCE for done flag, weighted combination
-5. Run `uv run python -m app.world_model` to verify the model compiles and shapes are correct
-6. Key question: Why use a separate head for `done` with sigmoid+BCE instead of treating it as a regression target?
+1. Open `app/world_model.py` and study the `WorldModel` class skeleton.
+2. **TODO 1 — shared encoder**: Build `self.encoder` as an `nn.Sequential` MLP (`state_dim + action_dim` → `hidden_dim` with `num_hidden_layers` ReLU-activated layers). This trunk extracts shared features for all three heads.
+3. **TODO 2 — three prediction heads**: Build `state_head`, `reward_head`, `done_head`. Separate heads let each output specialise while sharing features, the classic multi-task setup.
+4. **TODO 3 — `forward()`**: One-hot the action, concatenate with state, pass through encoder and each head; apply sigmoid on the done logit so it is in [0, 1].
+5. **TODO 4 — `compute_loss()`**: MSE for state and reward, BCE for done, weighted sum via `WORLD_MODEL.*_loss_weight`. Return both the tensor and a logging dict.
+6. Run `uv run python -m app.world_model` to verify the model compiles and shapes are correct.
+7. Key question: Why use a separate head for `done` with sigmoid+BCE instead of treating it as a regression target?
 
 ### Phase 3: Training the World Model (~20 min)
 
-1. Open `app/train_model.py` and study the training scaffold
-2. **User implements:** The training loop -- sample batches from the replay buffer, forward pass, compute loss, backprop, optimizer step
-3. **User implements:** The validation step -- evaluate prediction MSE on held-out transitions
-4. Run data collection first: `uv run python -m app.data_collection` (fully implemented, generates transitions)
-5. Train the model: `uv run python -m app.train_model`
-6. Inspect the loss curve plot. Key question: If your state prediction MSE is 0.01, does that mean 100-step rollouts will be accurate? Why or why not?
+1. Open `app/train_model.py` and study the training scaffold.
+2. **TODO 1 — `train_one_step()`**: Forward the model on one mini-batch, compute loss with `model.compute_loss`, zero-grad / backward / step, return the scalar total. The atomic unit of supervised training.
+3. **TODO 2 — `train_one_epoch()`**: Iterate mini-batches produced by the scaffolded `_iter_minibatches`, call `train_one_step`, return the mean loss. The epoch loop is separated from the step loop on purpose — compare with 052's `call()` dispatching to `_handle_success/_handle_failure`.
+4. **TODO 3 — `evaluate_model()`**: Eval mode, `torch.no_grad`, one forward pass over the full validation tensors, return the total loss. (Small dataset → no batching needed.)
+5. Run data collection first: `uv run python -m app.data_collection` (fully implemented).
+6. Train the model: `uv run python -m app.train_model`.
+7. Inspect the loss curve plot. Key question: If your state-prediction MSE is 0.01, does that mean 100-step rollouts will be accurate? Why or why not?
 
 ### Phase 4: Planning with the Learned Model (~15 min)
 
-1. Open `app/plan_with_model.py` and study the rollout scaffold
-2. **User implements:** `imagine_rollout` -- starting from a real state, use the world model to predict forward N steps, collecting (s, a, r, s', done) tuples
-3. **User implements:** `evaluate_model_accuracy` -- compare predicted trajectories to real trajectories and compute per-step error
-4. Run `uv run python -m app.plan_with_model` to visualize real vs. predicted trajectories
-5. Key question: At what rollout length do predictions start diverging significantly? Why?
+1. Open `app/plan_with_model.py` and study the rollout scaffold.
+2. **TODO 1 — `imagine_rollout()`**: Starting from a real state, repeatedly call `model.predict(current_state, action)` and chain the predicted next_state back in. Break on predicted done.
+3. **TODO 2 — `rollout_step_errors()`**: Given one real and one imagined rollout, return the per-step state MSE list. Small, pure function — the unit of measurement.
+4. **TODO 3 — `evaluate_model_accuracy()`**: Loop `num_rollouts` times, use `rollout_step_errors` to accumulate step-indexed error lists, and return `per_step_mse` and `cumulative_error` arrays.
+5. Run `uv run python -m app.plan_with_model` to visualise real vs. predicted trajectories.
+6. Key question: At what rollout length do predictions start diverging significantly? Why?
 
 ### Phase 5: Model-Based Agent (~25 min)
 
-1. Open `app/agent.py` and study the Dyna-style agent scaffold
-2. **User implements:** The DQN's `select_action` method (epsilon-greedy on Q-values)
-3. **User implements:** The `train_on_batch` method -- standard DQN update (Q-learning with target network)
-4. **User implements:** The `_train_on_simulated_data` function -- sample real states from the buffer, predict with the world model, train DQN on simulated transitions
-5. **User implements:** The Dyna loop integrating real + simulated steps in `train_dyna_agent`
-6. Run `uv run python -m app.agent` and compare learning curves: model-free DQN vs. Dyna-style DQN
-7. Key question: How does the ratio of simulated-to-real updates (K) affect sample efficiency vs. stability?
+1. Open `app/agent.py` and study the Dyna-style agent scaffold.
+2. **TODO 1 — `DQNAgent.select_action()`**: Epsilon-greedy on Q-values. With probability `epsilon` return a random action, otherwise `argmax` over `q_net(state)` inside `torch.no_grad`.
+3. **TODO 2 — `DQNAgent.compute_td_target()`**: Bellman target under the *frozen* target network, wrapped in `torch.no_grad`. Isolating the target computation mirrors how resilience4j / Polly isolate "what to do" from "how to do it".
+4. **TODO 3 — `DQNAgent.train_on_batch()`**: Gather Q(s,a), call `compute_td_target`, MSE loss, backprop + optimizer step. Tensor conversion is scaffolded in `_batch_to_tensors`.
+5. **TODO 4 — `_simulate_batch()`**: Sample starting states, pick actions via the agent's policy, forward once through the world model under `torch.no_grad`, assemble a `TransitionBatch`. This is the *imagination* step — the core of Dyna.
+6. **TODO 5 — `_train_on_simulated_data()`**: Loop `AGENT.simulated_steps_per_real_step` times, calling `_simulate_batch` + `agent.train_on_batch`. Two lines but deliberately separated so the K-ratio knob is visible.
+7. The outer Dyna loop in `train_dyna_agent` is scaffolded — read it to see how real steps and simulated steps interleave.
+8. Run `uv run python -m app.agent` and compare learning curves: model-free DQN vs. Dyna-style DQN.
+9. Key question: How does the ratio of simulated-to-real updates (K) affect sample efficiency vs. stability?
 
 ### Phase 6: Analysis & Discussion (~10 min)
 

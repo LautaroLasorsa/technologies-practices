@@ -24,30 +24,29 @@ class ObservationEncoder(nn.Module):
     def __init__(self, config: DreamerConfig) -> None:
         super().__init__()
         self.config = config
+        self.network = self._build_network()
 
-        # TODO(human): Build a 2-layer MLP that maps obs_dim -> embedding_dim.
-        #
-        # Layers:
-        #   1. Linear(obs_dim -> encoder_hidden) + ELU
-        #   2. Linear(encoder_hidden -> embedding_dim) + ELU
-        #
-        # Use nn.Sequential and store it as self.network.
-        #
-        # Hint: nn.Sequential(
-        #     nn.Linear(...), nn.ELU(),
-        #     nn.Linear(...), nn.ELU(),
-        # )
-        raise NotImplementedError("TODO(human): build self.network")
+    # -- TODO -----------------------------------------------------------------
+
+    def _build_network(self) -> nn.Sequential:
+        """Return the 2-layer MLP that maps obs_dim -> embedding_dim.
+
+        Architecture:
+          Linear(obs_dim -> encoder_hidden) + ELU
+          Linear(encoder_hidden -> embedding_dim) + ELU
+
+        ELU (not ReLU) is the Dreamer-standard activation: it keeps a small
+        negative slope and avoids "dead neurons" that occur when ReLU gets
+        stuck at zero — important because every gradient flows through this
+        encoder into the RSSM.
+        """
+        # TODO(human): build and return an nn.Sequential with the two
+        # Linear + ELU blocks described above, using self.config.obs_dim,
+        # self.config.encoder_hidden and self.config.embedding_dim.
+        raise NotImplementedError("Implement ObservationEncoder._build_network()")
+
+    # -- Scaffolded forward ---------------------------------------------------
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
-        """Encode observations into embeddings.
-
-        Args:
-            obs: Tensor of shape (batch, obs_dim).
-
-        Returns:
-            Tensor of shape (batch, embedding_dim).
-        """
-        # TODO(human): Pass obs through self.network and return the result.
-        # This is a one-liner.
-        raise NotImplementedError("TODO(human): forward pass")
+        """Encode observations (batch, obs_dim) -> (batch, embedding_dim)."""
+        return self.network(obs)

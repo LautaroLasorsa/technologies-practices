@@ -11,6 +11,11 @@ Training:
   imagined trajectories.
 - Actor is trained with REINFORCE-style policy gradient using advantages
   (lambda-return minus critic baseline), plus an entropy bonus for exploration.
+
+The MLPs are pre-built in `__init__`; the exercises focus on:
+  - Wrapping the actor's logits into a `Categorical` distribution.
+  - The REINFORCE + entropy actor loss.
+  - The MSE critic loss against lambda-return targets.
 """
 
 import torch
@@ -30,37 +35,30 @@ class Actor(nn.Module):
     def __init__(self, config: DreamerConfig) -> None:
         super().__init__()
         self.config = config
+        # 2-layer MLP producing raw logits (Categorical applies the softmax).
+        self.network = nn.Sequential(
+            nn.Linear(config.latent_dim, config.actor_hidden), nn.ELU(),
+            nn.Linear(config.actor_hidden, config.actor_hidden), nn.ELU(),
+            nn.Linear(config.actor_hidden, config.action_dim),
+        )
 
-        # TODO(human): Build a 2-layer MLP that maps latent_dim -> action_dim logits.
-        #
-        # Architecture:
-        #   self.network = nn.Sequential(
-        #       nn.Linear(config.latent_dim, config.actor_hidden), nn.ELU(),
-        #       nn.Linear(config.actor_hidden, config.actor_hidden), nn.ELU(),
-        #       nn.Linear(config.actor_hidden, config.action_dim),
-        #   )
-        #
-        # The output are raw logits (unnormalized log-probabilities).
-        # Categorical() will handle the softmax internally.
-        raise NotImplementedError("TODO(human): build actor network")
+    # -- TODO 1 ---------------------------------------------------------------
 
     def forward(self, latent: torch.Tensor) -> Categorical:
-        """Compute action distribution from latent state.
+        """Turn a latent state into a `Categorical` distribution over actions.
 
-        Args:
-            latent: (batch, latent_dim) -- concat of h and z.
+        Pass `latent` through `self.network` to get raw logits, then return
+        `Categorical(logits=logits)`.
 
-        Returns:
-            Categorical distribution over actions.
+        Why return a distribution object instead of an action? Different
+        callers need different things:
+          - Environment interaction: `.sample()` for exploration.
+          - Loss computation:         `.log_prob(action)` and `.entropy()`.
         """
-        # TODO(human): Pass latent through self.network to get logits,
-        # then return Categorical(logits=logits).
-        #
-        # Why return a distribution object instead of an action?
-        # Because different callers need different things:
-        # - Environment interaction: .sample() for exploration
-        # - Loss computation: .log_prob(action) and .entropy()
-        raise NotImplementedError("TODO(human): forward pass")
+        # TODO(human): compute logits and wrap them in a Categorical.
+        raise NotImplementedError("Implement Actor.forward()")
+
+    # -- TODO 2 ---------------------------------------------------------------
 
     def loss(
         self,
@@ -68,36 +66,27 @@ class Actor(nn.Module):
         actions: torch.Tensor,
         advantages: torch.Tensor,
     ) -> torch.Tensor:
-        """Compute actor loss: REINFORCE with entropy bonus.
+        """REINFORCE + entropy bonus actor loss.
 
-        L_actor = -mean(log_prob(a) * advantage) - entropy_weight * mean(entropy)
+            L_actor = -mean(log_prob(a) * advantage) - entropy_weight * mean(entropy)
 
-        The first term pushes the policy toward actions with positive advantage.
-        The entropy term encourages exploration by penalizing overly deterministic
-        policies.
+        The first term pushes the policy toward actions with positive
+        advantage; the second encourages exploration by rewarding entropy.
 
-        Args:
-            latent_states: (T, batch, latent_dim) -- imagined trajectory states.
-            actions: (T, batch) -- actions taken (long indices).
-            advantages: (T, batch) -- lambda-return minus critic value.
+        Steps:
+          1. `dist = self(latent_states)`
+          2. `log_probs = dist.log_prob(actions)`
+          3. `entropy   = dist.entropy()`
+          4. `policy_loss  = -(log_probs * advantages.detach()).mean()`
+          5. `entropy_loss = -self.config.entropy_weight * entropy.mean()`
+          6. return `policy_loss + entropy_loss`
 
-        Returns:
-            Scalar loss.
+        CRITICAL: `advantages.detach()` — the actor should treat advantages
+        as fixed targets; do not backprop through the critic / return
+        computation into the actor.
         """
-        # TODO(human): Implement the REINFORCE + entropy loss.
-        #
-        # Steps:
-        #   1. dist = self.forward(latent_states)     # get distribution for all states
-        #   2. log_probs = dist.log_prob(actions)      # log pi(a|s) for chosen actions
-        #   3. entropy = dist.entropy()                # H[pi(.|s)]
-        #   4. policy_loss = -(log_probs * advantages.detach()).mean()
-        #   5. entropy_loss = -self.config.entropy_weight * entropy.mean()
-        #   6. return policy_loss + entropy_loss
-        #
-        # CRITICAL: advantages.detach() -- don't backprop through the return
-        # computation into the actor. The actor should treat advantages as fixed
-        # targets, not try to change the world model to increase them.
-        raise NotImplementedError("TODO(human): actor loss")
+        # TODO(human): implement the REINFORCE + entropy loss as above.
+        raise NotImplementedError("Implement Actor.loss()")
 
 
 class Critic(nn.Module):
@@ -109,51 +98,31 @@ class Critic(nn.Module):
     def __init__(self, config: DreamerConfig) -> None:
         super().__init__()
         self.config = config
-
-        # TODO(human): Build a 2-layer MLP that maps latent_dim -> 1.
-        #
-        # Same structure as Actor but output dim is 1 (scalar value).
-        #   self.network = nn.Sequential(
-        #       nn.Linear(config.latent_dim, config.critic_hidden), nn.ELU(),
-        #       nn.Linear(config.critic_hidden, config.critic_hidden), nn.ELU(),
-        #       nn.Linear(config.critic_hidden, 1),
-        #   )
-        raise NotImplementedError("TODO(human): build critic network")
+        self.network = nn.Sequential(
+            nn.Linear(config.latent_dim, config.critic_hidden), nn.ELU(),
+            nn.Linear(config.critic_hidden, config.critic_hidden), nn.ELU(),
+            nn.Linear(config.critic_hidden, 1),
+        )
 
     def forward(self, latent: torch.Tensor) -> torch.Tensor:
-        """Estimate value of a latent state.
+        """Estimate value of a latent state (batch / (T, batch), latent_dim) -> same leading dims."""
+        return self.network(latent).squeeze(-1)
 
-        Args:
-            latent: (batch, latent_dim) or (T, batch, latent_dim).
-
-        Returns:
-            Value estimate, same leading dims as input but last dim squeezed.
-        """
-        # TODO(human): Pass latent through self.network and squeeze the last dim.
-        #
-        # return self.network(latent).squeeze(-1)
-        raise NotImplementedError("TODO(human): forward pass")
+    # -- TODO 3 ---------------------------------------------------------------
 
     def loss(
         self,
         latent_states: torch.Tensor,
         lambda_returns: torch.Tensor,
     ) -> torch.Tensor:
-        """Compute critic loss: MSE between predicted values and lambda-returns.
+        """MSE between predicted values and lambda-return targets.
 
-        Args:
-            latent_states: (T, batch, latent_dim)
-            lambda_returns: (T, batch) -- target values from imagination.
+        Steps:
+          1. `values = self(latent_states)`            # (T, batch)
+          2. return `F.mse_loss(values, lambda_returns.detach())`
 
-        Returns:
-            Scalar MSE loss.
+        `.detach()` on targets: the critic must not backprop through the
+        lambda-return computation — treat returns as fixed regression targets.
         """
-        # TODO(human): Implement critic loss.
-        #
-        # Steps:
-        #   1. values = self.forward(latent_states)           # (T, batch)
-        #   2. return F.mse_loss(values, lambda_returns.detach())
-        #
-        # .detach() on targets: the critic should not backprop through the
-        # lambda-return computation. Targets are treated as fixed.
-        raise NotImplementedError("TODO(human): critic loss")
+        # TODO(human): implement the MSE critic loss against detached lambda returns.
+        raise NotImplementedError("Implement Critic.loss()")

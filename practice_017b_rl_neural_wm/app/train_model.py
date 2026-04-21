@@ -60,6 +60,73 @@ def to_tensors(
     )
 
 
+def train_one_step(
+    model: WorldModel,
+    optimizer: Adam,
+    batch_tensors: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
+) -> float:
+    """Run a single supervised-learning step on one mini-batch.
+
+    Forward pass through the model, compute the combined loss via
+    model.compute_loss, backprop, and step the optimizer. Returns the scalar
+    total loss for logging.
+    """
+    states, actions, rewards, next_states, dones = batch_tensors
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This is the atomic unit of supervised training: one forward, one loss,
+    # one backward, one step. Every epoch is just this operation applied over
+    # every mini-batch.
+
+    # TODO(human): Implement one gradient step.
+    #
+    # Steps:
+    #   1. pred_state, pred_reward, pred_done = model(states, actions)
+    #   2. total_loss, loss_dict = model.compute_loss(
+    #          pred_state, pred_reward, pred_done,
+    #          next_states, rewards, dones,
+    #      )
+    #   3. optimizer.zero_grad(); total_loss.backward(); optimizer.step()
+    #   4. Return loss_dict["total"]
+    raise NotImplementedError("TODO(human): Implement train_one_step")
+
+
+def _iter_minibatches(
+    n: int, batch_size: int
+) -> list[torch.Tensor]:
+    """Yield shuffled mini-batch index tensors covering [0, n)."""
+    perm = torch.randperm(n)
+    return [perm[i : i + batch_size] for i in range(0, n, batch_size)]
+
+
+def train_one_epoch(
+    model: WorldModel,
+    optimizer: Adam,
+    train_tensors: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
+    batch_size: int,
+) -> float:
+    """Train the model for one epoch over `train_tensors` and return mean loss."""
+    model.train()
+    n_train = train_tensors[0].shape[0]
+
+    # ── Exercise Context ──────────────────────────────────────────────────
+    # This teaches supervised learning for dynamics models: treat (s, a) →
+    # (s', r, done) as a regression/classification problem. Mini-batch training
+    # and backprop refine predictions over the whole dataset once per epoch.
+
+    # TODO(human): Iterate mini-batches and return the mean loss.
+    #
+    # Steps:
+    #   1. epoch_losses: list[float] = []
+    #   2. For each index tensor `idx` in _iter_minibatches(n_train, batch_size):
+    #      a. Build batch_tensors by indexing each tensor in train_tensors with idx
+    #         (e.g. tuple(t[idx] for t in train_tensors))
+    #      b. loss = train_one_step(model, optimizer, batch_tensors)
+    #      c. epoch_losses.append(loss)
+    #   3. Return float(np.mean(epoch_losses))
+    raise NotImplementedError("TODO(human): Implement train_one_epoch")
+
+
 def train_world_model(
     model: WorldModel,
     train_data: TransitionBatch,
@@ -88,41 +155,12 @@ def train_world_model(
     train_tensors = to_tensors(train_data, device)
     val_tensors = to_tensors(val_data, device)
 
-    n_train = len(train_data.states)
     history: dict[str, list[float]] = {"train_loss": [], "val_loss": []}
 
     for epoch in range(epochs):
-        # --- Training ---
-        model.train()
-        epoch_losses: list[float] = []
-
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # This teaches supervised learning for dynamics models: treat (s, a) → (s', r, done)
-        # as a regression/classification problem. Mini-batch training and backprop refine predictions.
-
-        # TODO(human): Implement the training loop for one epoch.
-        #
-        # Steps:
-        #   1. Generate a random permutation of indices [0, n_train)
-        #   2. Iterate over mini-batches (slice indices by batch_size):
-        #      a. Extract the batch: states, actions, rewards, next_states, dones
-        #         from train_tensors using the batch indices
-        #      b. Forward pass: pred_state, pred_reward, pred_done = model(states, actions)
-        #      c. Compute loss: total_loss, loss_dict = model.compute_loss(
-        #             pred_state, pred_reward, pred_done,
-        #             next_states, rewards, dones
-        #         )
-        #      d. Backprop: optimizer.zero_grad(), total_loss.backward(), optimizer.step()
-        #      e. Append loss_dict["total"] to epoch_losses
-        #   3. After all batches, compute mean training loss for this epoch
-        #
-        # Hint: Use torch.randperm(n_train) for the permutation.
-        raise NotImplementedError("TODO(human): Implement mini-batch training loop")
-
-        avg_train_loss = float(np.mean(epoch_losses))
+        avg_train_loss = train_one_epoch(model, optimizer, train_tensors, batch_size)
         history["train_loss"].append(avg_train_loss)
 
-        # --- Validation ---
         val_loss = evaluate_model(model, val_tensors)
         history["val_loss"].append(val_loss)
 

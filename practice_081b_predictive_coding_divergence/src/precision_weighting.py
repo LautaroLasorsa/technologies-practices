@@ -14,9 +14,14 @@ In our PCN, precision weighting modifies the energy function:
 
     E = (1/2) * sum_l (pi_l * epsilon_l^2)
 
-where pi_l is the precision at layer l. High pi amplifies the error;
-low pi suppresses it. This makes the network more robust to noise
-because noisy layers can be downweighted.
+where pi_l is the precision at layer l. Uniform precision recovers standard
+free energy (strict generalization). Zero precision completely ignores that
+layer's error (the network "tunes out" noise). Very high precision makes
+those errors dominate the energy (selective attention).
+
+You implement two pieces: the weighted energy and the weighted inference
+loop. Precision learning (`learn_precisions`) and the noise robustness
+experiment harness are pre-built.
 """
 
 import torch
@@ -25,58 +30,27 @@ from src.predictive_coding_network import PredictiveCodingNetwork
 from src.cortical_layer import CorticalLayer
 
 
+# -- TODO 1 ----------------------------------------------------------------
+
+
 def precision_weighted_energy(
     neural_activities: list[torch.Tensor],
     cortical_layers: list[CorticalLayer],
     precisions: list[torch.Tensor],
 ) -> torch.Tensor:
-    """Compute precision-weighted free energy.
+    """Scalar (1/2) * sum_l (pi_l * epsilon_l^2), averaged over the batch.
 
-    Standard free energy treats all prediction errors equally.
-    Precision weighting lets the network attend to reliable signals
-    and ignore noisy ones.
-
-        E = (1/2) * sum_l || sqrt(pi_l) * epsilon_l ||^2
-          = (1/2) * sum_l (pi_l * epsilon_l^2).sum()
-
-    Args:
-        neural_activities: [a_0, ..., a_L]
-        cortical_layers: List of CorticalLayer
-        precisions: List of precision tensors, one per layer transition.
-                    Each has shape (dim_{l+1},) -- per-neuron precision.
-                    Higher = more attention to that neuron's error.
-
-    Returns:
-        Scalar precision-weighted free energy (averaged over batch).
+    Same loop as standard free energy, but multiply each squared error by
+    the per-neuron precision for that layer (`precisions[l]`, shape
+    `(dim_{l+1},)`, broadcasts over the batch dim). Clean signal: loop layers,
+    `pred = layer.compute_prediction(activities[l])`, compute epsilon, then
+    accumulate `0.5 * (precisions[l] * eps**2).sum() / batch_size`.
     """
-    # TODO(human): Compute precision-weighted free energy.
-    #
-    # Same as standard free energy, but multiply each squared error by precision:
-    #
-    # total_energy = 0.0
-    # batch_size = neural_activities[0].shape[0]
-    #
-    # For each layer l in range(len(cortical_layers)):
-    #   prediction = cortical_layers[l].compute_prediction(neural_activities[l])
-    #   epsilon = cortical_layers[l].compute_prediction_error(
-    #       neural_activities[l + 1], prediction
-    #   )
-    #   # Precision broadcasts: (batch, dim) * (dim,) -> (batch, dim)
-    #   weighted_error = precisions[l] * epsilon ** 2
-    #   total_energy += 0.5 * weighted_error.sum() / batch_size
-    #
-    # return total_energy
-    #
-    # Think about: What happens when precision is uniform (all 1s)?
-    # You get standard free energy -- precision weighting is a strict
-    # generalization. What if precision is 0 for a neuron?
-    # Its error is completely ignored -- the network doesn't care what
-    # that neuron does. This is how the brain "tunes out" noise.
-    #
-    # What if precision is very HIGH for certain neurons?
-    # Those errors dominate the energy -- the network pays maximum
-    # attention to those signals. This is selective attention.
-    raise NotImplementedError("TODO(human): Implement precision-weighted energy")
+    # TODO(human): implement precision-weighted free energy.
+    raise NotImplementedError("Implement precision_weighted_energy()")
+
+
+# -- TODO 2 ----------------------------------------------------------------
 
 
 def precision_weighted_inference(
@@ -87,77 +61,29 @@ def precision_weighted_inference(
     num_inference_steps: int = 20,
     inference_rate: float = 0.1,
 ) -> tuple[list[torch.Tensor], list[float]]:
-    """Run inference with precision weighting.
+    """Run inference with precision-weighted error signals.
 
-    The inference dynamics are modified to include precision:
+    Same structure as `PredictiveCodingNetwork.run_inference_phase`, but
+    scale each epsilon by its precision *before* using it in the updates:
 
-        delta_a_l = -gamma * pi_{l-1} * epsilon_{l-1}
-                    + gamma * W_l^T * (pi_l * epsilon_l * f'(W_l * a_l))
+        weighted_eps[l] = precisions[l] * epsilon[l]
+        delta_a_l = -gamma * weighted_eps[l-1]
+                    + gamma * (weighted_eps[l] * f'(W_l a_l)) @ W_l
 
-    Notice: precision scales the error signal BEFORE it's used.
-    High precision on a layer = strong correction signal from that layer.
-    Low precision = weak signal, almost ignored.
+    Clamp `a_0 = sensory_input` and `a_L = target`; update hidden layers
+    l = 1 .. L-2. Track `precision_weighted_energy` (NOT the standard one)
+    at each step in `energy_trace`.
 
-    Args:
-        network: PredictiveCodingNetwork
-        sensory_input: shape (batch, input_dim)
-        target: one-hot, shape (batch, num_classes)
-        precisions: per-layer precision tensors, each shape (dim_{l+1},)
-        num_inference_steps: T
-        inference_rate: gamma
-
-    Returns:
-        (activities, energy_trace) after precision-weighted inference
+    Neuroscience: this is how the brain handles unreliable senses. In a dark
+    room, visual precision drops and the brain leans on other modalities.
+    In anxious brains, interoceptive precision is too high -- every heartbeat
+    feels alarming.
     """
-    # TODO(human): Implement precision-weighted inference.
-    #
-    # Same structure as standard run_inference_phase, but:
-    # 1. Multiply each epsilon by its precision before using it:
-    #    weighted_eps[l] = precisions[l] * epsilon[l]
-    # 2. Use weighted_eps in both bottom-up and top-down terms
-    # 3. Track precision-weighted energy (not standard energy)
-    #
-    # Steps:
-    # 1. Initialize activities, clamp input and target:
-    #    activities = network._initialize_activities(sensory_input)
-    #    activities[0] = sensory_input
-    #    activities[-1] = target
-    #    energy_trace = []
-    #
-    # 2. For each step in range(num_inference_steps):
-    #    a. Compute predictions and raw errors:
-    #       epsilons = []
-    #       for l in range(len(network.cortical_layers)):
-    #           pred = network.cortical_layers[l].compute_prediction(activities[l])
-    #           eps = network.cortical_layers[l].compute_prediction_error(
-    #               activities[l + 1], pred
-    #           )
-    #           epsilons.append(eps)
-    #
-    #    b. Weight errors by precision:
-    #       weighted_eps = [precisions[l] * epsilons[l]
-    #                       for l in range(len(epsilons))]
-    #
-    #    c. Update hidden layers using weighted errors:
-    #       for l in range(1, network.num_layers - 1):
-    #           bottom_up = -inference_rate * weighted_eps[l - 1]
-    #           pre_act = network.cortical_layers[l].pre_activation(activities[l])
-    #           f_prime = network.cortical_layers[l].activation_derivative(pre_act)
-    #           top_down = inference_rate * (weighted_eps[l] * f_prime) @ network.cortical_layers[l].synaptic_weights
-    #           activities[l] = activities[l] + bottom_up + top_down
-    #
-    #    d. Track precision_weighted_energy:
-    #       energy = precision_weighted_energy(activities, network.cortical_layers, precisions)
-    #       energy_trace.append(energy.item())
-    #
-    # 3. Return (activities, energy_trace)
-    #
-    # Neuroscience: This is literally how the brain handles unreliable
-    # senses. In a dark room, visual precision drops and the brain
-    # relies more on other modalities (auditory, proprioceptive).
-    # In anxious brains, interoceptive (body sensation) precision is
-    # cranked too high -- every heartbeat becomes alarming.
-    raise NotImplementedError("TODO(human): Implement precision-weighted inference")
+    # TODO(human): implement precision-weighted inference.
+    raise NotImplementedError("Implement precision_weighted_inference()")
+
+
+# -- Scaffolded: precision learning and experiment harness ----------------
 
 
 def learn_precisions(
@@ -168,12 +94,11 @@ def learn_precisions(
 ) -> list[torch.Tensor]:
     """Update precisions based on observed prediction error variance.
 
-    Precision should be high where errors are consistently small (reliable signal)
+    Precision is high where errors are consistently small (reliable signal)
     and low where errors are large/variable (noisy signal).
 
-    Simple rule: pi_l = 1 / (var(epsilon_l) + eps)
-
-    Pre-built -- this is an optimization detail, not the core learning objective.
+    Simple rule: pi_l = 1 / (var(epsilon_l) + eps).  Pre-built -- this is
+    an optimization detail, not the core learning objective.
     """
     updated = []
     for l in range(len(network.cortical_layers)):

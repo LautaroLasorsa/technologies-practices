@@ -41,26 +41,31 @@ class ObservationDecoder(nn.Module):
 
     def __init__(self, config: DreamerConfig) -> None:
         super().__init__()
-        # TODO(human): Create self.network using _build_mlp.
-        #
-        # Input dimension: config.latent_dim  (= deterministic_dim + stochastic_dim)
-        # Hidden dimension: config.decoder_hidden
-        # Output dimension: config.obs_dim
-        #
-        # One line: self.network = _build_mlp(...)
-        raise NotImplementedError("TODO(human): build observation decoder")
+        self.network = self._build_network(config)
+
+    # -- TODO -----------------------------------------------------------------
+
+    @staticmethod
+    def _build_network(config: DreamerConfig) -> nn.Sequential:
+        """Return an MLP that maps the full latent state to an obs prediction.
+
+        Use the provided `_build_mlp` helper:
+          input  = config.latent_dim   (= deterministic_dim + stochastic_dim)
+          hidden = config.decoder_hidden
+          output = config.obs_dim
+
+        This decoder is what forces the RSSM to learn an informative latent:
+        if (h, z) cannot be decoded back to the observation, the
+        reconstruction loss pushes the whole stack to fix it.
+        """
+        # TODO(human): return _build_mlp(input_dim=..., hidden_dim=..., output_dim=...).
+        raise NotImplementedError("Implement ObservationDecoder._build_network()")
+
+    # -- Scaffolded forward ---------------------------------------------------
 
     def forward(self, latent: torch.Tensor) -> torch.Tensor:
-        """Decode latent state to observation prediction.
-
-        Args:
-            latent: (batch, latent_dim) -- concat of h and z.
-
-        Returns:
-            (batch, obs_dim) -- predicted observation.
-        """
-        # TODO(human): One-liner -- pass latent through self.network.
-        raise NotImplementedError("TODO(human): forward pass")
+        """Decode latent state (batch, latent_dim) -> (batch, obs_dim)."""
+        return self.network(latent)
 
 
 class RewardDecoder(nn.Module):
@@ -70,11 +75,12 @@ class RewardDecoder(nn.Module):
 
     The reward prediction loss trains the world model to understand which
     latent states lead to high/low rewards -- critical for imagination.
+
+    Provided as a reference for the observation decoder above.
     """
 
     def __init__(self, config: DreamerConfig) -> None:
         super().__init__()
-        # This one is provided as reference for the observation decoder above.
         self.network = _build_mlp(
             input_dim=config.latent_dim,
             hidden_dim=config.decoder_hidden,
@@ -82,12 +88,5 @@ class RewardDecoder(nn.Module):
         )
 
     def forward(self, latent: torch.Tensor) -> torch.Tensor:
-        """Decode latent state to reward prediction.
-
-        Args:
-            latent: (batch, latent_dim)
-
-        Returns:
-            (batch, 1) -- predicted reward.
-        """
+        """Decode latent state (batch, latent_dim) -> (batch, 1)."""
         return self.network(latent)

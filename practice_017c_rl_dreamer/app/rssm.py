@@ -26,7 +26,6 @@ Reference: https://arxiv.org/abs/2010.02193 (DreamerV2), Section 2.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.distributions import Normal
 
 from app.config import DreamerConfig
@@ -37,6 +36,10 @@ class RSSM(nn.Module):
 
     Full DreamerV2 uses 32 categorical distributions x 32 classes.
     We simplify to a diagonal Gaussian for clarity.
+
+    Construction of the sub-networks is pre-scaffolded so the exercises can
+    focus on the three forward passes (recurrent / posterior / prior) and how
+    they compose into `observe_step` (training) and `imagine_step` (dreaming).
     """
 
     def __init__(self, config: DreamerConfig) -> None:
@@ -48,65 +51,30 @@ class RSSM(nn.Module):
         emb = config.embedding_dim
         act = config.action_dim
 
-        # --- Recurrent model ---
-        # Input to GRU: concat of previous stochastic state z_{t-1} and action a_{t-1}
-        # The GRU cell updates the deterministic state h.
+        # Recurrent model: fc(prev_z, prev_action) -> GRUCell -> h_t.
         self.recurrent_input_fc = nn.Linear(sto + act, hidden)
         self.gru_cell = nn.GRUCell(input_size=hidden, hidden_size=det)
 
-        # --- Representation model (posterior) ---
-        # Input: concat of deterministic state h_t and observation embedding e_t
-        # Output: mean and (log) std of Gaussian over z_t
-        #
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # The posterior infers the stochastic latent state given both the deterministic state
-        # and the actual observation. It's trained via reconstruction loss and learns to capture
-        # what actually happened (ground truth from observations).
+        # Representation model (posterior): q(z_t | h_t, embedding_t).
+        # Shared trunk + separate heads for mean / log_std of a diagonal Gaussian.
+        self.posterior_fc = nn.Sequential(nn.Linear(det + emb, hidden), nn.ELU())
+        self.posterior_mean = nn.Linear(hidden, sto)
+        self.posterior_log_std = nn.Linear(hidden, sto)
 
-        # TODO(human): Build the posterior network.
-        #
-        # Architecture:
-        #   self.posterior_fc = nn.Sequential(
-        #       nn.Linear(det + emb, hidden), nn.ELU(),
-        #   )
-        #   self.posterior_mean = nn.Linear(hidden, sto)
-        #   self.posterior_log_std = nn.Linear(hidden, sto)
-        #
-        # The fc layer processes the concatenated input, then two heads
-        # produce the mean and log-std of the Gaussian distribution over z.
-        raise NotImplementedError("TODO(human): build posterior network")
-
-        # --- Transition model (prior) ---
-        # Input: deterministic state h_t only (no observation!)
-        # Output: mean and (log) std of Gaussian over z_t
-        #
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # The prior predicts the stochastic state from ONLY the deterministic state (no observation).
-        # This is what enables imagination: the model can generate plausible latent trajectories
-        # without needing real observations, using only its learned dynamics.
-
-        # TODO(human): Build the prior network. Same structure as posterior
-        # but input is only h_t (size det), not h_t + embedding.
-        #
-        # Architecture:
-        #   self.prior_fc = nn.Sequential(
-        #       nn.Linear(det, hidden), nn.ELU(),
-        #   )
-        #   self.prior_mean = nn.Linear(hidden, sto)
-        #   self.prior_log_std = nn.Linear(hidden, sto)
-        raise NotImplementedError("TODO(human): build prior network")
+        # Transition model (prior): p(z_t | h_t) -- no observation input.
+        # Same structure as the posterior; this is what imagination uses.
+        self.prior_fc = nn.Sequential(nn.Linear(det, hidden), nn.ELU())
+        self.prior_mean = nn.Linear(hidden, sto)
+        self.prior_log_std = nn.Linear(hidden, sto)
 
     def initial_state(self, batch_size: int) -> tuple[torch.Tensor, torch.Tensor]:
-        """Return zero-initialized (h, z) for a batch.
-
-        Returns:
-            h: (batch, deterministic_dim) -- zeros
-            z: (batch, stochastic_dim) -- zeros
-        """
+        """Return zero-initialized (h, z) for a batch."""
         device = next(self.parameters()).device
         h = torch.zeros(batch_size, self.config.deterministic_dim, device=device)
         z = torch.zeros(batch_size, self.config.stochastic_dim, device=device)
         return h, z
+
+    # -- TODO 1 ---------------------------------------------------------------
 
     def recurrent_step(
         self,
@@ -114,90 +82,57 @@ class RSSM(nn.Module):
         prev_z: torch.Tensor,
         prev_action: torch.Tensor,
     ) -> torch.Tensor:
-        """Advance the deterministic state using the GRU.
+        """Advance the deterministic state: h_t = GRU(h_{t-1}, fc([z_{t-1}, a_{t-1}])).
 
-        h_t = GRU(h_{t-1}, fc([z_{t-1}, a_{t-1}]))
-
-        Args:
-            prev_h: (batch, deterministic_dim)
-            prev_z: (batch, stochastic_dim)
-            prev_action: (batch, action_dim) -- one-hot encoded
-
-        Returns:
-            h_t: (batch, deterministic_dim) -- new deterministic state
+        This is the deterministic backbone of the RSSM — the GRU that carries
+        sequential information across timesteps. Concatenate `prev_z` and
+        `prev_action` along the last dim, push through `self.recurrent_input_fc`
+        with an ELU activation, then feed the result (together with `prev_h`)
+        into `self.gru_cell` and return the new hidden state.
         """
-        # ── Exercise Context ──────────────────────────────────────────────────
-        # This implements the deterministic backbone of the RSSM: the GRU that maintains
-        # sequential information across timesteps. It teaches how recurrent models capture
-        # temporal dependencies in world-model architectures.
+        # TODO(human): implement the 3-line recurrent step.
+        raise NotImplementedError("Implement RSSM.recurrent_step()")
 
-        # TODO(human): Implement the recurrent step.
-        #
-        # Steps:
-        #   1. Concatenate prev_z and prev_action along dim=-1
-        #   2. Pass through self.recurrent_input_fc + ELU activation
-        #   3. Feed into self.gru_cell(result, prev_h) to get new h
-        #   4. Return h
-        #
-        # Hint: x = torch.cat([prev_z, prev_action], dim=-1)
-        #       x = F.elu(self.recurrent_input_fc(x))
-        #       h = self.gru_cell(x, prev_h)
-        raise NotImplementedError("TODO(human): recurrent step")
+    # -- TODO 2 ---------------------------------------------------------------
 
     def posterior(
         self,
         h: torch.Tensor,
         embedding: torch.Tensor,
     ) -> tuple[torch.Tensor, Normal]:
-        """Representation model: infer z from h + observation embedding.
+        """Representation model: q(z_t | h_t, embedding_t).
 
-        z_t ~ q(z_t | h_t, embedding_t)
+        Concatenate `h` with the observation `embedding`, run it through
+        `posterior_fc`, produce `mean` and `log_std` via the two heads, clamp
+        `log_std` to `[-5, 2]` for numerical stability, build a `Normal`
+        distribution, and sample with `rsample()`.
 
-        Args:
-            h: (batch, deterministic_dim)
-            embedding: (batch, embedding_dim) -- from ObservationEncoder
+        Why `rsample()` and not `sample()`? The reparameterization trick
+        z = mean + std * epsilon with epsilon ~ N(0, 1) makes z differentiable
+        w.r.t. mean and std — essential for backprop through the world model
+        (reconstruction loss has to flow back into the posterior parameters).
 
-        Returns:
-            z: (batch, stochastic_dim) -- sampled using reparameterization trick
-            dist: Normal distribution object (for KL computation)
+        Returns: (z_sampled, Normal distribution for KL loss).
         """
-        # TODO(human): Implement the posterior.
-        #
-        # Steps:
-        #   1. Concatenate h and embedding: x = torch.cat([h, embedding], dim=-1)
-        #   2. Pass through self.posterior_fc: features = self.posterior_fc(x)
-        #   3. Compute mean = self.posterior_mean(features)
-        #   4. Compute log_std = self.posterior_log_std(features)
-        #   5. Clamp log_std to [-5, 2] for numerical stability
-        #   6. Create dist = Normal(mean, log_std.exp())
-        #   7. Sample z using rsample() (reparameterized -- allows gradients to flow!)
-        #   8. Return (z, dist)
-        #
-        # Why rsample() not sample()? rsample uses the reparameterization trick:
-        # z = mean + std * epsilon, where epsilon ~ N(0,1). This makes z
-        # differentiable w.r.t. mean and std, which is essential for backprop
-        # through the world model.
-        raise NotImplementedError("TODO(human): posterior inference")
+        # TODO(human): implement the posterior forward pass as described.
+        raise NotImplementedError("Implement RSSM.posterior()")
+
+    # -- TODO 3 ---------------------------------------------------------------
 
     def prior(self, h: torch.Tensor) -> tuple[torch.Tensor, Normal]:
-        """Transition model: predict z from h only (no observation).
+        """Transition model: p(z_t | h_t) — no observation.
 
-        z_t ~ p(z_t | h_t)
+        Structurally identical to `posterior`, but input is just `h` and the
+        layers are `prior_fc / prior_mean / prior_log_std`. This is what makes
+        imagination possible: the prior alone must predict plausible next
+        stochastic states, without ever seeing the real observation.
 
-        Args:
-            h: (batch, deterministic_dim)
-
-        Returns:
-            z: (batch, stochastic_dim) -- sampled
-            dist: Normal distribution object (for KL computation)
+        Returns: (z_sampled, Normal distribution for KL loss).
         """
-        # TODO(human): Implement the prior. Same structure as posterior,
-        # but uses self.prior_fc/mean/log_std and input is just h (not h + emb).
-        #
-        # This is nearly identical to posterior() but with different networks
-        # and different input. The prior must learn to predict z without
-        # seeing the observation -- this is what makes imagination possible.
-        raise NotImplementedError("TODO(human): prior prediction")
+        # TODO(human): implement the prior forward pass (mirror of posterior).
+        raise NotImplementedError("Implement RSSM.prior()")
+
+    # -- TODO 4 ---------------------------------------------------------------
 
     def observe_step(
         self,
@@ -206,34 +141,21 @@ class RSSM(nn.Module):
         prev_action: torch.Tensor,
         embedding: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, Normal, Normal]:
-        """One step of RSSM during training (with observations).
+        """One RSSM step during *training* (observations available).
 
-        Combines recurrent step + posterior + prior.
+        Compose the three sub-models:
+          1. h = recurrent_step(prev_h, prev_z, prev_action)
+          2. z_post, post_dist = posterior(h, embedding)
+          3. _,      prior_dist = prior(h)
 
-        Args:
-            prev_h: (batch, deterministic_dim)
-            prev_z: (batch, stochastic_dim)
-            prev_action: (batch, action_dim) -- one-hot
-            embedding: (batch, embedding_dim) -- current observation encoded
-
-        Returns:
-            h: new deterministic state
-            z: sampled from posterior (used for reconstruction)
-            posterior_dist: for KL loss
-            prior_dist: for KL loss
+        Return `(h, z_post, post_dist, prior_dist)`. We keep `z` from the
+        posterior (it has the real observation) for reconstruction; the prior
+        distribution is only used for the KL loss term.
         """
-        # TODO(human): Compose the three sub-models.
-        #
-        # Steps:
-        #   1. h = self.recurrent_step(prev_h, prev_z, prev_action)
-        #   2. z_post, post_dist = self.posterior(h, embedding)
-        #   3. _, prior_dist = self.prior(h)
-        #   4. Return (h, z_post, post_dist, prior_dist)
-        #
-        # Note: we use z from posterior (not prior) during training because
-        # the posterior has access to the real observation and is more accurate.
-        # The prior is only used for the KL loss term here.
-        raise NotImplementedError("TODO(human): observe step")
+        # TODO(human): compose recurrent_step + posterior + prior.
+        raise NotImplementedError("Implement RSSM.observe_step()")
+
+    # -- TODO 5 ---------------------------------------------------------------
 
     def imagine_step(
         self,
@@ -241,26 +163,15 @@ class RSSM(nn.Module):
         prev_z: torch.Tensor,
         action: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """One step of RSSM during imagination (NO observations).
+        """One RSSM step during *imagination* (no observations).
 
-        Uses the prior (transition model) instead of posterior.
+        Same recurrent step, but the stochastic state comes from the prior,
+        not the posterior:
+          1. h = recurrent_step(prev_h, prev_z, action)
+          2. z, _ = prior(h)
 
-        Args:
-            prev_h: (batch, deterministic_dim)
-            prev_z: (batch, stochastic_dim)
-            action: (batch, action_dim) -- one-hot
-
-        Returns:
-            h: new deterministic state
-            z: sampled from prior
+        This is the core of "dreaming": advance the world model forward using
+        only the learned dynamics.
         """
-        # TODO(human): Implement imagination step.
-        #
-        # Steps:
-        #   1. h = self.recurrent_step(prev_h, prev_z, action)
-        #   2. z, _ = self.prior(h)
-        #   3. Return (h, z)
-        #
-        # This is the core of "dreaming": advance the world model forward
-        # using only the learned dynamics, with no real observations.
-        raise NotImplementedError("TODO(human): imagine step")
+        # TODO(human): compose recurrent_step + prior.
+        raise NotImplementedError("Implement RSSM.imagine_step()")

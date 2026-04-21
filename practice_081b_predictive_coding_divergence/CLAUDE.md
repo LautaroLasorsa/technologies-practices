@@ -108,53 +108,51 @@ Each phase uses the SAME trained PCN weights in a different inference mode -- de
 
 ## Instructions
 
-### Phase 1: Generative Mode (~20 min)
+### Phase 1: Setup (~5 min)
 
-**File:** `src/generative_inference.py`
+1. Install Python dependencies: `uv sync`
+2. Sanity check your environment: `uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available())"`
+3. All exercises use the PCN/CorticalLayer from Session A (pre-built here in `src/predictive_coding_network.py` and `src/cortical_layer.py`) -- no need to re-implement them.
 
-**Concepts:** A PCN is a generative model. By clamping the output layer to a desired label and leaving the sensory layer free, inference "dreams" an image. This is impossible with a standard MLP -- it has no generative direction. You will implement the modified inference loop where layer 0 is free (only receives top-down corrections, no bottom-up errors since there is no layer below it).
+### Phase 2: Generative Mode (~20 min)
 
-**TODO(human) tasks:**
-- Implement `generate_from_label()` -- Initialize activities randomly, clamp the output to a one-hot label, run inference with the sensory layer free. The key difference from training inference: layer 0 is updated by top-down signals only (no bottom-up term).
+1. Open `src/generative_inference.py`.
+2. **TODO 1 -- `_sensory_layer_update()`**: Compute the new value for `activities[0]` using only the top-down term (there is no layer below a_0 to supply a bottom-up error). This is the piece that distinguishes generative inference from training inference.
+3. **TODO 2 -- `generate_from_label()`**: Orchestrate the loop. Initialise all activities randomly, clamp `activities[-1] = one_hot(label)`, then for each step compute errors, update hidden layers l = 1..L-2 with the standard rule, and update `activities[0]` via TODO 1. Keep `activities[-1]` clamped.
+4. Run: `uv run python src/experiments.py --experiment generative`
+5. Inspect `outputs/generated_images.png` -- different random inits should produce different variations of the same class. Key question: what would change in your loop if `activations[-1]` was also free?
 
-### Phase 2: Missing Data Inference (~25 min)
+### Phase 3: Missing Data Inference (~25 min)
 
-**File:** `src/missing_data.py`
+1. Open `src/missing_data.py`.
+2. **TODO 1 -- `_masked_sensory_update()`**: Same top-down-only update as generative mode for `activities[0]`, but apply it only to missing pixels. Observed pixels stay clamped to `partial_input` via `mask * partial_input + (1 - mask) * (...)`.
+3. **TODO 2 -- `infer_missing_data()`**: Drive inference with three modifications vs training: hidden layers update as usual, `activities[-1]` is FREE (bottom-up only), and `activities[0]` uses TODO 1. Return `(reconstructed, predicted_labels)`.
+4. Run: `uv run python src/experiments.py --experiment missing-data`
+5. Inspect `outputs/missing_data.png`. Key question: why does the classification stay reasonable even under heavy occlusion?
 
-**Concepts:** When pixels are partially occluded, the PCN can simultaneously reconstruct missing pixels AND classify the image -- using inference with partial clamping. Observed pixels are clamped in the sensory layer; missing pixels and the output layer are free. This is amodal completion -- the neural mechanism behind seeing "through" occlusion.
+### Phase 4: Precision Weighting (~25 min)
 
-**TODO(human) tasks:**
-- Implement `infer_missing_data()` -- Three-way modification of standard inference: (1) sensory layer is partially clamped via mask, (2) output layer is free for classification, (3) hidden layers update normally. The mask determines which pixels are observed (fixed) vs missing (free to be inferred).
+1. Open `src/precision_weighting.py`.
+2. **TODO 1 -- `precision_weighted_energy()`**: Same loop as standard free energy, but multiply each squared error by the per-neuron precision before summing. Uniform precision must recover the standard energy.
+3. **TODO 2 -- `precision_weighted_inference()`**: Copy the structure of `PredictiveCodingNetwork.run_inference_phase`, but multiply each epsilon by `precisions[l]` before plugging it into the bottom-up and top-down update terms. Track the precision-weighted energy (not the standard one) each step.
+4. Run: `uv run python src/experiments.py --experiment precision`
+5. Inspect `outputs/precision_robustness.png`. Key question: which noise level shows the biggest gap between precision-weighted and standard PCN, and why?
 
-### Phase 3: Precision Weighting (~25 min)
+### Phase 5: Continual Learning (~20 min)
 
-**File:** `src/precision_weighting.py`
+1. Open `src/continual_learning.py`.
+2. **TODO -- `train_pcn_on_loader()`**: For each epoch iterate the loader, flatten images, build a one-hot target via `create_one_hot`, and call `pcn.train_step(...)`. This is the only "hot loop" in the experiment -- the orchestrator, evaluation, and forgetting metric are scaffolded.
+3. Run: `uv run python src/experiments.py --experiment continual`
+4. Inspect `outputs/continual_learning.png`. Key question: does your PCN really forget less than the backprop MLP, and can you explain why from the local-Hebbian perspective?
 
-**Concepts:** Precision (inverse variance) modulates how strongly each prediction error drives inference. This is the proposed neural mechanism for attention. High precision on a layer means its errors strongly influence updates; low precision means its errors are downweighted. The energy function becomes `E = (1/2) * sum(pi * epsilon^2)`.
+### Phase 6: Retinotopic Cortical Layers (~30 min)
 
-**TODO(human) tasks:**
-- Implement `precision_weighted_energy()` -- Standard energy with per-neuron precision scaling. Uniform precision recovers standard free energy.
-- Implement `precision_weighted_inference()` -- Modified inference dynamics where each epsilon is scaled by its precision before being used in the update equations.
-
-### Phase 4: Continual Learning (~20 min)
-
-**File:** `src/continual_learning.py`
-
-**Concepts:** Train on task 1 (Fashion-MNIST classes 0-4), then task 2 (classes 5-9), measure task 1 retention. PCNs are hypothesized to forget less because local Hebbian updates only affect synapses with non-zero prediction errors -- unused pathways are preserved. Compare against backprop MLP on the same protocol.
-
-**TODO(human) tasks:**
-- Implement `continual_learning_experiment()` -- Train on task 1, measure baseline, train on task 2 without resetting, measure both tasks, compute forgetting metric. The experiment runner handles the backprop comparison automatically.
-
-### Phase 5: Retinotopic Cortical Layers (~30 min)
-
-**File:** `src/retinotopic_layer.py`
-
-**Concepts:** Replace fully-connected layers with convolutions, mirroring the retinotopic organization of the visual cortex. V1 neurons have local receptive fields (= conv filters). Top-down prediction uses `Conv2d`, the transpose weight operation uses `ConvTranspose2d`, and Hebbian updates use cross-correlation between input activity and error signal.
-
-**TODO(human) tasks:**
-- Implement `compute_prediction()` -- Conv2d followed by activation function (the conv analogue of `f(a @ W^T)`)
-- Implement `compute_prediction_error()` -- Pointwise subtraction (same as FC, but on 4D tensors)
-- Implement `hebbian_update()` -- Cross-correlation between input activity and modulated error signal (the conv analogue of the outer product weight update)
+1. Open `src/retinotopic_layer.py`.
+2. **TODO 1 -- `compute_prediction()`**: Conv analogue of `f(a @ W^T)`. Use `F.conv2d(activity, self.synaptic_weights, stride=..., padding=...)` then apply `self.activation_fn`.
+3. **TODO 2 -- `compute_prediction_error()`**: Pointwise `actual - predicted` on 4D tensors (identical to the FC case).
+4. **TODO 3 -- `hebbian_update()`**: Conv analogue of the outer-product weight update -- cross-correlation between input activity and error signal. A loop-over-batch implementation using `F.conv2d` with rearranged dims is clear enough; vectorising is optional.
+5. Run: `uv run python src/experiments.py --experiment retinotopic`
+6. Inspect `outputs/retinotopic.png` and the printed output shapes. Key question: why does `stride=2` correspond to higher cortical areas having lower spatial resolution?
 
 ## Motivation
 
@@ -168,20 +166,55 @@ Session A established that PCNs match backprop's classification accuracy using b
 
 ## Commands
 
-| Phase | Command | Description |
-|-------|---------|-------------|
-| Setup | `uv sync` | Install dependencies |
-| All | `uv run pytest tests/ -v` | Run all tests |
-| Phase 1 | `uv run pytest tests/test_generative.py -v` | Test generative mode |
-| Phase 1 | `uv run python src/experiments.py --experiment generative` | Generate images from labels |
-| Phase 2 | `uv run pytest tests/test_missing_data.py -v` | Test missing data inference |
-| Phase 2 | `uv run python src/experiments.py --experiment missing-data` | Missing data reconstruction |
-| Phase 3 | `uv run pytest tests/test_precision.py -v` | Test precision weighting |
-| Phase 3 | `uv run python src/experiments.py --experiment precision` | Noise robustness experiment |
-| Phase 4 | `uv run pytest tests/test_continual_learning.py -v` | Test continual learning |
-| Phase 4 | `uv run python src/experiments.py --experiment continual` | Continual learning comparison |
-| Phase 5 | `uv run pytest tests/test_retinotopic.py -v` | Test convolutional layers |
-| Phase 5 | `uv run python src/experiments.py --experiment retinotopic` | Conv PCN on CIFAR-10 |
+All commands are run from `practice_081b_predictive_coding_divergence/`.
+
+### Setup
+
+| Command | Description |
+|---------|-------------|
+| `uv sync` | Install Python dependencies (torch, torchvision, matplotlib) |
+| `uv run pytest tests/ -v` | Run all tests across every phase |
+
+### Phase 2: Generative Mode
+
+| Command | Description |
+|---------|-------------|
+| `uv run pytest tests/test_generative.py -v` | Verify `_sensory_layer_update` and `generate_from_label` |
+| `uv run python src/experiments.py --experiment generative` | Train/load PCN and generate images for every class -> `outputs/generated_images.png` |
+
+### Phase 3: Missing Data Inference
+
+| Command | Description |
+|---------|-------------|
+| `uv run pytest tests/test_missing_data.py -v` | Verify `_masked_sensory_update` and `infer_missing_data` |
+| `uv run python src/experiments.py --experiment missing-data` | Reconstruct masked Fashion-MNIST images -> `outputs/missing_data.png` |
+
+### Phase 4: Precision Weighting
+
+| Command | Description |
+|---------|-------------|
+| `uv run pytest tests/test_precision.py -v` | Verify `precision_weighted_energy` and `precision_weighted_inference` |
+| `uv run python src/experiments.py --experiment precision` | Noise-robustness sweep (standard vs precision-weighted) -> `outputs/precision_robustness.png` |
+
+### Phase 5: Continual Learning
+
+| Command | Description |
+|---------|-------------|
+| `uv run pytest tests/test_continual_learning.py -v` | Verify `train_pcn_on_loader` via `continual_learning_experiment` |
+| `uv run python src/experiments.py --experiment continual` | Task1 -> Task2 comparison of PCN vs backprop MLP -> `outputs/continual_learning.png` |
+
+### Phase 6: Retinotopic Cortical Layers
+
+| Command | Description |
+|---------|-------------|
+| `uv run pytest tests/test_retinotopic.py -v` | Verify `compute_prediction`, `compute_prediction_error`, `hebbian_update` |
+| `uv run python src/experiments.py --experiment retinotopic` | Smoke-test conv PCN forward/error/Hebbian on CIFAR-10 shapes -> `outputs/retinotopic.png` |
+
+### All Experiments
+
+| Command | Description |
+|---------|-------------|
+| `uv run python src/experiments.py --experiment all` | Run every experiment end-to-end |
 
 ## State
 
