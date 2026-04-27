@@ -1,0 +1,11 @@
+[project]
+name = "practice-084-recursive-language-models"
+version = "0.1.0"
+description = "Recursive Language Models — LM-as-tool inside a Python REPL with bounded recursion"
+requires-python = ">=3.12"
+dependencies = [
+    "litellm>=1.50",
+    "ollama>=0.4",
+    "pydantic>=2.6",
+    "tiktoken>=0.7",
+]
