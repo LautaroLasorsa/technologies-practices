@@ -1,19 +1,18 @@
-"""
-Phase 4 — Metrics & Datasets: Preparing for Optimization
-=========================================================
-This script teaches two prerequisites for DSPy optimization:
-1. Metric functions — how to measure if a program's output is correct
-2. dspy.Example datasets — the standard data format for train/val splits
+"""Phase 4 — Metrics and ``dspy.Example`` datasets, the inputs to optimization.
 
-Metrics guide the optimizer: without a good metric, BootstrapFewShot cannot
-distinguish useful demonstrations from useless ones.
+Two prerequisites for any DSPy optimizer:
 
-Run: uv run python src/04_metrics_datasets.py
+1. A **metric function** — scores a single prediction. Without a good
+   metric the optimizer can't tell useful demonstrations from useless ones.
+2. A **dataset** of ``dspy.Example`` objects with ``.with_inputs(...)``
+   marking which fields are inputs vs labels.
+
+Run: uv run python -m src._04_metrics_datasets
 """
 
 import dspy
 
-from llm_config import configure_lm
+from .llm_config import configure_lm
 
 
 # -- Setup: configure LM ----------------------------------------------------
@@ -26,7 +25,7 @@ def configure_dspy() -> None:
 # Each entry has a review (input) and a gold sentiment label (expected output).
 # This simulates a small labeled dataset you'd have in a real project.
 
-RAW_DATA = [
+RAW_DATA: list[dict[str, str]] = [
     {"review": "Absolutely love this product! Works perfectly and arrived early.", "sentiment": "positive"},
     {"review": "Complete waste of money. Broke after two days of normal use.", "sentiment": "negative"},
     {"review": "It's okay. Does what it says but nothing special.", "sentiment": "neutral"},
@@ -77,11 +76,10 @@ TRAIN_SIZE = 5
 #     mode. You can use this to apply stricter filtering during bootstrap.
 #
 # What to do:
-#   1. Define sentiment_metric(example, pred, trace=None) -> float
-#   2. Compare pred.sentiment (lowercased, stripped) with example.sentiment
+#   1. Compare pred.sentiment (lowercased, stripped) with example.sentiment
 #      (lowercased, stripped). Case-insensitive matching is important because
 #      LMs often capitalize or add whitespace unpredictably.
-#   3. Return 1.0 if they match, 0.0 if they don't.
+#   2. Return 1.0 if they match, 0.0 if they don't.
 #
 # Design consideration: This is an exact-match metric — the simplest kind.
 # For production, you might use fuzzy matching, semantic similarity, or
@@ -89,7 +87,7 @@ TRAIN_SIZE = 5
 # for learning how metrics work in DSPy.
 # ---------------------------------------------------------------------------
 def sentiment_metric(example: dspy.Example, pred: dspy.Prediction, trace=None) -> float:
-    raise NotImplementedError("TODO(human): Implement sentiment metric")
+    raise NotImplementedError("TODO(human): Implement case-insensitive exact-match metric")
 
 
 # ---------------------------------------------------------------------------
@@ -110,34 +108,37 @@ def sentiment_metric(example: dspy.Example, pred: dspy.Prediction, trace=None) -
 #   1. Convert RAW_DATA into a list of dspy.Example objects:
 #        example = dspy.Example(
 #            review=item["review"],
-#            sentiment=item["sentiment"]
+#            sentiment=item["sentiment"],
 #        ).with_inputs("review")
 #
 #   2. Split into train_set (first TRAIN_SIZE examples) and val_set (rest).
 #      We use a small train set (5) because BootstrapFewShot works well
 #      with few examples — it's generating demonstrations, not fine-tuning.
 #
-#   3. Return (train_set, val_set) from a function called create_datasets().
-#
-#   4. Print the sizes and a sample example from each set to verify.
+#   3. Return (train_set, val_set).
 # ---------------------------------------------------------------------------
 def create_datasets() -> tuple[list[dspy.Example], list[dspy.Example]]:
-    raise NotImplementedError("TODO(human): Create train/val datasets")
+    raise NotImplementedError("TODO(human): Build dspy.Example lists and split train/val")
 
+
+# -- Demo helpers (scaffolded) ----------------------------------------------
 
 def test_metric(val_set: list[dspy.Example]) -> None:
     """Quick sanity check: run the metric on a few mock predictions."""
     print("\n--- Metric Sanity Check ---")
-
-    # Simulate a correct prediction
     correct_pred = dspy.Prediction(sentiment=val_set[0].sentiment)
-    score = sentiment_metric(val_set[0], correct_pred)
-    print(f"  Correct prediction score: {score} (expected 1.0)")
+    print(f"  Correct prediction score: {sentiment_metric(val_set[0], correct_pred)} (expected 1.0)")
 
-    # Simulate an incorrect prediction
     wrong_pred = dspy.Prediction(sentiment="wrong_label")
-    score = sentiment_metric(val_set[0], wrong_pred)
-    print(f"  Incorrect prediction score: {score} (expected 0.0)")
+    print(f"  Incorrect prediction score: {sentiment_metric(val_set[0], wrong_pred)} (expected 0.0)")
+
+
+def _print_dataset_summary(train_set: list[dspy.Example], val_set: list[dspy.Example]) -> None:
+    print(f"  Train size: {len(train_set)}")
+    print(f"  Val size:   {len(val_set)}")
+    print("\n  Sample train example:")
+    print(f"    review:    {train_set[0].review[:60]}...")
+    print(f"    sentiment: {train_set[0].sentiment}")
 
 
 def main() -> None:
@@ -147,11 +148,7 @@ def main() -> None:
     print("PART 1: Create Datasets")
     print("=" * 70)
     train_set, val_set = create_datasets()
-    print(f"  Train size: {len(train_set)}")
-    print(f"  Val size:   {len(val_set)}")
-    print(f"\n  Sample train example:")
-    print(f"    review:    {train_set[0].review[:60]}...")
-    print(f"    sentiment: {train_set[0].sentiment}")
+    _print_dataset_summary(train_set, val_set)
 
     print("\n" + "=" * 70)
     print("PART 2: Test Metric")

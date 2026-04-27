@@ -155,44 +155,47 @@ Advanced DSPy features for building robust LLM pipelines. You'll implement RAG w
 
 ## Instructions
 
+Source files use a leading underscore (`_NN_*.py`) so they form valid Python identifiers — run them as modules from the practice root:
+
+```
+uv run python -m src._01_ingest_documents
+```
+
+Each TODO is a small, focused piece (~5–25 lines). Comments inside `TODO` blocks contain critical learning material — do not skim past them.
+
 ### Phase 1: Setup & Document Ingestion (~15 min)
 
-Start Docker (Ollama + Qdrant), pull model, init project.
+Start Docker (Ollama + Qdrant), pull the model, run `uv sync`, run `_00_verify_setup`.
 
-**Exercise 1 — Ingest Documents into Qdrant** (`src/01_ingest_documents.py`, TODO):
-Loading documents into a vector database is the foundation of any RAG system. This exercise teaches the full ingestion pipeline: read documents, generate embeddings with sentence-transformers, and upsert into Qdrant with proper payloads. Understanding this process is essential because the quality of your embeddings and payload structure directly determines retrieval quality downstream.
+1. **`_01_ingest_documents.create_collection`** — call `client.recreate_collection(...)` with `VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE)`. Teaches that vector size MUST match the embedder's output dimension and distance MUST match what the retriever uses at query time.
+2. **`_01_ingest_documents.embed_texts`** — extract `text` fields and call `embedder.encode(texts)`. Teaches that the same embedder must be used for documents and queries so they live in the same semantic space.
+3. **`_01_ingest_documents.upsert_points`** — wrap each `(id, vector, payload)` triple in a `PointStruct` and `client.upsert(...)`. Teaches the payload-as-passage idiom (the retriever returns the payload's `text`).
 
 ### Phase 2: Basic RAG Pipeline (~20 min)
 
-**Exercise 2 — Custom QdrantRetriever** (`src/02_basic_rag.py`, TODO #1):
-DSPy's `dspy.Retrieve` expects a configured retrieval model backend, but for custom vector databases you need to build your own retriever. This exercise teaches how to query Qdrant with a sentence-transformers embedding, convert results into `dspy.Prediction(passages=[...])`, and integrate it into a DSPy program. This is the bridge between DSPy's module system and any external vector store.
-
-**Exercise 3 — BasicRAG Module** (`src/02_basic_rag.py`, TODO #2):
-Composing retrieval with generation is the core RAG pattern. This exercise teaches how to chain your custom retriever with `ChainOfThought` in a single `dspy.Module`. The `forward()` method defines the pipeline: retrieve context -> generate answer. Once composed as a module, the entire pipeline becomes optimizable by DSPy's compilers.
+4. **`_02_basic_rag.QdrantRetriever.forward`** — embed the query, call `client.query_points(...)`, return `dspy.Prediction(passages=[hit.payload["text"] for hit in results.points])`. Teaches the bridge between DSPy modules and any external vector store.
+5. **`_02_basic_rag.BasicRAG.forward`** — call `self.retrieve(query=question)` then `self.generate(context=..., question=...)`. Teaches the canonical Retrieve-then-Generate composition that DSPy compilers can optimize end-to-end.
 
 ### Phase 3: Multi-Hop Reasoning (~20 min)
 
-**Exercise 4 — MultiHopRAG Module** (`src/03_multihop_rag.py`, TODO):
-Single-hop retrieval fails when the answer requires synthesizing information from multiple documents. This exercise teaches the multi-hop pattern: hop 1 retrieves initial context and extracts key entities, hop 2 builds a refined query from those entities and retrieves additional passages, then a final ChainOfThought synthesizes all context into an answer. This is how production RAG systems handle complex questions.
+6. **`_03_multihop_rag.MultiHopRAG.hop1_retrieve`** — initial retrieval against the original question. Teaches the entry point of iterative retrieval.
+7. **`_03_multihop_rag.MultiHopRAG.extract_and_refine`** — call `self.extract(context=hop1_passages, question=question)` to identify entities and propose a refined query. Teaches that the LM, not the developer, formulates the next query — and that ChainOfThought helps it reason about what's missing.
+8. **`_03_multihop_rag.MultiHopRAG.hop2_and_synthesize`** — second retrieval with the refined query, dedup-merge passages, then `self.synthesize(...)`. Teaches passage merging + final synthesis across both hops.
 
 ### Phase 4: Output Refinement (~20 min)
 
-**Exercise 5 — Reward Functions & Refine** (`src/04_refinement.py`, TODO #1):
-Reward functions define what "good output" means programmatically. This exercise teaches how to write reward functions that check citation quality, answer length, and factual grounding — then wrap your RAG module with `dspy.Refine` so it automatically self-corrects when the reward is below threshold. Understanding this pattern is key to building LLM pipelines with quality guarantees.
-
-**Exercise 6 — Handling Unanswerable Questions** (`src/04_refinement.py`, TODO #2):
-Real RAG systems must gracefully handle questions that fall outside the knowledge base. This exercise tests your refinement pipeline with intentionally unanswerable questions — observing how the reward function detects hallucination and how Refine's feedback loop steers the model toward honest "I don't know" responses.
+9. **`_04_refinement.citation_and_length_reward`** — score 0.0/0.5/1.0 based on a non-trivial-length floor and a 100-word cap. Teaches how to encode quality criteria as a numeric signal that `dspy.Refine` can drive.
+10. **`_04_refinement.wrap_with_refine`** — wrap a fresh RAG pipeline with `dspy.Refine(module=..., N=3, reward_fn=..., threshold=1.0)`. Teaches the retry-with-feedback loop on top of an existing module.
+11. **`_04_refinement.no_hallucination_reward`** — return `1.0` iff the answer contains an "I don't know" / uncertainty phrase. Teaches encoding *honesty* as a reward signal — directly attacking the #1 RAG failure mode (hallucination).
+12. **`_04_refinement.wrap_honest_rag`** — second `dspy.Refine` wrapper using `no_hallucination_reward`. Teaches that the same Refine machinery generalizes to different quality contracts just by swapping the reward.
 
 ### Phase 5: MIPROv2 Optimization & Typed Predictors (~25 min)
 
-**Exercise 7 — MIPROv2 Optimization** (`src/05_mipro_typed.py`, TODO #1):
-MIPROv2 represents state-of-the-art prompt optimization. This exercise teaches how to optimize your RAG pipeline with Bayesian search over instructions + demonstrations jointly. Comparing MIPROv2 results with BootstrapFewShot reveals the power of joint optimization.
-
-**Exercise 8 — Typed Predictor with Pydantic** (`src/05_mipro_typed.py`, TODO #2):
-Typed predictors enforce structured output at the signature level. This exercise teaches how to define a Pydantic model as an output field, so DSPy validates the LM's JSON output against your schema. This is essential for production systems where downstream code expects specific types.
-
-**Exercise 9 — Save & Load Compiled Program** (`src/05_mipro_typed.py`, TODO #3):
-Compiled programs contain optimized prompts and demonstrations. This exercise teaches program serialization — saving a compiled program to disk and loading it back. In production, you compile once (expensive) and deploy the saved program (cheap).
+13. **`_05_mipro_typed.bootstrap_compile`** — `BootstrapFewShot(metric=..., max_bootstrapped_demos=2, max_labeled_demos=2).compile(...)`. Teaches the simpler optimizer that only learns demonstrations.
+14. **`_05_mipro_typed.mipro_compile`** — `MIPROv2(metric=..., auto="light", num_threads=1, verbose=True).compile(program, trainset=..., valset=...)`. Teaches Bayesian joint optimization of instructions + demonstrations and why it beats BootstrapFewShot.
+15. **`_05_mipro_typed.build_typed_rag`** — define `TypedRAG(dspy.Module)` using `dspy.ChainOfThought(TypedQA)`, where `TypedQA` outputs the `StructuredAnswer` Pydantic model. Teaches how the JSONAdapter enforces a schema as the contract between LM and downstream code.
+16. **`_05_mipro_typed.save_program`** — call `program.save(str(SAVED_PROGRAM_PATH))`. Teaches that only learned parameters (prompts + demos) are persisted, not module structure.
+17. **`_05_mipro_typed.load_program`** — build a fresh pipeline via `create_rag_pipeline()` and call `.load(path=...)`. Teaches the compile-once / deploy-many separation that makes optimized programs versionable artifacts.
 
 ## Motivation
 
@@ -254,37 +257,37 @@ All commands run from `practice_030b_dspy_advanced/`.
 | Command | Description |
 |---------|-------------|
 | `uv sync` | Install Python dependencies from pyproject.toml |
-| `uv run python src/00_verify_setup.py` | Verify DSPy + Qdrant connection |
+| `uv run python -m src._00_verify_setup` | Verify DSPy + Qdrant connection |
 
 ### Phase 1: Document Ingestion
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/01_ingest_documents.py` | Load documents into Qdrant with embeddings |
+| `uv run python -m src._01_ingest_documents` | Run TODOs 1-3: create collection, embed texts, upsert points |
 
 ### Phase 2: Basic RAG
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/02_basic_rag.py` | Run basic RAG pipeline with custom Qdrant retriever |
+| `uv run python -m src._02_basic_rag` | Run TODOs 4-5: QdrantRetriever.forward + BasicRAG.forward |
 
 ### Phase 3: Multi-Hop Reasoning
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/03_multihop_rag.py` | Run multi-hop reasoning with iterative retrieval |
+| `uv run python -m src._03_multihop_rag` | Run TODOs 6-8: hop1, extract+refine, hop2+synthesize |
 
 ### Phase 4: Output Refinement
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/04_refinement.py` | Test Refine/BestOfN with reward functions |
+| `uv run python -m src._04_refinement` | Run TODOs 9-12: citation/length reward + Refine, no-hallucination reward + Refine |
 
 ### Phase 5: MIPROv2 & Typed Predictors
 
 | Command | Description |
 |---------|-------------|
-| `uv run python src/05_mipro_typed.py` | Run MIPROv2 optimization and typed predictors |
+| `uv run python -m src._05_mipro_typed` | Run TODOs 13-17: BootstrapFewShot + MIPROv2 compile, TypedRAG, save & load |
 
 ## References
 

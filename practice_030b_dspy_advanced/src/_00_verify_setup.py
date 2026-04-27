@@ -1,17 +1,19 @@
-"""
-Phase 0 -- Verify Setup: DSPy + Ollama + Qdrant Connection
-============================================================
-This script verifies that DSPy can communicate with the local Ollama instance
-and that the Qdrant vector database is reachable.
+"""Phase 0 -- Verify Setup: DSPy + LLM provider + Qdrant.
 
-Run: uv run python src/00_verify_setup.py
-Prereq: docker compose up -d && docker exec ollama ollama pull qwen2.5:7b
+Sanity check that DSPy can talk to the configured LLM and that the local
+Qdrant instance is reachable.  No TODO(human) — this file is scaffolded.
+
+Run:
+    uv run python -m src._00_verify_setup
+
+Prereq:
+    docker compose up -d && docker exec ollama ollama pull qwen2.5:7b
 """
 
 import dspy
 from qdrant_client import QdrantClient
 
-from llm_config import LLM_MODEL, LLM_PROVIDER, configure_lm
+from .llm_config import LLM_MODEL, LLM_PROVIDER, configure_lm
 
 
 QDRANT_HOST = "localhost"
@@ -19,9 +21,9 @@ QDRANT_PORT = 6333
 
 
 def verify_dspy_connection() -> None:
-    """Configure DSPy with local Ollama and run a test query."""
-    print("Testing DSPy + Ollama connection...")
-    lm = configure_lm()
+    """Configure DSPy with the selected provider and run a test query."""
+    print("Testing DSPy + LLM connection...")
+    configure_lm()
 
     predictor = dspy.Predict("question -> answer")
     result = predictor(question="What is the third planet from the Sun?")

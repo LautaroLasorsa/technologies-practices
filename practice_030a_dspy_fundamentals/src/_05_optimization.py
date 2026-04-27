@@ -1,24 +1,26 @@
-"""
-Phase 5 — BootstrapFewShot Optimization: Compile & Evaluate
-=============================================================
-This script brings everything together: compile the SentimentAnalyzer
-with BootstrapFewShot, then evaluate baseline vs optimized performance.
+"""Phase 5 — BootstrapFewShot: compile, evaluate, inspect demos.
 
-BootstrapFewShot works by:
-1. Running a teacher LM on training examples
-2. Filtering traces with your metric (keeping only correct ones)
-3. Injecting the best traces as few-shot demonstrations into the student
+Brings everything together. ``BootstrapFewShot``:
 
-The result is a compiled program that performs better because it has
-curated, task-specific examples in its prompt.
+1. Runs the program (as "teacher") on each training example.
+2. Filters traces with your metric (keeping only correct ones).
+3. Injects the surviving traces into the student program as few-shot demos.
 
-Run: uv run python src/05_optimization.py
+The compiled student then performs better because its prompts now contain
+curated, task-specific examples.
+
+Run: uv run python -m src._05_optimization
+
+NOTE: the SentimentAnalyzer / sentiment_metric / create_datasets stubs
+below are intentionally separate from phases 3 and 4 so this file is
+runnable on its own. After you finish phases 3–4, paste your
+implementations into the matching stubs here.
 """
 
 import dspy
 from dspy.teleprompt import BootstrapFewShot
 
-from llm_config import configure_lm
+from .llm_config import configure_lm
 
 
 # -- Setup: configure LM ----------------------------------------------------
@@ -28,10 +30,8 @@ def configure_dspy() -> None:
 
 
 # -- Reuse SentimentAnalyzer and data from previous phases -------------------
-# NOTE: After you complete phases 3 and 4, copy your implementations here
-# or import them. For now, we provide minimal stubs that you'll replace.
 
-RAW_DATA = [
+RAW_DATA: list[dict[str, str]] = [
     {"review": "Absolutely love this product! Works perfectly and arrived early.", "sentiment": "positive"},
     {"review": "Complete waste of money. Broke after two days of normal use.", "sentiment": "negative"},
     {"review": "It's okay. Does what it says but nothing special.", "sentiment": "neutral"},
@@ -63,35 +63,31 @@ TRAIN_SIZE = 5
 
 
 class SentimentAnalyzer(dspy.Module):
-    """Stub — replace with your implementation from Phase 3."""
+    """Stub — paste your Phase 3 implementation here."""
 
     def __init__(self) -> None:
         super().__init__()
-        # TODO: Copy your __init__ from 03_custom_module.py after completing it
         raise NotImplementedError(
-            "Copy your SentimentAnalyzer implementation from 03_custom_module.py"
+            "Copy your SentimentAnalyzer.__init__ from _03_custom_module.py"
         )
 
     def forward(self, review: str) -> dspy.Prediction:
-        # TODO: Copy your forward() from 03_custom_module.py after completing it
         raise NotImplementedError(
-            "Copy your SentimentAnalyzer implementation from 03_custom_module.py"
+            "Copy your SentimentAnalyzer.forward from _03_custom_module.py"
         )
 
 
 def sentiment_metric(example: dspy.Example, pred: dspy.Prediction, trace=None) -> float:
-    """Stub — replace with your implementation from Phase 4."""
-    # TODO: Copy your metric from 04_metrics_datasets.py after completing it
+    """Stub — paste your Phase 4 metric here."""
     raise NotImplementedError(
-        "Copy your sentiment_metric implementation from 04_metrics_datasets.py"
+        "Copy your sentiment_metric from _04_metrics_datasets.py"
     )
 
 
 def create_datasets() -> tuple[list[dspy.Example], list[dspy.Example]]:
-    """Stub — replace with your implementation from Phase 4."""
-    # TODO: Copy your dataset creation from 04_metrics_datasets.py after completing it
+    """Stub — paste your Phase 4 dataset builder here."""
     raise NotImplementedError(
-        "Copy your create_datasets implementation from 04_metrics_datasets.py"
+        "Copy your create_datasets from _04_metrics_datasets.py"
     )
 
 
@@ -113,71 +109,93 @@ def create_datasets() -> tuple[list[dspy.Example], list[dspy.Example]]:
 #   - max_rounds: how many optimization rounds to run (default 1 is fine).
 #
 # What to do:
-#   1. Create the optimizer:
+#   1. Build the optimizer:
 #        optimizer = BootstrapFewShot(
 #            metric=sentiment_metric,
 #            max_bootstrapped_demos=4,
 #            max_labeled_demos=8,
 #        )
-#   2. Create a baseline (unoptimized) SentimentAnalyzer instance.
-#   3. Compile the program:
+#   2. Build a baseline (unoptimized) SentimentAnalyzer instance.
+#   3. Compile a fresh student:
 #        optimized = optimizer.compile(
 #            student=SentimentAnalyzer(),
 #            trainset=train_set,
 #        )
-#   4. Return both baseline and optimized programs.
+#   4. Return (baseline, optimized).
 #
-# Note: compilation will take a minute — the teacher runs on every training
+# Compilation will take a minute — the teacher runs on every training
 # example and the metric filters the results. Watch the output for traces
 # being accepted/rejected.
 # ---------------------------------------------------------------------------
 def compile_program(
     train_set: list[dspy.Example],
 ) -> tuple[SentimentAnalyzer, SentimentAnalyzer]:
-    raise NotImplementedError("TODO(human): Compile with BootstrapFewShot")
+    raise NotImplementedError("TODO(human): Build optimizer, return (baseline, optimized)")
 
 
 # ---------------------------------------------------------------------------
-# TODO(human) #2 — Evaluate baseline vs optimized program
+# TODO(human) #2 — Score baseline vs optimized with dspy.Evaluate
 # ---------------------------------------------------------------------------
 # dspy.Evaluate runs your program on a dataset and computes the average
 # metric score. By comparing baseline vs optimized scores, you see the
 # concrete impact of BootstrapFewShot optimization.
 #
 # What to do:
-#   1. Create an evaluator:
+#   1. Build an evaluator:
 #        evaluator = dspy.Evaluate(
 #            devset=val_set,
 #            metric=sentiment_metric,
 #            num_threads=1,          # single thread for local Ollama
 #            display_progress=True,
 #        )
-#
-#   2. Evaluate the baseline (unoptimized) program:
-#        baseline_score = evaluator(baseline)
-#
-#   3. Evaluate the optimized program:
+#   2. Score both programs:
+#        baseline_score  = evaluator(baseline)
 #        optimized_score = evaluator(optimized)
-#
-#   4. Print both scores and the improvement delta.
-#
-#   5. Inspect what the optimizer learned — look at the optimized program's
-#      demos. For each predictor in the optimized program:
-#        for name, predictor in optimized.named_predictors():
-#            print(f"\nPredictor: {name}")
-#            print(f"  Number of demos: {len(predictor.demos)}")
-#            for i, demo in enumerate(predictor.demos):
-#                print(f"  Demo {i}: {demo}")
-#
-#      This reveals WHICH examples the optimizer selected as most useful.
-#      These auto-curated demos are what makes the optimized program better.
+#   3. Return (baseline_score, optimized_score). The wrapper below prints
+#      both numbers and the delta.
 # ---------------------------------------------------------------------------
+def score_programs(
+    baseline: SentimentAnalyzer,
+    optimized: SentimentAnalyzer,
+    val_set: list[dspy.Example],
+) -> tuple[float, float]:
+    raise NotImplementedError("TODO(human): Run dspy.Evaluate on baseline and optimized")
+
+
+# ---------------------------------------------------------------------------
+# TODO(human) #3 — Inspect what the optimizer learned
+# ---------------------------------------------------------------------------
+# Every compiled DSPy program exposes its sub-modules via
+# `named_predictors()`. Each predictor stores the demonstrations the
+# optimizer chose for it in `predictor.demos`. Reading these demos is
+# how you see WHICH examples BootstrapFewShot decided would best teach
+# the model your task — the auto-curated demos are what makes the
+# optimized program better.
+#
+# What to do:
+#   - Iterate `optimized.named_predictors()` and print, for each one:
+#       * the predictor name
+#       * len(predictor.demos)
+#       * each demo (a dspy.Example) on its own line
+# ---------------------------------------------------------------------------
+def print_optimized_demos(optimized: SentimentAnalyzer) -> None:
+    raise NotImplementedError("TODO(human): Walk named_predictors() and print demos")
+
+
+# -- Reporting glue (scaffolded) --------------------------------------------
+
 def evaluate_programs(
     baseline: SentimentAnalyzer,
     optimized: SentimentAnalyzer,
     val_set: list[dspy.Example],
 ) -> None:
-    raise NotImplementedError("TODO(human): Evaluate and compare programs")
+    baseline_score, optimized_score = score_programs(baseline, optimized, val_set)
+    print(f"\n  Baseline score:  {baseline_score:.3f}")
+    print(f"  Optimized score: {optimized_score:.3f}")
+    print(f"  Improvement:     {optimized_score - baseline_score:+.3f}")
+
+    print("\n--- Optimized program demos ---")
+    print_optimized_demos(optimized)
 
 
 def main() -> None:
@@ -187,17 +205,14 @@ def main() -> None:
     print("Phase 5: BootstrapFewShot Optimization")
     print("=" * 70)
 
-    # Step 1: Create datasets (reuse from Phase 4)
     print("\n--- Creating datasets ---")
     train_set, val_set = create_datasets()
     print(f"  Train: {len(train_set)} examples")
     print(f"  Val:   {len(val_set)} examples")
 
-    # Step 2: Compile
     print("\n--- Compiling with BootstrapFewShot ---")
     baseline, optimized = compile_program(train_set)
 
-    # Step 3: Evaluate
     print("\n--- Evaluating baseline vs optimized ---")
     evaluate_programs(baseline, optimized, val_set)
 
