@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-0%20%2F%20132%20practices-blue?style=flat-square" alt="Progress: 0/132">
+  <img src="https://img.shields.io/badge/Progress-0%20%2F%20133%20practices-blue?style=flat-square" alt="Progress: 0/133">
 </p>
 
 > **This is the `template` branch** — all exercises are in `not-started` state, ready for you to implement. Check out [`master`](../../tree/master) to see progress and completed practices.
@@ -591,6 +591,12 @@ python clean_all.py
 <tr>
   <td>083b</td>
   <td>Self-Evolving Persona Agent: ACE Loop & Self-Improvement</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>084</td>
+  <td>Recursive Language Models</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>—</td>
 </tr>

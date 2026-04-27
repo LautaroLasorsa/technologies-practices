@@ -1,0 +1,17 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Generated synthetic contexts (haystacks) and run logs
+data/
+runs/
+*.jsonl
+
+# Cached LM responses
+.rlm_cache/
