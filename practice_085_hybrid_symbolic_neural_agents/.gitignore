@@ -1,0 +1,18 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Generated outputs (schedules, run logs, golden-case snapshots)
+runs/
+out/
+*.jsonl
+*.json.bak
+
+# Cached LM responses
+.llm_cache/
