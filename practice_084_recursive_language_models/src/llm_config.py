@@ -41,9 +41,11 @@ Environment variables:
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass
 
 import litellm
+from litellm.exceptions import RateLimitError
 
 
 # LiteLLM expects ``{prefix}/{model}``.  ``ollama_chat`` is the chat-
@@ -63,6 +65,13 @@ _DEFAULT_URLS = {
     "lmstudio": "http://localhost:1234/v1",
     # Cloud providers: leave URL empty so LiteLLM uses its built-in default.
 }
+
+
+# Phase-4 sweeps make many sequential calls. Cloud providers will rate-limit
+# the harness if we just blast requests; bound the per-call wait at 120s and
+# retry up to 6 times on 429s with linear backoff (60s, 90s, ..., 210s).
+CHAT_TIMEOUT_S = 120
+MAX_RATE_LIMIT_RETRIES = 6
 
 
 @dataclass
@@ -113,11 +122,16 @@ def get_sub_lm() -> LMConfig:
 
 def chat(cfg: LMConfig, messages: list[dict], temperature: float = 0.0,
          max_tokens: int | None = None) -> str:
-    """One-shot chat completion. Returns the assistant string content."""
+    """One-shot chat completion. Returns the assistant string content.
+
+    Adds a per-call timeout and bounded retry-with-backoff on RateLimitError
+    so a long Phase-4 sweep can survive transient provider throttling.
+    """
     kwargs: dict = {
         "model": cfg.litellm_model,
         "messages": messages,
         "temperature": temperature,
+        "timeout": CHAT_TIMEOUT_S,
     }
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
@@ -125,5 +139,14 @@ def chat(cfg: LMConfig, messages: list[dict], temperature: float = 0.0,
         kwargs["api_key"] = cfg.api_key
     if cfg.base_url:
         kwargs["api_base"] = cfg.base_url
-    resp = litellm.completion(**kwargs)
-    return resp.choices[0].message.content or ""
+
+    for attempt in range(MAX_RATE_LIMIT_RETRIES):
+        try:
+            resp = litellm.completion(**kwargs)
+            return resp.choices[0].message.content or ""
+        except RateLimitError:
+            wait = 30 * (attempt + 2)
+            print(f"  [rate-limited] sleep {wait}s "
+                  f"(attempt {attempt + 1}/{MAX_RATE_LIMIT_RETRIES})")
+            time.sleep(wait)
+    raise RuntimeError("rate-limit retries exhausted")

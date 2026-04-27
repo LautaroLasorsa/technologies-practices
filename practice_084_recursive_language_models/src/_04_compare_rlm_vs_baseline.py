@@ -100,7 +100,9 @@ def _run_rlm(cfg_root: LMConfig, cfg_sub: LMConfig,
     chars = 0
     t0 = time.perf_counter()
     for p in problems:
-        chars += len(p.haystack)
+        # NB: the haystack itself is bound to the REPL var `context` and
+        # never enters any LM prompt — so we only count what the sub-LMs
+        # actually receive (tracker.n_input_chars).
         raw, tracker = run_root_agent(p.question, p.haystack,
                                       cfg_root=cfg_root, cfg_sub=cfg_sub)
         sub_calls += tracker.n_sub_calls
