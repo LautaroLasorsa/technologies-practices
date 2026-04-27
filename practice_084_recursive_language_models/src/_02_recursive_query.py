@@ -81,9 +81,20 @@ class CostTracker:
 # A literal sentinel is the cheapest way to do that.
 # ---------------------------------------------------------------------------
 def _sub_lm_answer(cfg: LMConfig, text: str, question: str) -> str:
-    raise NotImplementedError(
-        "TODO(human): build sub-LM messages and call chat(); return stripped string"
-    )
+    system_message = {
+        "role":"system",
+        "content":"You are a"
+                "focused reading assistant. Answer the question using only the"
+                "provided text. If the text doesn't contain the answer, reply"
+                "with the literal string 'NOT_FOUND'."
+    }
+
+    user_message = {
+        "role":"user",
+        "content": f"TEXT:{text}\n\n QUESTION: {question}"
+    }
+
+    return chat(cfg, messages = [system_message, user_message], max_tokens = DEFAULT_MAX_TOKENS_PER_CALL).strip()
 
 
 class DepthExceeded(RuntimeError):
@@ -109,9 +120,8 @@ class DepthExceeded(RuntimeError):
 # so a depth violation costs zero tokens.
 # ---------------------------------------------------------------------------
 def _check_depth(current_depth: int, max_depth: int) -> None:
-    raise NotImplementedError(
-        "TODO(human): raise DepthExceeded if current_depth >= max_depth"
-    )
+     if current_depth >= max_depth:
+         raise DepthExceeded(f"{current_depth} > {max_depth}")
 
 
 # ---------------------------------------------------------------------------
@@ -145,11 +155,12 @@ def query(
     current_depth: int = 0,
     max_depth: int = 1,
 ) -> str:
-    """Run `question` against `text` using a fresh sub-LM. Bounded recursion."""
-    raise NotImplementedError(
-        "TODO(human): orchestrate depth check + timing + sub-LM call + tracker.record"
-    )
-
+    _check_depth(current_depth, max_depth)
+    t0 = time.perf_counter()
+    result = _sub_lm_answer(cfg, text, question)
+    dt = time.perf_counter() - t0
+    tracker.record(depth = current_depth+1, in_chars=len(text),out_chars=len(result),dt=dt)
+    return result
 
 # -- Sanity demo (scaffolded) -----------------------------------------------
 

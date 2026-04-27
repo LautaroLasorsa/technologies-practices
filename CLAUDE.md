@@ -163,7 +163,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 082 | Discord Bot Engineering: Gateway, Interactions & UI Components | Python (discord.py) | API Design & Protocols | `completed` |
 | 083a | Self-Evolving Persona Agent: Foundations | Python (LangGraph, instructor, Ollama) | AI & LLM Engineering | `completed` |
 | 083b | Self-Evolving Persona Agent: ACE Loop & Self-Improvement | Python (LangGraph, instructor, sentence-transformers, Ollama) | AI & LLM Engineering | `not-started` |
-| 084 | Recursive Language Models | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 084 | Recursive Language Models | Python, Docker (Ollama) | AI & LLM Engineering | `completed` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 

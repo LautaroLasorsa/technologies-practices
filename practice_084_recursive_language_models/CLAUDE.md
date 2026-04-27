@@ -174,4 +174,4 @@ All provider routing lives in `src/llm_config.py` and is dispatched through Lite
 
 ## State
 
-`not-started`
+`completed`

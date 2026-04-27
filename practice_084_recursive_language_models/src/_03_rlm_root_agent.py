@@ -36,7 +36,7 @@ from ._02_recursive_query import CostTracker, query
 
 
 # Hard caps so a runaway loop doesn't burn the day.
-MAX_ROUNDS = 6
+MAX_ROUNDS = 12
 REPL_OUTPUT_TRUNC = 2000           # truncate REPL stdout fed back to the LM
 FINAL_RE = re.compile(r"FINAL\((.*?)\)\s*$", re.DOTALL)
 CODE_RE = re.compile(r"```(?:python)?\s*(.*?)```", re.DOTALL)
@@ -72,8 +72,34 @@ CODE_RE = re.compile(r"```(?:python)?\s*(.*?)```", re.DOTALL)
 # context. ~25 lines is plenty.
 # ---------------------------------------------------------------------------
 def build_root_system_prompt() -> str:
-    raise NotImplementedError(
-        "TODO(human): write the root system prompt describing the REPL + protocol"
+    return (
+        "You answer questions about a long document that is too large to read at once."
+        "You have a Python REPL. The variable 'context' is a string holding the document."
+        "The function `query(text, question)` invokes a fresh sub-LM on a *snipppet* of text and returns its answer (or 'NOT_FOUND')."
+        "You must pass a subset of the context to the sub-agent. Never pass more than 200 characters at a sub-agent query."
+        "You must return exactly one of these per turn:\n"
+        "a) a ```python``` block. Whatever in 'print(...)'s comes back in the next turn.\n"
+        "b) `FINAL(answer)` on its own line, ending the session.  It must not be inside a ```python``` block. You must produce this FINAL block as soon as you know the answer\n"
+        """
+                 - inspect `len(context)` and slice `context[:N]` to peek;
+                 - use `re.findall(...)` to grep for keywords;
+                 - call `query(chunk, sub_question)` for any slice that *might*"contain the answer — the sub-LM has fresh attention and won't be lost in 100k tokens.
+
+        """
+        """
+        Example
+        [TURN 1]
+        ```python
+            apps = re.find(input,pattern)
+            for app in apps:
+                print(query(apps, question))
+        ```
+        [TURN 1 Output]: NOT_FOUND, NOT_FOUND, ... , <ANSWER>, NOT_FOUND ...
+        [TURN 2]
+        FINAL(<ANSWER>)
+
+        Note that [TURN 2] isn't between ``` ``` symbols.
+        """
     )
 
 
@@ -129,9 +155,14 @@ def make_repl_state(context: str, cfg_sub: LMConfig, tracker: CostTracker,
 # block however it likes inside the markdown fence.
 # ---------------------------------------------------------------------------
 def execute_python(code: str, state: ReplState) -> str:
-    raise NotImplementedError(
-        "TODO(human): exec(code, state.namespace) capturing stdout + tracebacks"
-    )
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        try:
+            code = textwrap.dedent(code)
+            exec(code, state.namespace)
+        except Exception as e:
+            buf.write("\n ERROR : " + traceback.format_exc())
+    return buf.getvalue()
 
 
 def _extract_code(reply: str) -> str | None:
@@ -199,10 +230,22 @@ def run_root_agent(
             f"Begin by writing Python that helps you locate the answer."
         )},
     ]
-    raise NotImplementedError(
-        "TODO(human): drive the round loop — parse FINAL/code, exec, append messages"
-    )
 
+    for _ in range(MAX_ROUNDS):
+        answer = chat(cfg_root, messages=messages)
+        messages.append({"role":"assistant","content":answer})
+        final = _extract_final(answer)
+        if final: return final, tracker
+        code = _extract_code(answer)
+        if not code:
+            messages.append({"role":"user","content":"Reply with either a ```python``` block or `FINAL(answer)`."})
+            continue
+
+        code_result = execute_python(code,state)
+        messages.append({"role":"user", "content":f"REPL OUTPUT: \n {_truncate(code_result) or '(no output)'}"})
+
+
+    return "<no FINAL after MAX_ROUNDS rounds>", tracker
 
 # -- Demo (scaffolded) ------------------------------------------------------
 

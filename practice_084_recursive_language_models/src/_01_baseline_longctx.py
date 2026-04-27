@@ -133,9 +133,10 @@ def materialize_problems(n_filler: int = 60, seed: int = 7) -> list[HaystackProb
 # prompt produces here.
 # ---------------------------------------------------------------------------
 def build_baseline_messages(haystack: str, question: str) -> list[dict]:
-    raise NotImplementedError(
-        "TODO(human): assemble the system + user chat messages for vanilla long-context QA"
-    )
+    return [
+        {"role":"system", "content":"You answer questions strictly using the provided document. Reply with only the answer, no preamble."},
+        {"role":"user","content": question + haystack + question}
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +159,8 @@ def build_baseline_messages(haystack: str, question: str) -> list[dict]:
 # Substring containment captures correctness without fighting formatting.
 # ---------------------------------------------------------------------------
 def is_correct(prediction: str, gold: str) -> bool:
-    raise NotImplementedError("TODO(human): substring-match prediction against gold")
+    print(prediction + " vs " + gold)
+    return gold.strip().lower() in prediction.strip().lower()
 
 
 # -- Demo runner (scaffolded) -----------------------------------------------

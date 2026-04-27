@@ -28,7 +28,7 @@ from ._02_recursive_query import CostTracker
 from ._03_rlm_root_agent import run_root_agent
 
 
-HAYSTACK_SIZES: list[int] = [20, 60, 200]   # n_filler paragraphs
+HAYSTACK_SIZES: list[int] = [20, 60, 200, 5000]   # n_filler paragraphs
 
 
 @dataclass
@@ -63,10 +63,9 @@ class Row:
 # Phase 3 and tune this until the grader stops giving false negatives.
 # ---------------------------------------------------------------------------
 def normalize_final_answer(raw: str) -> str:
-    raise NotImplementedError(
-        "TODO(human): strip quotes/prefixes/trailing punctuation from the FINAL string"
-    )
-
+    cured = raw.strip().strip("'\"").rstrip(".,")
+    # print("normalization "+raw+" -> "+cured)
+    return cured
 
 # -- Baseline runner (scaffolded) -------------------------------------------
 
@@ -100,7 +99,7 @@ def _run_rlm(cfg_root: LMConfig, cfg_sub: LMConfig,
     chars = 0
     t0 = time.perf_counter()
     for p in problems:
-        chars += len(p.haystack)
+        # chars += len(p.haystack)
         raw, tracker = run_root_agent(p.question, p.haystack,
                                       cfg_root=cfg_root, cfg_sub=cfg_sub)
         sub_calls += tracker.n_sub_calls

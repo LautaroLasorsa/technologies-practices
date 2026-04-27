@@ -44,7 +44,8 @@ import os
 from dataclasses import dataclass
 
 import litellm
-
+from litellm.exceptions import RateLimitError
+import time
 
 # LiteLLM expects ``{prefix}/{model}``.  ``ollama_chat`` is the chat-
 # completions transport (vs. the raw ``ollama`` /api/generate one).
@@ -111,13 +112,19 @@ def get_sub_lm() -> LMConfig:
     return _resolve(provider, model)
 
 
+_last_call = time.time()
+SECONDS_BETWEEN_CALLS = 3
+
 def chat(cfg: LMConfig, messages: list[dict], temperature: float = 0.0,
          max_tokens: int | None = None) -> str:
     """One-shot chat completion. Returns the assistant string content."""
+    global _last_call
+    # time.sleep(max(0,  _last_call + SECONDS_BETWEEN_CALLS - time.time()))
     kwargs: dict = {
         "model": cfg.litellm_model,
         "messages": messages,
         "temperature": temperature,
+        "timeout": 120,
     }
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
@@ -125,5 +132,15 @@ def chat(cfg: LMConfig, messages: list[dict], temperature: float = 0.0,
         kwargs["api_key"] = cfg.api_key
     if cfg.base_url:
         kwargs["api_base"] = cfg.base_url
-    resp = litellm.completion(**kwargs)
-    return resp.choices[0].message.content or ""
+    for attempt in range(6):
+        try:
+            resp = litellm.completion(**kwargs)
+            _last_call = time.time()
+            answer = resp.choices[0].message.content or ""
+        #    print(f"{messages}\n\n{answer}")
+            return answer
+        except RateLimitError:
+            wait = 30 * (attempt + 2)
+            print(f"  [rate-limited] sleep {wait}s (attempt {attempt+1}/6)")
+            time.sleep(wait)
+    raise RuntimeError("rate-limit retries exhausted")
