@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-23%20%2F%20133%20practices-blue?style=flat-square" alt="Progress: 23/133">
+  <img src="https://img.shields.io/badge/Progress-23%20%2F%20134%20practices-blue?style=flat-square" alt="Progress: 23/134">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -659,6 +659,12 @@ python clean_all.py
   <td><b>Recursive Language Models</b></td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>✅ Completed</td>
+</tr>
+<tr>
+  <td>085</td>
+  <td>Hybrid Symbolic-Neural Agents: LLM + CP-SAT for Scheduling</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
 </tr>
 </tbody>
 </table>
