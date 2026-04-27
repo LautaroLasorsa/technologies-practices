@@ -131,52 +131,44 @@ Hands-on introduction to DSPy's programming paradigm. You'll define signatures, 
 
 ## Instructions
 
-### Phase 1: Setup & First Signature (~15 min)
+### Phase 1: Setup & First Signature (~15 min) — `src/_01_first_signature.py`
 
-Start Docker and pull the Ollama model. Verify DSPy can connect to the local Ollama instance.
+Start Docker and pull the Ollama model, then run `_00_verify_setup.py` to confirm the connection.
 
-**Exercise 1 — Configure DSPy LM** (`src/01_first_signature.py`, TODO #1):
-DSPy needs a configured language model backend before any module can run. This exercise teaches the fundamental setup: pointing DSPy at a local Ollama instance. Understanding this configuration is essential because DSPy abstracts the LM — the same program works with OpenAI, Anthropic, or local models just by changing this one line.
+1. **TODO #1 — `configure_dspy()`**: build a `dspy.LM` pointed at local Ollama (`ollama_chat/qwen2.5:7b`, `api_base="http://localhost:11434"`, empty `api_key`) and call `dspy.configure(lm=...)`. Teaches DSPy's global LM configuration — the same program works with OpenAI, Anthropic, or local models just by swapping this one line.
+2. **TODO #2 — `build_qa_predictor()`**: return a `dspy.Predict("question -> answer")`. The scaffolded demo loop exercises it on three questions and prints the parsed `result.answer`, showing how DSPy turns a string signature into a prompt and back into typed fields.
 
-**Exercise 2 — First String Signature** (`src/01_first_signature.py`, TODO #2):
-String signatures are DSPy's simplest abstraction — they replace prompt templates with declarative I/O specs. By testing with `dspy.Predict`, you see how DSPy converts your signature into an actual prompt behind the scenes. This is the foundation everything else builds on.
+### Phase 2: Modules — Predict, CoT, PoT (~20 min) — `src/_02_modules.py`
 
-### Phase 2: Modules — Predict, CoT, PoT (~20 min)
+Compare the three built-in module strategies, then graduate to a class-based signature.
 
-Explore the three built-in module strategies and understand when each is appropriate.
+3. **TODO #1 — `build_predict_module()`**: return `dspy.Predict(MathProblem)`. Direct LM call, no reasoning trace — the baseline against which CoT/PoT will be measured.
+4. **TODO #2 — `build_cot_module()`**: return `dspy.ChainOfThought(MathProblem)`. Adds an intermediate `reasoning` field; the demo prints it so you can see the model "think out loud".
+5. **TODO #3 — `build_pot_module()`**: return `dspy.ProgramOfThought(MathProblem)`. The LM writes Python code, DSPy executes it — eliminates arithmetic errors entirely.
+6. **TODO #4 — `TextClassification` class signature**: declare a `dspy.Signature` subclass with the docstring task instruction and four typed fields (`text`, `categories` inputs; `category`, `confidence` outputs). Class signatures expose the field descriptions and docstring to the optimizer at compile time.
+7. **TODO #5 — `build_classifier()`**: return `dspy.ChainOfThought(TextClassification)`. Pairing the typed signature with CoT lets the LM justify its category choice before committing.
 
-**Exercise 3 — Compare Module Strategies** (`src/02_modules.py`, TODO #1):
-Running the same task through Predict, ChainOfThought, and ProgramOfThought reveals how each module transforms the underlying prompt differently. Predict gives a direct answer, CoT forces reasoning before answering, and PoT generates executable code. Seeing the differences firsthand builds intuition for which strategy to choose.
+### Phase 3: Custom Modules (~20 min) — `src/_03_custom_module.py`
 
-**Exercise 4 — Class-Based Signature** (`src/02_modules.py`, TODO #2):
-Class-based signatures are DSPy's production-grade way to define tasks. Typed fields with descriptions give the optimizer more information to work with during compilation. The docstring becomes the task instruction, making your code self-documenting.
+Subclass `dspy.Module` to chain two sub-modules into a sentiment pipeline.
 
-### Phase 3: Custom Modules (~20 min)
+8. **TODO #1 — `SentimentAnalyzer.__init__`**: declare `self.extract` (CoT for `review -> aspects: list[str]`) and `self.analyze` (CoT for `review, aspects -> sentiment, confidence`). Storing each sub-module as an attribute is what makes the optimizer able to find and tune them independently.
+9. **TODO #2 — `SentimentAnalyzer.forward`**: call `self.extract`, then `self.analyze`, then bundle the four interesting fields into a `dspy.Prediction`. This is the PyTorch-style composition pattern that powers every multi-step DSPy program.
 
-Learn the Module composition pattern — DSPy's core design for building multi-step programs.
+### Phase 4: Metrics & Datasets (~15 min) — `src/_04_metrics_datasets.py`
 
-**Exercise 5 — SentimentAnalyzer Module** (`src/03_custom_module.py`, TODO):
-Building a custom module teaches the most important DSPy pattern: composing simple modules into complex programs. The `__init__` + `forward()` pattern mirrors PyTorch's `nn.Module`, and for good reason — each sub-module is independently optimizable. The optimizer can find different few-shot examples for each step.
+Define the evaluation criterion and prepare labeled data for optimization.
 
-### Phase 4: Metrics & Datasets (~15 min)
+10. **TODO #1 — `sentiment_metric(example, pred, trace=None)`**: return `1.0` if the lowercased/stripped predicted sentiment matches the example's gold label, else `0.0`. Metrics are the optimizer's only signal — without them, BootstrapFewShot cannot distinguish good demonstrations from bad ones.
+11. **TODO #2 — `create_datasets()`**: turn `RAW_DATA` into a list of `dspy.Example` objects (each one calling `.with_inputs("review")` so `sentiment` is treated as a label, not a model input), then split into train (`TRAIN_SIZE`) and validation. Forgetting `.with_inputs(...)` lets the optimizer "cheat" by feeding the label into the prompt.
 
-Define evaluation criteria and prepare data for optimization.
+### Phase 5: BootstrapFewShot Optimization (~20 min) — `src/_05_optimization.py`
 
-**Exercise 6 — Metric Function** (`src/04_metrics_datasets.py`, TODO #1):
-Metrics are the compass that guides DSPy's optimization. Without a good metric, the optimizer cannot distinguish good outputs from bad. This exercise teaches the metric function signature and how to design metrics that capture your task's success criteria.
+Compile, evaluate, and inspect what the optimizer learned. Paste the Phase 3/4 stubs from your earlier work into the marked spots before starting these TODOs.
 
-**Exercise 7 — Train/Val Datasets** (`src/04_metrics_datasets.py`, TODO #2):
-DSPy.Example objects are the standard data container. The `.with_inputs()` method is critical — it tells the optimizer which fields are inputs (available at inference) vs labels (used only for evaluation). Getting this wrong means the optimizer "cheats" by including labels in the prompt.
-
-### Phase 5: BootstrapFewShot Optimization (~20 min)
-
-Run the full optimization loop and compare results.
-
-**Exercise 8 — Compile with BootstrapFewShot** (`src/05_optimization.py`, TODO #1):
-This is where everything comes together. Compilation runs the teacher on training data, filters traces with your metric, and injects the best demonstrations into the student program. Understanding the `max_bootstrapped_demos` and `max_labeled_demos` parameters is key to controlling optimization.
-
-**Exercise 9 — Evaluate & Compare** (`src/05_optimization.py`, TODO #2):
-Running `dspy.Evaluate` on both baseline and optimized programs provides concrete evidence that optimization works. Inspecting the optimized program's demos reveals *what* the optimizer learned — which examples it selected and why they help.
+12. **TODO #1 — `compile_program(train_set)`**: build a `BootstrapFewShot(metric=sentiment_metric, max_bootstrapped_demos=4, max_labeled_demos=8)`, then return both a fresh baseline `SentimentAnalyzer()` and `optimizer.compile(student=SentimentAnalyzer(), trainset=train_set)`. Watch the console — DSPy logs which traces pass the metric and become demos.
+13. **TODO #2 — `score_programs(baseline, optimized, val_set)`**: build a `dspy.Evaluate(devset=val_set, metric=sentiment_metric, num_threads=1, display_progress=True)` and return `(evaluator(baseline), evaluator(optimized))`. The scaffolded reporter prints both scores and the delta.
+14. **TODO #3 — `print_optimized_demos(optimized)`**: iterate `optimized.named_predictors()` and print each predictor's `len(predictor.demos)` and the demos themselves. This exposes the auto-curated few-shot examples that explain *why* the optimized program does better.
 
 ## Motivation
 
@@ -193,7 +185,7 @@ By default the practice runs against local Ollama (`qwen2.5:7b`). To switch prov
 | `LLM_BASE_URL` | _(provider default)_ | Override the API base URL |
 | `LLM_API_KEY` | _(empty)_ | API key — required for cloud providers |
 
-All provider routing is centralised in `src/llm_config.py` (`get_lm()` / `configure_lm()`). The `01_first_signature.py` TODO(human) exercise still asks you to construct a `dspy.LM` manually — that's intentional, as the exercise teaches the raw API before the abstraction is used everywhere else.
+All provider routing is centralised in `src/llm_config.py` (`get_lm()` / `configure_lm()`). The `_01_first_signature.py` TODO(human) exercise still asks you to construct a `dspy.LM` manually — that's intentional, as the exercise teaches the raw API before the abstraction is used everywhere else.
 
 ## Commands
 
@@ -202,12 +194,13 @@ All provider routing is centralised in `src/llm_config.py` (`get_lm()` / `config
 | **Infrastructure** | `docker compose up -d` | Start Ollama container |
 | | `docker exec ollama ollama pull qwen2.5:7b` | Download model for exercises |
 | **Setup** | `uv sync` | Install Python dependencies |
-| | `uv run python src/00_verify_setup.py` | Verify DSPy + Ollama connection |
-| **Phase 1** | `uv run python src/01_first_signature.py` | Test first signature with Predict |
-| **Phase 2** | `uv run python src/02_modules.py` | Compare Predict vs CoT vs PoT |
-| **Phase 3** | `uv run python src/03_custom_module.py` | Run custom module composition |
-| **Phase 4** | `uv run python src/04_metrics_datasets.py` | Test metrics and dataset creation |
-| **Phase 5** | `uv run python src/05_optimization.py` | Run BootstrapFewShot optimization |
+| | `uv run python -m src._00_verify_setup` | Verify DSPy + Ollama connection |
+| **Phase 1** | `uv run python -m src._01_first_signature` | Configure DSPy + run a string signature |
+| **Phase 2** | `uv run python -m src._02_modules` | Compare Predict vs CoT vs PoT, then class signature |
+| **Phase 3** | `uv run python -m src._03_custom_module` | Run the custom `SentimentAnalyzer` module |
+| **Phase 4** | `uv run python -m src._04_metrics_datasets` | Build datasets and sanity-check the metric |
+| **Phase 5** | `uv run python -m src._05_optimization` | Compile with BootstrapFewShot + evaluate |
+| **Cleanup** | `python clean.py` | Remove caches, venv, Docker volumes |
 
 ## References
 
