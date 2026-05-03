@@ -91,12 +91,25 @@ from .models import (
 def run_agent(user_request: str, cfg: LMConfig | None = None) -> AgentResult:
     """Run the full hybrid symbolic-neural pipeline on a user request."""
     cfg = cfg or get_lm()
-    raise NotImplementedError(
-        "TODO(human): call extract_schedule_request, solve, branch on "
-        "ScheduleSolution vs InfeasibleResult, call analyse + explain, "
-        "and return an AgentResult."
-    )
 
+    from ._01_constraint_extraction import extract_schedule_request
+    request = extract_schedule_request(user_request, cfg)
+
+    from ._02_cpsat_solver import solve
+    result = solve(request)
+
+
+    from ._04_explainer import explain
+    match result:
+        case ScheduleSolution():
+            explanation = explain(result, cfg)
+            return AgentResult(solved=True, solution=result, explanation = explanation)
+
+        case InfeasibleResult():
+            from ._03_infeasibility_analyzer import analyse
+            conflict = analyse(request, result)
+            explanation = explain(conflict, cfg)
+            return AgentResult(solved=False, conflict=conflict, explanation=explanation)
 
 # -- Sanity demo (scaffolded) -----------------------------------------------
 

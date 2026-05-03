@@ -39,8 +39,13 @@ from ortools.sat.python import cp_model
 
 from .models import (
     Assignment,
+    CoverageConstraint,
+    ForbiddenAssignment,
     HardConstraint,
     InfeasibleResult,
+    MaxShiftsPerEmployee,
+    QualificationConstraint,
+    RequiredAssignment,
     ScheduleRequest,
     ScheduleSolution,
 )
@@ -128,10 +133,36 @@ def _add_hard_constraints(
     x: dict[tuple[str, str], cp_model.IntVar],
 ) -> list[cp_model.IntVar]:
     """Add hard constraints to the model and return their assumption literals."""
-    raise NotImplementedError(
-        "TODO(human): for each hard constraint, create an assumption literal, "
-        "encode the constraint with .OnlyEnforceIf(lit), and append lit to the result."
-    )
+
+    assumption_lits = []
+
+    for i, hc in enumerate(request.hard_constraints):
+        lit = model.NewBoolVar(f"assume_{i}_{hc.kind}")
+        assumption_lits.append(lit)
+
+        match hc:
+
+            case CoverageConstraint():
+                for s in request.shifts:
+                    model.add(sum(x[e.id, s.id] for e in request.employees) == s.demand).OnlyEnforceIf(lit)
+
+            case MaxShiftsPerEmployee():
+                for e in request.employees:
+                    model.add(sum(x[e.id,s.id] for s in request.shifts) <= e.max_shifts).OnlyEnforceIf(lit)
+
+            case ForbiddenAssignment():
+                model.add(x[hc.employee_id,hc.shift_id]==0).OnlyEnforceIf(lit)
+
+            case RequiredAssignment():
+                model.add(x[hc.employee_id,hc.shift_id]==1).OnlyEnforceIf(lit)
+
+            case QualificationConstraint():
+                for e in request.employees:
+                    for s in request.shifts:
+                        if(s.required_qualification is not None and s.required_qualification not in e.qualifications):
+                            model.add(x[e.id,s.id]==0).OnlyEnforceIf(lit)
+
+    return assumption_lits
 
 
 def _add_soft_objective(

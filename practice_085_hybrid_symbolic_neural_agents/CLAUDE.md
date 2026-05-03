@@ -191,4 +191,4 @@ _(populated during the practice — observations, surprises, and cross-domain co
 
 ## State
 
-`not-started`
+`completed`

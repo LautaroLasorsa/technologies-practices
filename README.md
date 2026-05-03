@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-23%20%2F%20134%20practices-blue?style=flat-square" alt="Progress: 23/134">
+  <img src="https://img.shields.io/badge/Progress-24%20%2F%20139%20practices-blue?style=flat-square" alt="Progress: 24/139">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -661,8 +661,38 @@ python clean_all.py
   <td>✅ Completed</td>
 </tr>
 <tr>
-  <td>085</td>
-  <td>Hybrid Symbolic-Neural Agents: LLM + CP-SAT for Scheduling</td>
+  <td><b>085</b></td>
+  <td><b>Hybrid Symbolic-Neural Agents: LLM + CP-SAT for Scheduling</b></td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>✅ Completed</td>
+</tr>
+<tr>
+  <td>086</td>
+  <td>Agent Evaluation Engineering: τ-bench, LLM-as-Judge & Bootstrap CIs</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>087</td>
+  <td>Process Reward Models for Agents (AgentPRM)</td>
+  <td><img src="https://skillicons.dev/icons?i=py,pytorch,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>088</td>
+  <td>LATS: Language Agent Tree Search (MCTS for LLM Agents)</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>089</td>
+  <td>Agent Workflow Memory: Procedural vs Episodic</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>090</td>
+  <td>Chain-of-Verification: Decomposed Self-Consistency</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>—</td>
 </tr>

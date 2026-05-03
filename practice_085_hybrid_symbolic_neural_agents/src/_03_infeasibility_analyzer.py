@@ -83,13 +83,19 @@ def _short_label(constraints: list[HardConstraint]) -> str:
 # ---------------------------------------------------------------------------
 def analyse(request: ScheduleRequest, infeasible: InfeasibleResult) -> Conflict:
     """Extract the minimum unsatisfiable subset of hard constraints."""
-    raise NotImplementedError(
-        "TODO(human): rebuild the model, run solver.Solve, then call "
-        "SufficientAssumptionsForInfeasibility() and map indices back to "
-        "HardConstraint objects."
-    )
 
+    from ._02_cpsat_solver import _build_model
 
+    built = _build_model(request)
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = 5.0
+    solver.Solve(built.model)
+
+    lit_to_idx = {lit.Index():i for i,lit in enumerate(built.assumption_lits)}
+    indices = list[int](solver.SufficientAssumptionsForInfeasibility())
+
+    conflicts = [built.constraints_in_order[lit_to_idx[i]] for i in indices] if indices else request.hard_constraints
+    return Conflict(conflicting_constraints=conflicts, summary = _short_label(conflicts))
 # -- Sanity demo (scaffolded) -----------------------------------------------
 
 

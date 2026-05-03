@@ -89,9 +89,23 @@ def _format_conflict(conflict: Conflict) -> str:
 def explain(payload: ScheduleSolution | Conflict, cfg: LMConfig | None = None) -> str:
     """Produce a natural-language explanation of a solver output."""
     cfg = cfg or get_lm()
-    raise NotImplementedError(
-        "TODO(human): build messages from EXPLAINER_SYSTEM_PROMPT + a formatted "
-        "view of `payload`, call chat(), and return the stripped string."
+    body : str
+    match payload:
+        case ScheduleSolution():
+            body = _format_solution(payload)
+        case Conflict():
+            body = _format_conflict(payload)
+        case _:
+            raise TypeError(f"{type(payload)} not in ScheduleSolution | Conflict")
+
+    return chat(
+        cfg,
+        [
+            {"role":"system", "content":EXPLAINER_SYSTEM_PROMPT},
+            {"role":"user", "content":body}
+        ],
+        temperature=0.0,
+        max_tokens=400
     )
 
 

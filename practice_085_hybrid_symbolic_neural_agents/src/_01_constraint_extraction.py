@@ -93,9 +93,15 @@ def extract_schedule_request(user_request: str, cfg: LMConfig | None = None) -> 
     """Extract a ScheduleRequest from a natural-language description."""
     cfg = cfg or get_lm()
     client = instructor_client(cfg)
-    raise NotImplementedError(
-        "TODO(human): call client.chat.completions.create with "
-        "response_model=ScheduleRequest and return the result."
+    return client.chat.completions.create(
+        response_model = ScheduleRequest,
+        messages = [{"role":"system", "content": EXTRACTION_SYSTEM_PROMPT},
+            {"role":"user", "content": user_request}],
+        model = cfg.litellm_model,
+        max_retries=2,
+        temperature = 0.0,
+        api_key = cfg.api_key,
+        api_base = cfg.base_url
     )
 
 
