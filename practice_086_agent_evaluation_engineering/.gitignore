@@ -1,0 +1,22 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Generated outputs (eval reports, trajectories, plots)
+runs/
+out/
+reports/
+*.jsonl
+*.json.bak
+*.png
+*.pdf
+
+# Cached LM responses
+.llm_cache/

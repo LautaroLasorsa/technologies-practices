@@ -1,0 +1,37 @@
+[project]
+name = "practice-090-chain-of-verification"
+version = "0.1.0"
+description = "Chain-of-Verification (CoVe) — decomposed self-consistency via factored verification"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.3",
+    "langchain-core>=0.3",
+    "langchain-ollama>=0.2",
+    "pydantic>=2.6",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# Each provider package is optional so `uv sync` works without all SDKs.
+# Install on demand:
+#   uv sync --extra openai
+#   uv sync --extra anthropic
+#   uv sync --extra google
+#   uv sync --extra mistral
+#   uv sync --extra groq
+#   uv sync --extra all
+openai     = ["langchain-openai>=0.2"]
+anthropic  = ["langchain-anthropic>=0.2"]
+google     = ["langchain-google-genai>=2.0"]
+mistral    = ["langchain-mistralai>=0.2"]
+groq       = ["langchain-groq>=0.2"]
+all = [
+    "langchain-openai>=0.2",
+    "langchain-anthropic>=0.2",
+    "langchain-google-genai>=2.0",
+    "langchain-mistralai>=0.2",
+    "langchain-groq>=0.2",
+]
+
+[tool.uv]
+package = false
