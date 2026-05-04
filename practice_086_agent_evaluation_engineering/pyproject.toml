@@ -1,0 +1,22 @@
+[project]
+name = "practice-086-agent-evaluation-engineering"
+version = "0.1.0"
+description = "Agent Evaluation Engineering — tau-bench harness shape, LLM-as-Judge, paired bootstrap CIs"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.3",
+    "langchain-core>=0.3",
+    "langchain-ollama>=0.2",
+    "langchain-openai>=0.2",
+    "langchain-anthropic>=0.2",
+    "langchain-google-genai>=2.0",
+    "langchain-mistralai>=0.2",
+    "langchain-groq>=0.2",
+    "pydantic>=2.6",
+    "scipy>=1.13",
+    "pytest>=8",
+    "python-dotenv>=1.0",
+]
+
+[tool.uv]
+package = false

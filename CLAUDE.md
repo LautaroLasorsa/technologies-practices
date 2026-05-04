@@ -165,11 +165,11 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 083b | Self-Evolving Persona Agent: ACE Loop & Self-Improvement | Python (LangGraph, instructor, sentence-transformers, Ollama) | AI & LLM Engineering | `not-started` |
 | 084 | Recursive Language Models | Python, Docker (Ollama) | AI & LLM Engineering | `completed` |
 | 085 | Hybrid Symbolic-Neural Agents: LLM + CP-SAT for Scheduling | Python (OR-Tools, Ollama, Pydantic), Docker | AI & LLM Engineering | `completed` |
-| 086 | Agent Evaluation Engineering: τ-bench, LLM-as-Judge & Bootstrap CIs | Python (litellm, scipy, pytest), Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 086 | Agent Evaluation Engineering: τ-bench, LLM-as-Judge & Bootstrap CIs | Python (LangChain, scipy, pytest), Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 087 | Process Reward Models for Agents (AgentPRM) | Python (trl, transformers, ALFWorld), Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 088 | LATS: Language Agent Tree Search (MCTS for LLM Agents) | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 089 | Agent Workflow Memory: Procedural vs Episodic | Python (sentence-transformers, Ollama), Docker | AI & LLM Engineering | `not-started` |
-| 090 | Chain-of-Verification: Decomposed Self-Consistency | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 090 | Chain-of-Verification: Decomposed Self-Consistency | Python (LangChain, Pydantic), Docker (Ollama) | AI & LLM Engineering | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
