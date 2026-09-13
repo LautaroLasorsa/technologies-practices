@@ -1,0 +1,17 @@
+[project]
+name = "practice-102-panel-fixed-effects"
+version = "0.1.0"
+description = "Panel Data & Fixed Effects"
+requires-python = ">=3.11"
+dependencies = [
+    "xy==0.0.7",
+    "jupyterlab>=4.2",
+    "nbstripout>=0.7",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "pyfixest>=0.60",
+    "linearmodels>=7.0",
+]
+
+[tool.uv]
+package = false
