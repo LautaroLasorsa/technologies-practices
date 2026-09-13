@@ -1,0 +1,24 @@
+[project]
+name = "practice-108-time-series-econometrics"
+version = "0.1.0"
+description = "Time Series Econometrics: ARIMA, VAR & Cointegration"
+requires-python = ">=3.11"
+# No `matplotlib` here on purpose. statsmodels' plot_acf/plot_pacf/qqplot route
+# through `statsmodels.graphics.utils.create_mpl_ax`, which imports matplotlib
+# *only* when `ax is None` and otherwise just reads `ax.figure`. A real
+# `xy.pyplot.Axes` passed as `ax=` therefore duck-types through and renders
+# correctly (verified with xy 0.0.7 / statsmodels 0.15.0 — see CLAUDE.md
+# "Plotting: why there is no matplotlib here"). If a future xy release breaks
+# that, `uv add matplotlib` plus the two-line fallback in `src/plotting.py`
+# restores it.
+dependencies = [
+    "xy==0.0.7",
+    "jupyterlab>=4.2",
+    "nbstripout>=0.7",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "statsmodels>=0.14",
+]
+
+[tool.uv]
+package = false
