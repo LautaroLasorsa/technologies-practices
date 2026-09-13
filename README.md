@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-24%20%2F%20145%20practices-blue?style=flat-square" alt="Progress: 24/145">
+  <img src="https://img.shields.io/badge/Progress-24%20%2F%20158%20practices-blue?style=flat-square" alt="Progress: 24/158">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -742,6 +742,96 @@ python clean_all.py
   <td>096</td>
   <td>Evaluating Coding Agents: SWE-bench & Edit-Format Metrics</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+</tbody>
+</table>
+
+---
+
+## Econometrics & Causal Inference
+
+<table>
+<thead>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>097</td>
+  <td>Econometrics: OLS from Scratch & the Gauss-Markov Assumptions</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>098</td>
+  <td>Potential Outcomes & Randomized Experiments</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>099</td>
+  <td>Causal DAGs & Identification Strategies</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>100</td>
+  <td>Matching & Propensity Scores</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>101</td>
+  <td>Instrumental Variables & 2SLS</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>102</td>
+  <td>Panel Data & Fixed Effects</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>103</td>
+  <td>Difference-in-Differences & the Staggered Adoption Problem</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>104</td>
+  <td>Regression Discontinuity Design</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>105</td>
+  <td>Synthetic Control & Synthetic DiD</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>106</td>
+  <td>Double ML & Heterogeneous Treatment Effects</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>107</td>
+  <td>Sensitivity Analysis & Partial Identification</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>108</td>
+  <td>Time Series Econometrics: ARIMA, VAR & Cointegration</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>109</td>
+  <td>Bayesian Causal Inference & Structural Time Series</td>
+  <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
