@@ -185,7 +185,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 103 | Difference-in-Differences & the Staggered Adoption Problem | Python (pyfixest, differences, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 104 | Regression Discontinuity Design | Python (rdrobust, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 105 | Synthetic Control & Synthetic DiD | Python (pysyncon, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
-| 106 | Double ML & Heterogeneous Treatment Effects | Python (EconML, causalml, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
+| 106 | Double ML & Heterogeneous Treatment Effects | Python (EconML, scikit-learn, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 107 | Sensitivity Analysis & Partial Identification | Python (statsmodels, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 108 | Time Series Econometrics: ARIMA, VAR & Cointegration | Python (statsmodels, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 109 | Bayesian Causal Inference & Structural Time Series | Python (PyMC, CausalPy, arviz, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
