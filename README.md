@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-0%20%2F%20134%20practices-blue?style=flat-square" alt="Progress: 0/134">
+  <img src="https://img.shields.io/badge/Progress-0%20%2F%20145%20practices-blue?style=flat-square" alt="Progress: 0/145">
 </p>
 
 > **This is the `template` branch** — all exercises are in `not-started` state, ready for you to implement. Check out [`master`](../../tree/master) to see progress and completed practices.
@@ -603,6 +603,54 @@ python clean_all.py
 <tr>
   <td>085</td>
   <td>Hybrid Symbolic-Neural Agents: LLM + CP-SAT for Scheduling</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+</tbody>
+</table>
+
+---
+
+## Agentic Dev Tooling
+
+<table>
+<thead>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>091</td>
+  <td>Coding Agents From Scratch: The Bash-Only ReAct Loop</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>092</td>
+  <td>MCP: Build a Server & Client</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>093</td>
+  <td>OpenCode: Configure, Extend & Run Headless</td>
+  <td><img src="https://skillicons.dev/icons?i=docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>094</td>
+  <td>Agent Sandboxing & Permission Models</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker,linux" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>095</td>
+  <td>Parallel Agent Fan-Out with Git Worktrees</td>
+  <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>096</td>
+  <td>Evaluating Coding Agents: SWE-bench & Edit-Format Metrics</td>
   <td><img src="https://skillicons.dev/icons?i=py,docker" height="20"></td>
   <td>—</td>
 </tr>

@@ -169,6 +169,12 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 088 | LATS: Language Agent Tree Search (MCTS for LLM Agents) | Python, Docker (Ollama) | AI & LLM Engineering | `not-started` |
 | 089 | Agent Workflow Memory: Procedural vs Episodic | Python (sentence-transformers, Ollama), Docker | AI & LLM Engineering | `not-started` |
 | 090 | Chain-of-Verification: Decomposed Self-Consistency | Python (LangChain, Pydantic), Docker (Ollama) | AI & LLM Engineering | `not-started` |
+| 091 | Coding Agents From Scratch: The Bash-Only ReAct Loop | Python, Docker (Ollama) | Agentic Dev Tooling | `not-started` |
+| 092 | MCP: Build a Server & Client | Python (MCP SDK), Docker (Ollama) | Agentic Dev Tooling | `not-started` |
+| 093 | OpenCode: Configure, Extend & Run Headless | OpenCode, AGENTS.md, Docker (Ollama) | Agentic Dev Tooling | `not-started` |
+| 094 | Agent Sandboxing & Permission Models | Python, Docker, seccomp/Landlock | Agentic Dev Tooling | `not-started` |
+| 095 | Parallel Agent Fan-Out with Git Worktrees | Python, Git worktrees, Docker (Ollama) | Agentic Dev Tooling | `not-started` |
+| 096 | Evaluating Coding Agents: SWE-bench & Edit-Format Metrics | Python, Docker (Ollama) | Agentic Dev Tooling | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
