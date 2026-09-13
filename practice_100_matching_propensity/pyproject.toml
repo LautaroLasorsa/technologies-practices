@@ -1,0 +1,18 @@
+[project]
+name = "practice-100-matching-propensity"
+version = "0.1.0"
+description = "Matching & Propensity Scores"
+requires-python = ">=3.11"
+dependencies = [
+    "xy==0.0.7",
+    "jupyterlab>=4.2",
+    "nbstripout>=0.7",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "causaldata>=0.1.4",
+    "scikit-learn>=1.5",
+    "scipy>=1.13",
+]
+
+[tool.uv]
+package = false
