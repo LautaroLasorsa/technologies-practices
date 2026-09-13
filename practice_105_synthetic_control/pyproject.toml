@@ -1,0 +1,17 @@
+[project]
+name = "practice-105-synthetic-control"
+version = "0.1.0"
+description = "Synthetic Control & Synthetic DiD"
+requires-python = ">=3.11"
+dependencies = [
+    "xy==0.0.7",
+    "jupyterlab>=4.2",
+    "nbstripout>=0.7",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "scipy>=1.13",
+    "pysyncon>=1.2",
+]
+
+[tool.uv]
+package = false
