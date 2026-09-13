@@ -54,7 +54,20 @@ def hc_vcov(X: np.ndarray, resid: np.ndarray, XtX_inv: np.ndarray, kind: HCKind 
     `XtX_inv` is `(X'X)^-1`, as returned by `ols_via_qr`. Returns the
     (k, k) robust covariance matrix.
     """
-    raise NotImplementedError("TODO(human): implement the HC0-HC3 sandwich estimator")
+
+    w = resid**2
+
+    match kind:
+        case "HC1":
+            w = w * X.shape[0] / (X.shape[0] - X.shape[1])
+        case "HC2":
+            h = (X @ XtX_inv * X).sum(axis=1)
+            w = w / (1-h)
+        case "HC3":
+            h = (X @ XtX_inv * X).sum(axis=1)
+            w = w / (1-h)**2
+    M = X.T @ (X * w[:, None])
+    return XtX_inv @ M @ XtX_inv                    
 
 
 def main() -> None:

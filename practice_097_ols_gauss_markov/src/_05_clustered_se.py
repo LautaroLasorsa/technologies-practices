@@ -51,7 +51,12 @@ def cluster_robust_vcov(
     `cluster_id` is a (n,) array of cluster labels, one per observation.
     Returns the (k, k) covariance matrix.
     """
-    raise NotImplementedError("TODO(human): implement the cluster-robust (CR1) covariance estimator")
+    G = set(cluster_id)
+    Sgs = [sum(X[i] * resid[i] for i in range(X.shape[0]) if cluster_id[i]==g) for g in G]
+    M = sum([np.outer(s_g,s_g) for s_g in Sgs]) # eq = Sgs.T @ Sgs
+    c = (len(G)/(len(G)-1)) * ((X.shape[0]-1)/(X.shape[0]-X.shape[1]))
+    return c * XtX_inv @ M @ XtX_inv
+    
 
 
 def main() -> None:

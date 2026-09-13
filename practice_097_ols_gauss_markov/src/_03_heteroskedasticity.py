@@ -56,7 +56,7 @@ def breusch_pagan_lm_test(X: np.ndarray, resid: np.ndarray) -> tuple[float, floa
     RSS_aux = np.sum(residual_fit.resid**2)
     TSS_aux = np.var(resid_2)*n
     lm_statistic = n * (1 - RSS_aux/TSS_aux)
-    p_value  = 1 - stats.chi2(n-k).cdf(lm_statistic)
+    p_value  = 1 - stats.chi2(k-1).cdf(lm_statistic)
     return (lm_statistic,p_value)
 
 def main() -> None:
