@@ -42,12 +42,12 @@ from .datasets import TRUE_BETA, load_dataset
 #   2. vcov = sigma_hat_sq * XtX_inv.
 # ---------------------------------------------------------------------------
 def ols_vcov_homoskedastic(X: np.ndarray, resid: np.ndarray, XtX_inv: np.ndarray) -> np.ndarray:
-    """Classical OLS covariance matrix under homoskedastic, independent errors.
+    n, k = X.shape
+    sigma_hat_sq = sum(resid**2) / (n-k)
+    vcov = sigma_hat_sq * XtX_inv
+    return vcov
 
-    Returns the (k, k) covariance matrix; `np.sqrt(np.diag(...))` gives the
-    standard errors reported by every basic regression table.
-    """
-    raise NotImplementedError("TODO(human): implement the classical OLS vcov formula")
+
 
 
 def simulate_beta_hat_distribution(n: int = 200, n_sims: int = 500, seed: int = 0) -> np.ndarray:

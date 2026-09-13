@@ -65,12 +65,21 @@ class OLSFit:
 # ---------------------------------------------------------------------------
 def ols_via_qr(X: np.ndarray, y: np.ndarray) -> OLSFit:
     """Estimate OLS coefficients via QR decomposition.
-
+s
     Returns an `OLSFit` with the coefficient vector, fitted values,
     residuals, and `(X'X)^-1` — the last computed from `R`, never by
     inverting `X'X` directly.
     """
-    raise NotImplementedError("TODO(human): implement OLS via QR decomposition")
+
+    Q, R = np.linalg.qr(X)
+    beta = np.linalg.solve(R, Q.T @ y)
+    fitted = X @ beta
+    residuals = y - fitted
+    XtX_inv = np.linalg.solve(R, np.linalg.solve(R.T, np.eye(len(R))))
+
+    return OLSFit(
+        beta, fitted,residuals, XtX_inv
+    )
 
 
 def compare_to_statsmodels(X: np.ndarray, y: np.ndarray) -> None:

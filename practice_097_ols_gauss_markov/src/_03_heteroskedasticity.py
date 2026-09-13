@@ -49,8 +49,15 @@ def breusch_pagan_lm_test(X: np.ndarray, resid: np.ndarray) -> tuple[float, floa
     Returns `(lm_statistic, p_value)`. A small p-value (e.g. < 0.05)
     rejects the null of homoskedasticity.
     """
-    raise NotImplementedError("TODO(human): implement the Breusch-Pagan LM test")
-
+    n = X.shape[0]
+    k = X.shape[1]
+    resid_2 = resid**2
+    residual_fit = ols_via_qr(X,resid_2)
+    RSS_aux = np.sum(residual_fit.resid**2)
+    TSS_aux = np.var(resid_2)*n
+    lm_statistic = n * (1 - RSS_aux/TSS_aux)
+    p_value  = 1 - stats.chi2(n-k).cdf(lm_statistic)
+    return (lm_statistic,p_value)
 
 def main() -> None:
     for scenario in ("homoskedastic", "heteroskedastic"):
