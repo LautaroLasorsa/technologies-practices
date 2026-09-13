@@ -45,7 +45,11 @@ def load_dataset(scenario: str = "homoskedastic", n: int = 200, seed: int = 0) -
       - "homoskedastic":   iid Normal(0, sigma^2) errors — every Gauss-Markov
         assumption (A1-A5) holds, so OLS is BLUE and the classical variance
         formula is exactly right.
-      - "heteroskedastic": error scale grows with |x1| — violates A5.
+      - "heteroskedastic": error scale grows multiplicatively with x1
+        (sigma_i = exp(0.6 * x1)) — violates A5. The dependence is
+        *monotone* in x1 on purpose: Breusch-Pagan regresses squared
+        residuals on X itself, so a symmetric form like |x1| would be
+        invisible to it however strong the heteroskedasticity is.
       - "clustered":       errors share a per-cluster shock on top of an
         idiosyncratic term — violates the independence part of A4.
     """
@@ -58,7 +62,7 @@ def load_dataset(scenario: str = "homoskedastic", n: int = 200, seed: int = 0) -
     if scenario == "homoskedastic":
         errors = rng.normal(scale=1.0, size=n)
     elif scenario == "heteroskedastic":
-        sigma_i = 0.3 + 1.2 * np.abs(x1)
+        sigma_i = np.exp(0.6 * x1)
         errors = rng.normal(scale=1.0, size=n) * sigma_i
     elif scenario == "clustered":
         n_clusters = max(4, n // 20)
