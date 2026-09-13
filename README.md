@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-24%20%2F%20158%20practices-blue?style=flat-square" alt="Progress: 24/158">
+  <img src="https://img.shields.io/badge/Progress-25%20%2F%20158%20practices-blue?style=flat-square" alt="Progress: 25/158">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -757,10 +757,10 @@ python clean_all.py
 </thead>
 <tbody>
 <tr>
-  <td>097</td>
-  <td>Econometrics: OLS from Scratch & the Gauss-Markov Assumptions</td>
+  <td><b>097</b></td>
+  <td><b>Econometrics: OLS from Scratch & the Gauss-Markov Assumptions</b></td>
   <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>098</td>
