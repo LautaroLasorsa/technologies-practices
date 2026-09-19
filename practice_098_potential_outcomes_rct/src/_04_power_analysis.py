@@ -52,15 +52,16 @@ def minimum_detectable_effect(n: int, sigma2: float, alpha: float = 0.05, power:
     `sigma2` is the assumed common per-arm outcome variance. Returns a
     single float in the same units as the outcome.
     """
-    raise NotImplementedError("TODO(human): implement the minimum-detectable-effect formula")
-
+    return (norm.ppf(1-alpha/2) + norm.ppf(power)) * np.sqrt(2 * sigma2 / n)
 
 def power_for_effect(effect: float, n: int, sigma2: float, alpha: float = 0.05) -> float:
     """Achieved statistical power for a given true effect and per-arm `n`.
 
     Returns a probability in `[0, 1]`.
     """
-    raise NotImplementedError("TODO(human): implement the achieved-power formula")
+    z_a = norm.ppf(1-alpha/2)
+    d = abs(effect/np.sqrt(2*sigma2/n))
+    return norm.cdf(d-z_a) + norm.cdf(-d-z_a)
 
 
 def main() -> None:

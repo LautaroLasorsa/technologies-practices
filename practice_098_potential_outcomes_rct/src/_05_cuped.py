@@ -53,7 +53,8 @@ def cuped_adjust(y: np.ndarray, x: np.ndarray) -> tuple[np.ndarray, float]:
     same mean as `y` but lower variance whenever `x` is correlated with
     `y`.
     """
-    raise NotImplementedError("TODO(human): implement the CUPED adjustment")
+    theta = np.cov(y,x, ddof=1)[0,1] / np.var(x, ddof=1)
+    return y - theta * (x - np.mean(x)), theta
 
 
 def main() -> None:

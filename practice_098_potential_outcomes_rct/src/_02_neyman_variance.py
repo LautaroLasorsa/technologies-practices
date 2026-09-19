@@ -57,7 +57,9 @@ def neyman_variance(y: np.ndarray, treatment: np.ndarray) -> float:
     Returns a single float; `sqrt(...)` gives the standard error used for
     a 95% CI as `tau_hat +/- 1.96 * se`.
     """
-    raise NotImplementedError("TODO(human): implement Neyman's variance estimator")
+    y_0 = y[treatment==0]
+    y_1 = y[treatment==1]
+    return np.var(y_1, ddof=1)/len(y_1) + np.var(y_0,ddof=1)/len(y_0)
 
 
 def main() -> None:

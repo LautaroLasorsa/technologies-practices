@@ -52,6 +52,7 @@ from .datasets import load_dataset
 #      `mean(abs(null_stats) >= abs(observed_stat))`.
 #   5. Return `(observed_stat, null_stats, p_value)`.
 # ---------------------------------------------------------------------------
+
 def randomization_test(
     y: np.ndarray, treatment: np.ndarray, n_perm: int, rng: np.random.Generator
 ) -> tuple[float, np.ndarray, float]:
@@ -60,7 +61,16 @@ def randomization_test(
     Returns `(observed_stat, null_stats, p_value)` where `null_stats` has
     shape `(n_perm,)`.
     """
-    raise NotImplementedError("TODO(human): implement the randomization-inference loop")
+
+    observed_stat=difference_in_means(y,treatment)
+    null_stats = []
+    for _ in range(n_perm):
+        null_treatment = rng.permutation(treatment)
+        null_stats.append(difference_in_means(y,null_treatment))
+    
+    null_stats = np.array(null_stats)
+    p = np.average(abs(null_stats)>=abs(observed_stat))
+    return (observed_stat, null_stats, p)
 
 
 def main() -> None:

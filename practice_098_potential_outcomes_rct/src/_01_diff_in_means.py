@@ -53,8 +53,9 @@ def difference_in_means(y: np.ndarray, treatment: np.ndarray) -> float:
     `y` is the observed outcome (never the science table's `y0`/`y1`);
     `treatment` is the 0/1 assignment vector. Returns a single float.
     """
-    raise NotImplementedError("TODO(human): implement the difference-in-means ATE estimator")
-
+    y_0 = y[treatment==0]
+    y_1 = y[treatment==1]
+    return np.mean(y_1) - np.mean(y_0)
 
 def main() -> None:
     data = load_dataset(n=500, tau=2.0, seed=0)
