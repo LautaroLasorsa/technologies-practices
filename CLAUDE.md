@@ -177,7 +177,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 095 | Parallel Agent Fan-Out with Git Worktrees | Python, Git worktrees, Docker (Ollama) | Agentic Dev Tooling | `not-started` |
 | 096 | Evaluating Coding Agents: SWE-bench & Edit-Format Metrics | Python, Docker (Ollama) | Agentic Dev Tooling | `not-started` |
 | 097 | Econometrics: OLS from Scratch & the Gauss-Markov Assumptions | Python (statsmodels, xy), Jupyter | Econometrics & Causal Inference | `completed` |
-| 098 | Potential Outcomes & Randomized Experiments | Python (numpy, scipy, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
+| 098 | Potential Outcomes & Randomized Experiments | Python (numpy, scipy, xy), Jupyter | Econometrics & Causal Inference | `completed` |
 | 099 | Causal DAGs & Identification Strategies | Python (DoWhy, causal-learn, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 100 | Matching & Propensity Scores | Python (causaldata, scikit-learn, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 101 | Instrumental Variables & 2SLS | Python (linearmodels, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
