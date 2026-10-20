@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-26%20%2F%20158%20practices-blue?style=flat-square" alt="Progress: 26/158">
+  <img src="https://img.shields.io/badge/Progress-27%20%2F%20158%20practices-blue?style=flat-square" alt="Progress: 27/158">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -769,10 +769,10 @@ python clean_all.py
   <td>✅ Completed</td>
 </tr>
 <tr>
-  <td>099</td>
-  <td>Causal DAGs & Identification Strategies</td>
+  <td><b>099</b></td>
+  <td><b>Causal DAGs & Identification Strategies</b></td>
   <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>100</td>

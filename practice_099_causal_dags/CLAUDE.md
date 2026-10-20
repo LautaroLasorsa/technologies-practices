@@ -281,4 +281,4 @@ _(populated during the practice.)_
 
 ## State
 
-`not-started`
+`completed`
