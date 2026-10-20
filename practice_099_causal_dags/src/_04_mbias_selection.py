@@ -66,8 +66,13 @@ def collider_stratification_bias(df: pd.DataFrame, treatment: str, outcome: str,
     Runs the Phase 3 estimator with and without `collider` in the
     adjustment set and returns both estimates plus their difference.
     """
-    raise NotImplementedError("TODO(human): compute the collider-stratification bias")
-
+    unadjusted = estimate_effect_by_adjustment(df,treatment,outcome,{})
+    adjusted = estimate_effect_by_adjustment(df, treatment, outcome, collider)
+    return BiasResult(
+        unadjusted,
+        adjusted,
+        adjusted-unadjusted
+    )
 
 def selection_bias_demo(data, selection_var: str, keep_above_median: bool = True) -> BiasResult:
     """Selection bias as sample-filtering rather than regression-adjustment.

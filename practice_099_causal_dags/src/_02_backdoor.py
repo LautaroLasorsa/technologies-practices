@@ -70,7 +70,12 @@ def is_valid_backdoor_set(graph: Graph, treatment: str, outcome: str, z: set[str
     d-separates `treatment` from `outcome` once `treatment`'s outgoing edges
     are removed.
     """
-    raise NotImplementedError("TODO(human): implement the backdoor criterion")
+    
+    t_descendats = _descendants(graph,treatment)
+    if len( t_descendats.intersection(z) ) > 0: return False
+    gclone = graph.copy()
+    gclone.pop(treatment)
+    return is_d_separated(gclone, treatment,outcome,z)
 
 
 def main() -> None:

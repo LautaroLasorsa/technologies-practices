@@ -77,19 +77,53 @@ def is_d_separated(graph: Graph, x: str, y: str, z: set[str]) -> bool:
     `graph` maps each node to its list of children (directed edges). Returns
     `True` iff every path between `x` and `y` is blocked by `z`.
     """
-    raise NotImplementedError("TODO(human): implement d-separation via the moralized ancestral graph")
+    if x == y : return False 
+    if x in z or y in z:
+        return True 
+    parents = _parents(graph)
+    ancestral_graph = _ancestors(graph, parents, {x,y,*z})
+    gclone = Graph()
+    for u in ancestral_graph:
+        alt_u = "#" + u
+        for p in parents.get(u,[]):
+            if (p not in z) and (p in ancestral_graph):
+                gclone.setdefault(alt_u,[]).append(p)
+                gclone.setdefault(p,[]).append(alt_u)
+        
+        for v in graph.get(u,[]):
+            if (v not in z) and (v in ancestral_graph):
+                gclone.setdefault(u,[]).append(v)
+                gclone.setdefault(v,[]).append(u)
+
+    vis = set[str]()
+    vis.add(x)
+    stack = [x]
+    while stack:
+        u = stack.pop()
+        if u in z: continue
+        for v in gclone.get(u,[]):
+            if v not in vis:
+                vis.add(v)
+                stack.append(v)
+    
+    return y not in vis
 
 
 def main() -> None:
     checks = [
         ("confounder", "D", "Y", set(), False, "no adjustment: backdoor path via Z is open"),
-        ("confounder", "D", "Y", {"Z"}, True, "adjusting for Z blocks the backdoor path"),
+        ("confounder", "D", "Y", {"Z"}, False, "D -> Y edge stays open; Z only blocks the backdoor path (see Phase 2)"),
+        ("confounder_no_DY", "D", "Y", set(), False, "without D -> Y: backdoor path D <- Z -> Y is open"),
+        ("confounder_no_DY", "D", "Y", {"Z"}, True, "without D -> Y: adjusting for Z blocks the backdoor path"),
         ("mediator", "D", "Y", set(), False, "no adjustment: D -> Y is a direct dependence"),
         ("collider", "D", "Y", set(), True, "no adjustment: D and Y share no open path"),
         ("collider", "D", "Y", {"C"}, False, "conditioning on collider C OPENS a path"),
     ]
+    # Confounder graph with D's outgoing edge removed — the backdoor-only view
+    # that Phase 2's criterion builds before calling is_d_separated.
+    graphs = {**GRAPHS, "confounder_no_DY": {"Z": ["D", "Y"], "D": [], "Y": []}}
     for scenario, x, y, z, expected, note in checks:
-        graph = GRAPHS[scenario]
+        graph = graphs[scenario]
         try:
             result = is_d_separated(graph, x, y, z)
             mark = "OK" if result == expected else "MISMATCH"

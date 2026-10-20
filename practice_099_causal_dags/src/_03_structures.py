@@ -49,15 +49,20 @@ from .datasets import load_dataset
 #   3. Return the coefficient on the `treatment` column specifically (index
 #      1, right after the intercept).
 # ---------------------------------------------------------------------------
-def estimate_effect_by_adjustment(df, treatment: str, outcome: str, adjust_for: list[str]) -> float:
+
+import pandas as pd
+import numpy as np
+    
+def estimate_effect_by_adjustment(df : pd.DataFrame, treatment: str, outcome: str, adjust_for: list[str]) -> float:
     """OLS estimate of `treatment`'s effect on `outcome`, adjusting for `adjust_for`.
 
     Fits `outcome ~ intercept + treatment + adjust_for` by least squares and
     returns the coefficient on `treatment` only.
     """
-    raise NotImplementedError("TODO(human): implement the regression-adjustment estimator")
-
-
+    X = df[[treatment, *adjust_for]].assign(intercept=1.0).to_numpy()
+    Y = df[outcome].to_numpy()
+    coefs = np.linalg.lstsq(X, Y, rcond=None)[0]
+    return coefs[0]
 def main() -> None:
     # (scenario, "correct" adjustment set, "wrong" adjustment set) — "correct"
     # always means "recovers the stated true_effect"; "wrong" means adjusting
