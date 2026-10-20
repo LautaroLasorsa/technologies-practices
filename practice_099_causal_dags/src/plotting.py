@@ -25,7 +25,7 @@ def draw_dag(graph: Graph, positions: dict[str, tuple[float, float]], title: str
     fig, ax = plt.subplots(figsize=(5, 4))
     xs = [positions[n][0] for n in positions]
     ys = [positions[n][1] for n in positions]
-    ax.scatter(xs, ys, s=800, zorder=2)
+    ax.scatter(xs, ys, s=800)
     for node, (x, y) in positions.items():
         ax.text(x, y + 0.12, node, ha="center", va="bottom", fontsize=12)
     for parent, children in graph.items():
@@ -57,7 +57,7 @@ def estimate_vs_truth_plot(
     figure: some adjustment sets land on the line, others don't."""
     fig, ax = plt.subplots(figsize=(6, 4))
     x = np.arange(len(labels))
-    ax.scatter(x, estimates, s=60, zorder=2)
+    ax.scatter(x, estimates, s=60)
     ax.axhline(true_value, linestyle="--", label="true effect")
     ax.set_xticks(list(x))
     ax.set_xticklabels(labels, rotation=20, ha="right")

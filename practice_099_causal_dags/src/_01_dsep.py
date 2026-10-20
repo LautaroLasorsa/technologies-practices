@@ -83,13 +83,18 @@ def is_d_separated(graph: Graph, x: str, y: str, z: set[str]) -> bool:
 def main() -> None:
     checks = [
         ("confounder", "D", "Y", set(), False, "no adjustment: backdoor path via Z is open"),
-        ("confounder", "D", "Y", {"Z"}, True, "adjusting for Z blocks the backdoor path"),
+        ("confounder", "D", "Y", {"Z"}, False, "D -> Y edge stays open; Z only blocks the backdoor path (see Phase 2)"),
+        ("confounder_no_DY", "D", "Y", set(), False, "without D -> Y: backdoor path D <- Z -> Y is open"),
+        ("confounder_no_DY", "D", "Y", {"Z"}, True, "without D -> Y: adjusting for Z blocks the backdoor path"),
         ("mediator", "D", "Y", set(), False, "no adjustment: D -> Y is a direct dependence"),
         ("collider", "D", "Y", set(), True, "no adjustment: D and Y share no open path"),
         ("collider", "D", "Y", {"C"}, False, "conditioning on collider C OPENS a path"),
     ]
+    # Confounder graph with D's outgoing edge removed — the backdoor-only view
+    # that Phase 2's criterion builds before calling is_d_separated.
+    graphs = {**GRAPHS, "confounder_no_DY": {"Z": ["D", "Y"], "D": [], "Y": []}}
     for scenario, x, y, z, expected, note in checks:
-        graph = GRAPHS[scenario]
+        graph = graphs[scenario]
         try:
             result = is_d_separated(graph, x, y, z)
             mark = "OK" if result == expected else "MISMATCH"
