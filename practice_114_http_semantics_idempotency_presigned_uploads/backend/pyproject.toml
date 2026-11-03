@@ -1,0 +1,12 @@
+[project]
+name = "practice-114-backend"
+version = "0.1.0"
+description = "FastAPI backend demonstrating HTTP Semantics, Idempotency Keys, and Presigned Uploads"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "boto3>=1.35.0",
+    "pydantic>=2.9.0",
+]

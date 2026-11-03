@@ -1206,6 +1206,12 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=ts,react,nodejs" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>114</td>
+  <td>HTTP Semantics, Idempotency, Caching & Presigned Uploads</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,react,py,fastapi,docker" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 
