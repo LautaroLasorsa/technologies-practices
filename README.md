@@ -1212,6 +1212,12 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=ts,react,py,fastapi,docker" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>115a</td>
+  <td>Browser Security Boundaries: CORS, CSRF, XSS & CSP</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,react,nodejs,py,fastapi" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 
