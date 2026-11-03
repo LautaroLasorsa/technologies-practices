@@ -1146,6 +1146,12 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=ts,nextjs,react,py,fastapi" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>118</td>
+  <td>Performance Engineering, Virtualization & Network-Boundary Testing</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,react,vitest" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 

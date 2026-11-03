@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production build artifacts
+dist/
+build/
+
+# Testing & Coverage
+coverage/
+.vitest/
+
+# Un-ignore frontend/src/data which is blocked by root data/ ignore
+!frontend/src/data/
+!frontend/src/data/**
+
+# Environment and local configurations
+.env.local
+.env.*.local
+*.log
+
+# Python & OS artifacts
+__pycache__/
+.pytest_cache/
+.venv/
+.DS_Store
+Thumbs.db
