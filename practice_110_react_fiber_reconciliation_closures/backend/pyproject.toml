@@ -1,0 +1,14 @@
+[project]
+name = "practice-110-backend"
+version = "0.1.0"
+description = "FastAPI telemetry and task search service for Practice 110"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

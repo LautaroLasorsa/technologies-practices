@@ -188,6 +188,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 107 | Sensitivity Analysis & Partial Identification | Python (statsmodels, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 108 | Time Series Econometrics: ARIMA, VAR & Cointegration | Python (statsmodels, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
 | 109 | Bayesian Causal Inference & Structural Time Series | Python (PyMC, arviz, nutpie, xy), Jupyter | Econometrics & Causal Inference | `not-started` |
+| 110 | React Mental Model: Fiber, Reconciliation & Closure Traps | TypeScript (React 19, Vite), Python (FastAPI) | Frontend & Full-Stack Engineering | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
