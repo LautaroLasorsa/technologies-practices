@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+build/
+dist/
+*.egg-info/
+
+# Node & Next.js
+node_modules/
+bff-nextjs/node_modules/
+.next/
+bff-nextjs/.next/
+out/
+bff-nextjs/out/
+.turbo/
+
+# Environment files (keep example if any, ignore local credentials)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+bff-nextjs/.env.local
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

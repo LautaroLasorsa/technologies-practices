@@ -1230,6 +1230,12 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=ts,react,py,fastapi" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>117</td>
+  <td>Rendering Architectures: SSR, RSC & The BFF Pattern (Next.js)</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,nextjs,react,py,fastapi" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 
