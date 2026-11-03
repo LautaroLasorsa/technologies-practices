@@ -1110,6 +1110,12 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=ts,react,py,fastapi" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>113</td>
+  <td>Complex Forms, Action Workflows & Multi-Layer Validation</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,react,nodejs" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 

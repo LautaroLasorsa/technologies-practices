@@ -191,6 +191,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 110 | React Mental Model: Fiber, Reconciliation & Closure Traps | TypeScript (React 19, Vite), Python (FastAPI) | Frontend & Full-Stack Engineering | `not-started` |
 | 111 | Type-Safe Full-Stack Contracts: OpenAPI (Python) vs tRPC (Node) | TypeScript (React, tRPC, Zod), Python (FastAPI) | Frontend & Full-Stack Engineering | `not-started` |
 | 112 | State Taxonomy: Server Cache (TanStack Query) vs Client State (Zustand) | TypeScript (React, TanStack Query, Zustand), Python (FastAPI) | Frontend & Full-Stack Engineering | `not-started` |
+| 113 | Complex Forms, Action Workflows & Multi-Layer Validation | TypeScript (React 19, RHF, Zod, Node/Fastify) | Frontend & Full-Stack Engineering | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
