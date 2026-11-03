@@ -196,6 +196,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 | 114 | HTTP Semantics, Idempotency, Caching & Presigned Uploads | TypeScript (React), Python (FastAPI), Docker (MinIO) | Frontend & Full-Stack Engineering | `not-started` |
 | 115a | Browser Security Boundaries: CORS, CSRF, XSS & CSP | TypeScript (React, Node), Python (FastAPI) | Frontend & Full-Stack Engineering | `not-started` |
 | 115b | Auth Lifecycles: OAuth2 PKCE, Refresh Rotation & Session Mutex | TypeScript (React, Node/Fastify, Web Crypto) | Frontend & Full-Stack Engineering | `not-started` |
+| 116 | Real-Time & Streaming UI: SSE, WebSockets & Backpressure | TypeScript (React), Python (FastAPI SSE/WS) | Frontend & Full-Stack Engineering | `not-started` |
 
 **State tags:** `not-started` → `in-progress` → `completed`
 
