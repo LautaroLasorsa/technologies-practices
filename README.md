@@ -1098,6 +1098,12 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=ts,react,vite,py,fastapi" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>111</td>
+  <td>Type-Safe Full-Stack Contracts: OpenAPI (Python) vs tRPC (Node)</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,react,nodejs,py,fastapi" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 
