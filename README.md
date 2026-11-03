@@ -1128,6 +1128,12 @@ python clean_all.py
   <td><img src="https://skillicons.dev/icons?i=ts,react,nodejs,py,fastapi" height="20"></td>
   <td>—</td>
 </tr>
+<tr>
+  <td>115b</td>
+  <td>Auth Lifecycles: OAuth2 PKCE, Refresh Rotation & Session Mutex</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,react,nodejs" height="20"></td>
+  <td>—</td>
+</tr>
 </tbody>
 </table>
 
