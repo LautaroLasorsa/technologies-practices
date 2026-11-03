@@ -2,19 +2,19 @@
 
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=py,rust,cpp,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp,wasm,linux,discord&perline=18" />
+  <img src="https://skillicons.dev/icons?i=py,rust,cpp,ts,react,nextjs,docker,kubernetes,terraform,kafka,graphql,pytorch,cmake,fastapi,grafana,prometheus,postgres,gcp,wasm,linux,discord&perline=21" />
 </p>
 
 <b> _**This repository is not to show the things that I made, but the things that I have been interested into learning, and my progress learning them**_ </b>
 
 <p align="center">
-  Hands-on technology practices spanning systems programming, distributed systems, AI/ML, and operations research.<br>
+  Hands-on technology practices spanning systems programming, distributed systems, AI/ML, operations research, and frontend/full-stack engineering.<br>
   Each practice is a self-contained ~60–120 min session where I implement the core logic from scratch —<br>
   setup and boilerplate are AI-assisted, but the critical learning code is written by hand.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-27%20%2F%20158%20practices-blue?style=flat-square" alt="Progress: 27/158">
+  <img src="https://img.shields.io/badge/Progress-27%20%2F%20168%20practices-blue?style=flat-square" alt="Progress: 27/168">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -1168,6 +1168,24 @@ python clean_all.py
   <td>048</td>
   <td>Integrated OR: Supply Chain</td>
   <td><img src="https://skillicons.dev/icons?i=py" height="20"></td>
+  <td>—</td>
+</tr>
+</tbody>
+</table>
+
+---
+
+## Frontend & Full-Stack Engineering
+
+<table>
+<thead>
+<tr><th>#<img width="50" height="1"></th><th>Practice<img width="500" height="1"></th><th>Stack<img width="200" height="1"></th><th>Status<img width="150" height="1"></th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>110</td>
+  <td>React Mental Model: Fiber, Reconciliation & Closure Traps</td>
+  <td><img src="https://skillicons.dev/icons?i=ts,react,vite,py,fastapi" height="20"></td>
   <td>—</td>
 </tr>
 </tbody>
