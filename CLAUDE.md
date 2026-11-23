@@ -211,6 +211,7 @@ Multi-session topics are split into separate folders (e.g., `003a`, `003b`), eac
 - **Standalone sessions.** Each practice folder is a self-contained session — no dependency on completing previous practices (unless explicitly noted).
 - **Per-practice `.gitignore`.** Each practice folder must include a `.gitignore` that excludes generated/temporary files specific to that practice (e.g., protobuf stubs, synthetic data, plot images, model checkpoints). If a file needs to be tracked but is excluded by the root `.gitignore`, explicitly include it with `!` negation (e.g., `!Cargo.lock` for Rust practices that need it, `!data/` for practices where `data/` contains source input rather than generated output).
 - **Per-practice `clean.py`.** Each practice folder must include a `clean.py` script that removes all generated/temporary files (Docker volumes, build dirs, caches, virtual environments, synthetic data, etc.). The script should be runnable standalone (`python clean.py` from the practice folder) and is also invoked by the root `clean_all.py`.
+- **Python `uv` scaffolding.** For flat-script or FastAPI service directories without an installable package directory, omit `[build-system]` and set `[tool.uv]` with `package = false`; never declare `readme = "README.md"` unless `README.md` exists in the same directory.
 
 ---
 
