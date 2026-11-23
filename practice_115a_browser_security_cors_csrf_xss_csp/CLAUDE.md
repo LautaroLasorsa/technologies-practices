@@ -128,7 +128,7 @@ You will observe both CSRF and XSS attacks succeeding against an unhardened conf
    cd backend
    uv venv
    source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-   uv pip install -e .
+   uv sync
    uvicorn main:app --host 127.0.0.1 --port 8115 --reload
    ```
 2. Launch the Attacker origin server:
@@ -209,7 +209,7 @@ Browser security boundaries are the first line of defense for every web applicat
 
 | Phase | Command | Description |
 |---|---|---|
-| **Backend Setup** | `cd backend && uv venv && uv pip install -e .` | Create Python venv and install FastAPI dependencies |
+| **Backend Setup** | `cd backend && uv venv && uv sync` | Create Python venv and install FastAPI dependencies |
 | **Backend Run** | `cd backend && uv run uvicorn main:app --host 127.0.0.1 --port 8115 --reload` | Start FastAPI Treasury API on port 8115 |
 | **Attacker Run** | `cd attacker-server && node server.mjs` | Start Attacker Origin Server on port 6660 |
 | **Frontend Setup** | `cd frontend && npm install` | Install React 19, Vite, and DOMPurify dependencies |

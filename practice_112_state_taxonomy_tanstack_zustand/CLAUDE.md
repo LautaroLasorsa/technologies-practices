@@ -176,7 +176,7 @@ Modern enterprise web applications regularly collapse into unmaintainable re-ren
 | Phase | Command | Description |
 |---|---|---|
 | **Backend Setup** | `cd backend && uv venv` | Create Python virtual environment for backend |
-| **Backend Dependencies** | `cd backend && uv pip install -e .` | Install FastAPI and dependencies |
+| **Backend Dependencies** | `cd backend && uv sync` | Install FastAPI and dependencies |
 | **Backend Run** | `cd backend && uv run uvicorn main:app --port 8112 --reload` | Run FastAPI server with OCC and conflict simulator on port 8112 |
 | **Frontend Setup** | `cd frontend && npm install` | Install React 19, TanStack Query v5, Zustand v5 |
 | **Frontend Run** | `cd frontend && npm run dev` | Start Vite dev server on `http://localhost:5173` |
