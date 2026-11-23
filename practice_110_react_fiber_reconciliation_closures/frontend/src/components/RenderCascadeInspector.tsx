@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef , useMemo, useCallback} from "react";
 import { AuditLogEntry, ThemeConfig } from "../types";
 
 const INITIAL_LOGS: AuditLogEntry[] = [
@@ -137,12 +137,15 @@ export const RenderCascadeInspector: React.FC<RenderCascadeInspectorProps> = ({
   // Verification:
   // Once stabilized, watch the "Child Renders" badge in the child panel: it should STAY AT 1
   // even while the parent heartbeat tick continues to increment!
-
+  const themeConfig = useMemo( () => ({ mode : "dark" as const, density : "compact" as const}), [])
+  const handleExport = useCallback((format : "json" | "csv") =>{
+    setExportNotice(`Exported ${logs.length} logs in ${format.toUpperCase()} format`);
+  }, [logs.length]);
   // --- BUGGY REFERENCES (BREAKS REACT.MEMO) ---
-  const buggyThemeConfig: ThemeConfig = { mode: "dark", density: "compact" };
-  const buggyExportHandler = (format: "json" | "csv") => {
-    setExportNotice(`Exported ${logs.length} logs in ${format.toUpperCase()} format.`);
-  };
+  //const buggyThemeConfig: ThemeConfig = { mode: "dark", density: "compact" };
+  //const buggyExportHandler = (format: "json" | "csv") => {
+  //  setExportNotice(`Exported ${logs.length} logs in ${format.toUpperCase()} format.`);
+  //};
   // --------------------------------------------
 
   return (
@@ -178,9 +181,9 @@ export const RenderCascadeInspector: React.FC<RenderCascadeInspectorProps> = ({
 
       {/* Memoized child receiving props */}
       <SystemAuditPanel
-        themeConfig={buggyThemeConfig}
+        themeConfig={themeConfig}
         logs={logs}
-        onExport={buggyExportHandler}
+        onExport={handleExport}
       />
     </div>
   );

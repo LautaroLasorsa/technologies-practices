@@ -63,9 +63,13 @@ export function useSearchEndpoint(initialQuery = ""): UseSearchEndpointResult {
     // Extra guard: You can also use an `active = true` flag inside the effect scope
     // and set `active = false` in the cleanup function.
 
+    const controller = new AbortController();
+
+
     // --- BUGGY IMPLEMENTATION FOR EXPERIMENTATION ---
     fetch(
-      `http://localhost:8110/api/tasks/search?q=${encodeURIComponent(query)}&delay_mode=jitter`
+      `http://localhost:8110/api/tasks/search?q=${encodeURIComponent(query)}&delay_mode=jitter`,
+      {signal: controller.signal}
     )
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -79,12 +83,16 @@ export function useSearchEndpoint(initialQuery = ""): UseSearchEndpointResult {
         setIsSearching(false);
       })
       .catch((err) => {
+        if(err instanceof DOMException && err.name === "AbortError"){
+          return;
+        }
         setError(err.message);
         setIsSearching(false);
       });
 
     // BUG: No cleanup function returning controller.abort()!
     // -----------------------------------------------
+    return () => controller.abort();
   }, [query]);
 
   // Detected race condition: user typed something longer, but current results belong to an earlier query

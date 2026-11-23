@@ -144,12 +144,19 @@ export const TaskQueueList: React.FC<TaskQueueListProps> = ({ tasks, onTasksChan
     // Type a note in item 0, click "Down". The text remains in slot 0 instead of moving with the item!
 
     // --- BUGGY IMPLEMENTATION FOR EXPERIMENTATION ---
-    const buggyList = tasks; // Direct reference mutation!
-    const temp = buggyList[index];
-    buggyList[index] = buggyList[targetIndex];
-    buggyList[targetIndex] = temp;
-    onTasksChange([...buggyList]); // Force update but with mutated source array
+   // const buggyList = tasks; // Direct reference mutation!
+   // const temp = buggyList[index];
+   // buggyList[index] = buggyList[targetIndex];
+   // buggyList[targetIndex] = temp;
+   // onTasksChange([...buggyList]); // Force update but with mutated source array
     // -----------------------------------------------
+
+    const new_tasts = [...tasks]
+    const temp = new_tasts[index];
+    new_tasts[index] = new_tasts[targetIndex];
+    new_tasts[targetIndex] = temp;
+    onTasksChange(new_tasts); 
+    
   };
 
   return (
@@ -174,7 +181,7 @@ export const TaskQueueList: React.FC<TaskQueueListProps> = ({ tasks, onTasksChan
         */}
         {tasks.map((task, index) => (
           <TaskQueueItem
-            key={index} // <-- BUG: Using array index as Fiber key!
+            key={task.id} // <-- BUG: Using array index as Fiber key!
             task={task}
             index={index}
             total={tasks.length}

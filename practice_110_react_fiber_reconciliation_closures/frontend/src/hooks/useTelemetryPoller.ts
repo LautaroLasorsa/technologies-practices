@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef} from "react";
 import { TelemetryMetric } from "../types";
 
 interface UseTelemetryPollerOptions {
@@ -22,9 +22,13 @@ export function useTelemetryPoller({
   const [currentMetric, setCurrentMetric] = useState<TelemetryMetric | null>(null);
   const [history, setHistory] = useState<TelemetryMetric[]>([]);
   const [alertTriggered, setAlertTriggered] = useState(false);
-  const [isPolling, setIsPolling] = useState(true);
+  const [isPolling, _] = useState(true);
   const [tickCount, setTickCount] = useState(0);
-
+  const thresholdRef = useRef(alertThreshold);
+  useEffect(()=>{
+    thresholdRef.current = alertThreshold;
+  }, [alertThreshold]);
+  
   /**
    * FLAGGED BEHAVIOR (Exercise 2 - Stale Closure Trap):
    *
@@ -39,7 +43,7 @@ export function useTelemetryPoller({
    */
   useEffect(() => {
     if (!isPolling) return;
-
+    
     const timer = setInterval(async () => {
       try {
         const response = await fetch("http://localhost:8110/api/telemetry/tick");
@@ -64,11 +68,9 @@ export function useTelemetryPoller({
         //      needing to reset the interval timer!
 
         // --- BUGGY IMPLEMENTATION FOR DEMONSTRATION ---
-        setTickCount(tickCount + 1); // Stale closure: always sets 0 + 1 = 1!
-        const nextHistory = [...history, tick].slice(-10); // Stale closure: history is always []!
-        setHistory(nextHistory);
-
-        if (tick.cpu_usage > alertThreshold) {
+        setTickCount(prev => prev+1); // Stale closure: always sets 0 + 1 = 1!
+        setHistory(prev => [...prev,tick].slice(-10));
+        if (tick.cpu_usage > thresholdRef.current ) {
           // Stale closure: evaluates against initial alertThreshold
           setAlertTriggered(true);
         }
