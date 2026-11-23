@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Progress-27%20%2F%20168%20practices-blue?style=flat-square" alt="Progress: 27/168">
+  <img src="https://img.shields.io/badge/Progress-28%20%2F%20168%20practices-blue?style=flat-square" alt="Progress: 28/168">
 </p>
 
 > **Want to try these practices yourself?** Check out the [`template`](../../tree/template) branch — it has the same scaffolding with all exercises in `not-started` state, ready for you to implement.
@@ -1183,10 +1183,10 @@ python clean_all.py
 </thead>
 <tbody>
 <tr>
-  <td>110</td>
-  <td>React Mental Model: Fiber, Reconciliation & Closure Traps</td>
+  <td><b>110</b></td>
+  <td><b>React Mental Model: Fiber, Reconciliation & Closure Traps</b></td>
   <td><img src="https://skillicons.dev/icons?i=ts,react,vite,py,fastapi" height="20"></td>
-  <td>—</td>
+  <td>✅ Completed</td>
 </tr>
 <tr>
   <td>111</td>
